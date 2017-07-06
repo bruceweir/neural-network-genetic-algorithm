@@ -89,12 +89,13 @@ def print_networks(networks):
     logging.info('-'*80)
     for network in networks:
         network.print_network()
+        print(network.network)
 
 def create_network_layer_options():
     
     nn_dense_layer_options = {
             'nb_neurons': [64, 128, 256, 512, 768, 1024],
-            'activation': ['relu', 'elu', 'tanh', 'sigmoid'],
+            'activation': ['relu', 'elu', 'tanh', 'sigmoid']           
     }
     
     nn_conv_layer_options = {
@@ -105,17 +106,17 @@ def create_network_layer_options():
     }
     
     nn_dropout_options = {
-            'keep_probability':[70, 50, 30]
+            'remove_probability':[.5, .3, .2]
     }
     
-    nb_initial_hidden_layers = 1
+    nb_initial_network_layers = 4
     
     nn_network_layer_options = {
-            'LayerTypes':['Dense', 'Convolution', 'Dropout'],
+            'LayerTypes':['Dense', 'Conv2D', 'Dropout'],
             'DenseOptions': nn_dense_layer_options,
-            'ConvolutionOptions': nn_conv_layer_options,
+            'Conv2DOptions': nn_conv_layer_options,
             'DropoutOptions': nn_dropout_options,
-            'NbInitialHiddenLayers': nb_initial_hidden_layers
+            'NbInitialNetworkLayers': nb_initial_network_layers
     }
     
     return nn_network_layer_options

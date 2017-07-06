@@ -22,27 +22,39 @@ class Network():
         self.accuracy = 0.
         self.nn_param_choices = nn_param_choices
         self.nn_network_layer_options = nn_network_layer_options
-        self.network = []  # (array): represents network parameters
+        self.network_layers = []  # (array): represents network parameters
 
     def create_random(self):
         """Create a random network."""
-        for i in range(self.nn_network_layer_options['NbInitialHiddenLayers']):
-            self.network.append(self.get_random_layer());
-            
-            
-    def get_random_layer(self):
         
-        layer = random.choice(self.nn_network_layer_options['LayerTypes'])
+        self.network_layers = []
+        
+        for i in range(self.nn_network_layer_options['NbInitialNetworkLayers']):
+            allow_dropout = True
+            if i==0:
+                allow_dropout = False
+            else:
+                allow_dropout = True
+                
+            self.network_layers.append(self.get_random_layer(allow_dropout));
+            
+            
+    def get_random_layer(self, allow_dropout=False):
+        
+        if allow_dropout == True:
+            layer = random.choice(self.nn_network_layer_options['LayerTypes'])
+        else:
+            layer = random.choice(self.nn_network_layer_options['LayerTypes'][:2])
             
         layer_parameters = {}
             
         if layer == 'Dense':
             for key in self.nn_network_layer_options['DenseOptions']:
                 layer_parameters[key] = random.choice(self.nn_network_layer_options['DenseOptions'][key])
-        if layer == 'Convolution':
-            for key in self.nn_network_layer_options['ConvolutionOptions']:
-                layer_parameters[key] = random.choice(self.nn_network_layer_options['ConvolutionOptions'][key])
-        if(layer == 'Dropout'):
+        if layer == 'Conv2D':
+            for key in self.nn_network_layer_options['Conv2DOptions']:
+                layer_parameters[key] = random.choice(self.nn_network_layer_options['Conv2DOptions'][key])
+        if layer == 'Dropout':
             for key in self.nn_network_layer_options['DropoutOptions']:
                 layer_parameters[key] = random.choice(self.nn_network_layer_options['DropoutOptions'][key])
         
@@ -56,7 +68,7 @@ class Network():
             network (dict): The network parameters
 
         """
-        self.network = network
+        self.network_layers = network
 
     def train(self, dataset):
         """Train the network and record the accuracy.
@@ -66,9 +78,9 @@ class Network():
 
         """
         if self.accuracy == 0.:
-            self.accuracy = train_and_score(self.network, dataset)
+            self.accuracy = train_and_score(self.network_layers, dataset)
 
     def print_network(self):
         """Print out a network."""
-        logging.info(self.network)
+        logging.info(self.network_layers)
         logging.info("Network accuracy: %.2f%%" % (self.accuracy * 100))

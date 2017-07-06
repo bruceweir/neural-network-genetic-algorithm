@@ -7,7 +7,7 @@ Based on:
 """
 from keras.datasets import mnist, cifar10
 from keras.models import Sequential
-from keras.layers import Dense, Dropout
+from keras.layers import Dense, Dropout, Conv2D
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 
@@ -58,39 +58,50 @@ def get_mnist():
 
     return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test)
 
-def compile_model(network, nb_classes, input_shape):
+def compile_model(network_layers, nb_classes, input_shape):
     """Compile a sequential model.
 
     Args:
-        network (dict): the parameters of the network
+        network_layers (dict): the parameters of the network inbetween the input and output layer
 
     Returns:
         a compiled network.
 
     """
     # Get our network parameters.
-    nb_layers = network['nb_layers']
-    nb_neurons = network['nb_neurons']
-    activation = network['activation']
-    optimizer = network['optimizer']
+    nb_layers = len(network_layers)
+   # nb_neurons = network['nb_neurons']
+   # activation = network['activation']
+   # optimizer = network['optimizer']
 
     model = Sequential()
 
     # Add each layer.
     for i in range(nb_layers):
 
+        layer_type = network_layers[i]['layerType'];
+        layer_parameters = network_layers[i]['layer_parameters']
         # Need input shape for first layer.
         if i == 0:
-            model.add(Dense(nb_neurons, activation=activation, input_shape=input_shape))
+            if layer_type == 'Dense':
+                model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation'], input_shape=input_shape))
+            elif layer_type == 'Conv2D':
+                model.add(Conv2D(layer_parameters['nb_filters'], activation=layer_parameters['activation'], input_shape=input_shape))       
+                
         else:
-            model.add(Dense(nb_neurons, activation=activation))
-
-        model.add(Dropout(0.2))  # hard-coded dropout
+            if layer_type == 'Dense':
+                model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation']))
+            elif layer_type == 'Conv2D':
+                model.add(Conv2D(layer_parameters['nb_filters'], activation=layer_parameters['activation']))       
+            elif layer_type == 'Dropout':
+                model.add(Dropout(layer_parameters['remove_probability']))       
+            
+        
 
     # Output layer.
     model.add(Dense(nb_classes, activation='softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer=optimizer,
+    model.compile(loss='categorical_crossentropy', optimizer='adam',
                   metrics=['accuracy'])
 
     return model
