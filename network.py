@@ -9,7 +9,7 @@ class Network():
     Currently only works for an MLP.
     """
 
-    def __init__(self, nn_param_choices=None):
+    def __init__(self, nn_param_choices=None, nn_network_layer_options=None):
         """Initialize our network.
 
         Args:
@@ -21,13 +21,34 @@ class Network():
         """
         self.accuracy = 0.
         self.nn_param_choices = nn_param_choices
-        self.network = {}  # (dic): represents MLP network parameters
+        self.nn_network_layer_options = nn_network_layer_options
+        self.network = []  # (array): represents network parameters
 
     def create_random(self):
         """Create a random network."""
-        for key in self.nn_param_choices:
-            self.network[key] = random.choice(self.nn_param_choices[key])
-
+        for i in range(self.nn_network_layer_options['NbInitialHiddenLayers']):
+            self.network.append(self.get_random_layer());
+            
+            
+    def get_random_layer(self):
+        
+        layer = random.choice(self.nn_network_layer_options['LayerTypes'])
+            
+        layer_parameters = {}
+            
+        if layer == 'Dense':
+            for key in self.nn_network_layer_options['DenseOptions']:
+                layer_parameters[key] = random.choice(self.nn_network_layer_options['DenseOptions'][key])
+        if layer == 'Convolution':
+            for key in self.nn_network_layer_options['ConvolutionOptions']:
+                layer_parameters[key] = random.choice(self.nn_network_layer_options['ConvolutionOptions'][key])
+        if(layer == 'Dropout'):
+            for key in self.nn_network_layer_options['DropoutOptions']:
+                layer_parameters[key] = random.choice(self.nn_network_layer_options['DropoutOptions'][key])
+        
+        return {'layerType': layer, 'layer_parameters':layer_parameters}
+    
+    
     def create_set(self, network):
         """Set network properties.
 

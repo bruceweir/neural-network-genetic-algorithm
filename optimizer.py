@@ -13,7 +13,7 @@ from network import Network
 class Optimizer():
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, nn_param_choices, retain=0.4,
+    def __init__(self, nn_param_choices, nn_network_layer_options, retain=0.4,
                  random_select=0.1, mutate_chance=0.2):
         """Create an optimizer.
 
@@ -31,6 +31,7 @@ class Optimizer():
         self.random_select = random_select
         self.retain = retain
         self.nn_param_choices = nn_param_choices
+        self.nn_network_layer_options = nn_network_layer_options
 
     def create_population(self, count):
         """Create a population of random networks.
@@ -46,7 +47,7 @@ class Optimizer():
         pop = []
         for _ in range(0, count):
             # Create a random network.
-            network = Network(self.nn_param_choices)
+            network = Network(self.nn_param_choices, self.nn_network_layer_options)
             network.create_random()
 
             # Add the network to our population.

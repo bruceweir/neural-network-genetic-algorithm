@@ -40,7 +40,7 @@ def get_average_accuracy(networks):
 
     return total_accuracy / len(networks)
 
-def generate(generations, population, nn_param_choices, dataset):
+def generate(generations, population, nn_param_choices, nn_network_layer_options, dataset):
     """Generate a network with the genetic algorithm.
 
     Args:
@@ -50,7 +50,7 @@ def generate(generations, population, nn_param_choices, dataset):
         dataset (str): Dataset to use for training/evaluating
 
     """
-    optimizer = Optimizer(nn_param_choices)
+    optimizer = Optimizer(nn_param_choices, nn_network_layer_options)
     networks = optimizer.create_population(population)
 
     # Evolve the generation.
@@ -90,12 +90,43 @@ def print_networks(networks):
     for network in networks:
         network.print_network()
 
+def create_network_layer_options():
+    
+    nn_dense_layer_options = {
+            'nb_neurons': [64, 128, 256, 512, 768, 1024],
+            'activation': ['relu', 'elu', 'tanh', 'sigmoid'],
+    }
+    
+    nn_conv_layer_options = {
+            'layer_size': [(28, 28), (14, 14), (7, 7)],
+            'filter_size': [(1, 1), (3, 3), (5, 5), (7, 7)],
+            'nb_filters': [2, 8, 16, 32, 64],
+            'activation': ['relu', 'elu', 'tanh', 'sigmoid']
+    }
+    
+    nn_dropout_options = {
+            'keep_probability':[70, 50, 30]
+    }
+    
+    nb_initial_hidden_layers = 1
+    
+    nn_network_layer_options = {
+            'LayerTypes':['Dense', 'Convolution', 'Dropout'],
+            'DenseOptions': nn_dense_layer_options,
+            'ConvolutionOptions': nn_conv_layer_options,
+            'DropoutOptions': nn_dropout_options,
+            'NbInitialHiddenLayers': nb_initial_hidden_layers
+    }
+    
+    return nn_network_layer_options
+
+
 def main():
     """Evolve a network."""
     generations = 10  # Number of times to evole the population.
     population = 20  # Number of networks in each generation.
     dataset = 'mnist'
-
+ 
     nn_param_choices = {
         'nb_neurons': [64, 128, 256, 512, 768, 1024],
         'nb_layers': [1, 2, 3, 4],
@@ -104,10 +135,12 @@ def main():
                       'adadelta', 'adamax', 'nadam'],
     }
 
+    nn_network_layer_options = create_network_layer_options()
+    
     logging.info("***Evolving %d generations with population %d***" %
                  (generations, population))
 
-    generate(generations, population, nn_param_choices, dataset)
+    generate(generations, population, nn_param_choices, nn_network_layer_options, dataset)
 
 if __name__ == '__main__':
     main()
