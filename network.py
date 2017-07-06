@@ -9,7 +9,7 @@ class Network():
     Currently only works for an MLP.
     """
 
-    def __init__(self, nn_param_choices=None, nn_network_layer_options=None):
+    def __init__(self, nn_param_choices=None):
         """Initialize our network.
 
         Args:
@@ -21,7 +21,7 @@ class Network():
         """
         self.accuracy = 0.
         self.nn_param_choices = nn_param_choices
-        self.nn_network_layer_options = nn_network_layer_options
+        self.nn_network_layer_options = self.create_network_layer_options()
         self.network_layers = []  # (array): represents network parameters
 
     def create_random(self):
@@ -36,10 +36,10 @@ class Network():
             else:
                 allow_dropout = True
                 
-            self.network_layers.append(self.get_random_layer(allow_dropout));
+            self.network_layers.append(self.create_random_layer(allow_dropout));
             
             
-    def get_random_layer(self, allow_dropout=False):
+    def create_random_layer(self, allow_dropout=False):
         
         if allow_dropout == True:
             layer = random.choice(self.nn_network_layer_options['LayerTypes'])
@@ -58,7 +58,7 @@ class Network():
             for key in self.nn_network_layer_options['DropoutOptions']:
                 layer_parameters[key] = random.choice(self.nn_network_layer_options['DropoutOptions'][key])
         
-        return {'layerType': layer, 'layer_parameters':layer_parameters}
+        return {'layer_type': layer, 'layer_parameters':layer_parameters}
     
     
     def create_set(self, network):
@@ -84,3 +84,45 @@ class Network():
         """Print out a network."""
         logging.info(self.network_layers)
         logging.info("Network accuracy: %.2f%%" % (self.accuracy * 100))
+
+
+    def create_network_layer_options(self):
+        
+        nb_initial_network_layers = 1
+        
+        nn_network_layer_options = {
+                'LayerTypes': self.get_layer_types(),
+                'DenseOptions': self.get_dense_layer_options(),
+                'Conv2DOptions': self.get_conv2d_layer_options(),
+                'DropoutOptions': self.get_dropout_layer_options(),
+                'NbInitialNetworkLayers': nb_initial_network_layers
+        }
+        
+        return nn_network_layer_options
+
+    def get_dense_layer_options(self):
+    
+        return {
+                'nb_neurons': [64, 128, 256, 512, 768, 1024],
+                'activation': ['relu', 'elu', 'tanh', 'sigmoid']           
+        }
+    
+    def get_conv2d_layer_options(self):
+        
+        return {
+                'layer_size': [(28, 28), (14, 14), (7, 7)],
+                'filter_size': [(1, 1), (3, 3), (5, 5), (7, 7)],
+                'nb_filters': [2, 8, 16, 32, 64],
+                'activation': ['relu', 'elu', 'tanh', 'sigmoid']
+        }
+    
+    def get_dropout_layer_options(self):
+        
+        return {
+                'remove_probability':[.5, .3, .2]
+        }
+    
+    
+    def get_layer_types(self):
+        
+        return ['Dense', 'Conv2D', 'Dropout']

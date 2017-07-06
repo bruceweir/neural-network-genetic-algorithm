@@ -13,7 +13,7 @@ from network import Network
 class Optimizer():
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, nn_param_choices, nn_network_layer_options, retain=0.4,
+    def __init__(self, nn_param_choices, retain=0.4,
                  random_select=0.1, mutate_chance=0.2):
         """Create an optimizer.
 
@@ -31,7 +31,7 @@ class Optimizer():
         self.random_select = random_select
         self.retain = retain
         self.nn_param_choices = nn_param_choices
-        self.nn_network_layer_options = nn_network_layer_options
+        
 
     def create_population(self, count):
         """Create a population of random networks.
@@ -47,7 +47,7 @@ class Optimizer():
         pop = []
         for _ in range(0, count):
             # Create a random network.
-            network = Network(self.nn_param_choices, self.nn_network_layer_options)
+            network = Network(self.nn_param_choices)
             network.create_random()
 
             # Add the network to our population.
@@ -113,14 +113,45 @@ class Optimizer():
             (Network): A randomly mutated network object
 
         """
-        # Choose a random key.
-        mutation = random.choice(list(self.nn_param_choices.keys()))
-
+        if len(network.network_layers) > 1:         
+            mutationType = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'AddLayer'])
+        else:
+            mutationType = random.choice(['AdjustLayerParameter', 'AddLayer'])
+            
+        mutatedLayerIndex = random.choice(range(len(network.network_layers)))
         # Mutate one of the params.
-        network.network[mutation] = random.choice(self.nn_param_choices[mutation])
-
+        if mutationType == 'AdjustLayerParameter':
+            parameter, value = self.get_random_parameter_for_network_layer(network, mutatedLayerIndex)
+            network.network_layers[mutatedLayerIndex]['layer_parameters'][parameter] = value
+        elif mutationType == 'RemoveLayer':
+            del network.network_layers[mutatedLayerIndex]
+        elif mutationType == 'AddLayer':
+            if len(network.network_layers) > 1 and network.network_layers[-1]['layer_type'] != 'Dropout':
+                network.network_layers.append(network.create_random_layer(allow_dropout = True))
+            else:
+                network.network_layers.append(network.create_random_layer(allow_dropout = False))
+                
         return network
 
+    def get_random_parameter_for_network_layer(self, network, layer_index):
+        
+        network_layer = network.network_layers[layer_index]
+        layer_type = network_layer['layer_type']
+    
+        if layer_type == 'Dense':
+            parameter = random.choice(list(network.get_dense_layer_options().keys()))
+            value = random.choice(network.get_dense_layer_options()[parameter])
+        elif layer_type == 'Conv2D':
+            parameter = random.choice(list(network.get_conv2d_layer_options().keys()))
+            value = random.choice(network.get_conv2d_layer_options()[parameter])
+        elif layer_type == 'Dropout':
+            parameter = random.choice(list(network.get_dropout_layer_options().keys()))
+            value = random.choice(network.get_dropout_layer_options()[parameter])
+        else:
+            raise NameError('Error: unknown layer_type: %s' % layer_type)
+            
+        return parameter, value
+    
     def evolve(self, pop):
         """Evolve a population of networks.
 
