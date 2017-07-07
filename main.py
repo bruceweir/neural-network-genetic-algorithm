@@ -3,6 +3,7 @@ import logging
 from optimizer import Optimizer
 from tqdm import tqdm
 
+
 # Setup logging.
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',

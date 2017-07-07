@@ -10,6 +10,15 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Conv2D, Flatten
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
+from keras import backend as K
+from IPython.display import SVG
+from keras.utils.vis_utils import model_to_dot
+
+
+
+K.set_image_dim_ordering('tf')
+
+import json
 
 # Helper: Early stopping.
 early_stopper = EarlyStopping(patience=5)
@@ -42,6 +51,8 @@ def get_mnist():
     nb_classes = 10
     batch_size = 128
     input_shape = (784,)
+    # tensorflow-style ordering (Height, Width, Channels)
+    input_shape_conv2d = (28, 28, 1)
 
     # Get the data.
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -52,13 +63,15 @@ def get_mnist():
     x_train /= 255
     x_test /= 255
 
+    x_train_conv2d = x_train.reshape(60000, 28, 28)
+    x_test_conv2d = x_test.reshape(10000, 28, 28)
     # convert class vectors to binary class matrices
     y_train = to_categorical(y_train, nb_classes)
     y_test = to_categorical(y_test, nb_classes)
 
-    return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test)
+    return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test, input_shape_conv2d, x_train_conv2d, x_test_conv2d)
 
-def compile_model(network_layers, nb_classes, input_shape):
+def compile_model(network, nb_classes, input_shape):
     """Compile a sequential model.
 
     Args:
@@ -68,31 +81,40 @@ def compile_model(network_layers, nb_classes, input_shape):
         a compiled network.
 
     """
+
+    print(json.dumps(network.network_layers, indent=4))
     # Get our network parameters.
-    nb_layers = len(network_layers)
-   # nb_neurons = network['nb_neurons']
-   # activation = network['activation']
-   # optimizer = network['optimizer']
+    nb_layers = len(network.network_layers)
 
     model = Sequential()
 
     # Add each layer.
     for i in range(nb_layers):
 
-        layer_type = network_layers[i]['layer_type'];
-        layer_parameters = network_layers[i]['layer_parameters']
+        print(i)
+        layer_type = network.network_layers[i]['layer_type'];
+        layer_parameters = network.network_layers[i]['layer_parameters']
         # Need input shape for first layer.
         if i == 0:
             if layer_type == 'Dense':
                 model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation'], input_shape=input_shape))
             elif layer_type == 'Conv2D':
-                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], activation=layer_parameters['activation'], input_shape=input_shape))       
+                print('Conv2D params')
+                print(layer_parameters['nb_filters'])
+                print(layer_parameters['kernel_size'])
+                print(input_shape)
+                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], input_shape=input_shape))#, activation=layer_parameters['activation'], input_shape=input_shape))       
                 
         else:
             if layer_type == 'Dense':
                 model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation']))
             elif layer_type == 'Conv2D':
-                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], activation=layer_parameters['activation']))       
+                print('Conv2D params')                
+                print(layer_parameters['nb_filters'])
+                print(layer_parameters['kernel_size'])
+                
+                #model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], strides=layer_parameters['strides'], activation=layer_parameters['activation']))       
+                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size']))#, strides=layer_parameters['strides'], activation=layer_parameters['activation']))       
             elif layer_type == 'Dropout':
                 model.add(Dropout(layer_parameters['remove_probability']))
             elif layer_type == 'Flatten':
@@ -101,10 +123,15 @@ def compile_model(network_layers, nb_classes, input_shape):
         
 
     # Output layer.
+    if network.network_is_not_1d_at_layer(len(network.network_layers)-1):
+        model.add(Flatten())
+    
     model.add(Dense(nb_classes, activation='softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='adam',
                   metrics=['accuracy'])
+
+    #SVG(model_to_dot(model).create(prog='dot', format='svg'))
 
     return model
 
@@ -121,17 +148,26 @@ def train_and_score(network, dataset):
             x_test, y_train, y_test = get_cifar10()
     elif dataset == 'mnist':
         nb_classes, batch_size, input_shape, x_train, \
-            x_test, y_train, y_test = get_mnist()
+            x_test, y_train, y_test, input_shape_conv2d, x_train_conv2d, x_test_conv2d = get_mnist()
 
-    model = compile_model(network, nb_classes, input_shape)
+    input_shape_choice = input_shape
+    x_train_choice = x_train
+    x_test_choice = x_test
+    
+    if network.starts_with_2d_layer():
+        input_shape_choice = input_shape_conv2d
+        x_train_choice = x_train_conv2d
+        x_test_choice = x_test_conv2d
+        
+    model = compile_model(network, nb_classes, input_shape_choice)
 
-    model.fit(x_train, y_train,
+    model.fit(x_train_choice, y_train,
               batch_size=batch_size,
               epochs=10000,  # using early stopping, so no real limit
               verbose=0,
-              validation_data=(x_test, y_test),
+              validation_data=(x_test_choice, y_test),
               callbacks=[early_stopper])
 
-    score = model.evaluate(x_test, y_test, verbose=0)
+    score = model.evaluate(x_test_choice, y_test, verbose=0)
 
     return score[1]  # 1 is accuracy. 0 is loss.

@@ -105,8 +105,12 @@ class Network():
             index = index-1
         
         return True
+
     
-        
+    def starts_with_2d_layer(self):
+        return '2D' in self.network_layers[0]['layer_type']
+    
+    
     def create_set(self, network):
         """Set network properties.
 
@@ -124,7 +128,7 @@ class Network():
 
         """
         if self.accuracy == 0.:
-            self.accuracy = train_and_score(self.network_layers, dataset)
+            self.accuracy = train_and_score(self, dataset)
 
     def print_network(self):
         """Print out a network."""
@@ -134,7 +138,7 @@ class Network():
 
     def create_network_layer_options(self):
         
-        nb_initial_network_layers = 1
+        nb_initial_network_layers = 10
         
         nn_network_layer_options = {
                 'LayerTypes': self.get_layer_types(),
@@ -156,7 +160,7 @@ class Network():
     def get_conv2d_layer_options(self):
         
         return {
-                'layer_size': [(28, 28), (14, 14), (7, 7)],
+                'strides': [(1, 1), (2, 2), (4, 4)],
                 'kernel_size': [(1, 1), (3, 3), (5, 5), (7, 7)],
                 'nb_filters': [2, 8, 16, 32, 64],
                 'activation': ['relu', 'elu', 'tanh', 'sigmoid']
