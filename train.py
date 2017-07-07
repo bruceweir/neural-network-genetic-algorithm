@@ -7,7 +7,7 @@ Based on:
 """
 from keras.datasets import mnist, cifar10
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Conv2D
+from keras.layers import Dense, Dropout, Conv2D, Flatten
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 
@@ -79,22 +79,24 @@ def compile_model(network_layers, nb_classes, input_shape):
     # Add each layer.
     for i in range(nb_layers):
 
-        layer_type = network_layers[i]['layerType'];
+        layer_type = network_layers[i]['layer_type'];
         layer_parameters = network_layers[i]['layer_parameters']
         # Need input shape for first layer.
         if i == 0:
             if layer_type == 'Dense':
                 model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation'], input_shape=input_shape))
             elif layer_type == 'Conv2D':
-                model.add(Conv2D(layer_parameters['nb_filters'], activation=layer_parameters['activation'], input_shape=input_shape))       
+                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], activation=layer_parameters['activation'], input_shape=input_shape))       
                 
         else:
             if layer_type == 'Dense':
                 model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation']))
             elif layer_type == 'Conv2D':
-                model.add(Conv2D(layer_parameters['nb_filters'], activation=layer_parameters['activation']))       
+                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], activation=layer_parameters['activation']))       
             elif layer_type == 'Dropout':
-                model.add(Dropout(layer_parameters['remove_probability']))       
+                model.add(Dropout(layer_parameters['remove_probability']))
+            elif layer_type == 'Flatten':
+                model.add(Flatten())
             
         
 

@@ -24,7 +24,7 @@ class Network():
         self.nn_network_layer_options = self.create_network_layer_options()
         self.network_layers = []  # (array): represents network parameters
 
-    def create_random(self):
+    def create_random_network(self):
         """Create a random network."""
         
         self.network_layers = []
@@ -37,30 +37,76 @@ class Network():
                 allow_dropout = True
                 
             self.network_layers.append(self.create_random_layer(allow_dropout));
+        
+        self.check_network_structure()
             
+
+    def add_layer_with_random_parameters(self, layer_type):
+        
+        self.network_layers.append(self.create_layer(layer_type));
+
             
     def create_random_layer(self, allow_dropout=False):
         
         if allow_dropout == True:
-            layer = random.choice(self.nn_network_layer_options['LayerTypes'])
+            layer_type = random.choice(self.nn_network_layer_options['LayerTypes'])
         else:
-            layer = random.choice(self.nn_network_layer_options['LayerTypes'][:2])
-            
-        layer_parameters = {}
-            
-        if layer == 'Dense':
-            for key in self.nn_network_layer_options['DenseOptions']:
-                layer_parameters[key] = random.choice(self.nn_network_layer_options['DenseOptions'][key])
-        if layer == 'Conv2D':
-            for key in self.nn_network_layer_options['Conv2DOptions']:
-                layer_parameters[key] = random.choice(self.nn_network_layer_options['Conv2DOptions'][key])
-        if layer == 'Dropout':
-            for key in self.nn_network_layer_options['DropoutOptions']:
-                layer_parameters[key] = random.choice(self.nn_network_layer_options['DropoutOptions'][key])
+            layer_type = random.choice(self.nn_network_layer_options['LayerTypes'][:2])
+    
+        return self.create_layer(layer_type)
         
-        return {'layer_type': layer, 'layer_parameters':layer_parameters}
+        
+    def create_layer(self, layer_type):
+        
+        layer_parameters = {}
+        
+        for key in self.nn_network_layer_options[layer_type]:
+                layer_parameters[key] = random.choice(self.nn_network_layer_options[layer_type][key])
+        
+        return {'layer_type': layer_type, 'layer_parameters': layer_parameters}
+    
+        
+    def check_network_structure(self):
+        
+        i=1
+        
+        while i < len(self.network_layers):
+            #print('%d: %s' % (i, self.network_layers[i]['layer_type']))
+            current_layer_type = self.network_layers[i]['layer_type']           
+            previous_layer_type = self.network_layers[i-1]['layer_type']
+            
+            if current_layer_type == 'Dense' and self.network_is_not_1d_at_layer(i-1):
+                self.network_layers.insert(i, {'layer_type':'Flatten', 'layer_parameters':{}})
+                i=1
+            elif current_layer_type == 'Dropout' and previous_layer_type == 'Dropout':
+                del self.network_layers[i]
+            else:
+                i+=1
+                
+            
+
+    def network_is_not_1d_at_layer(self, layer_index):
+        
+        return not self.network_is_1d_at_layer(layer_index)
     
     
+    def network_is_1d_at_layer(self, layer_index):
+               
+        index = layer_index
+        
+        while index > -1:
+            layer_type = self.network_layers[index]['layer_type']
+            
+            if layer_type == 'Dense' or layer_type == 'Flatten':
+                return True
+            if '2D' in layer_type:
+                return False
+            
+            index = index-1
+        
+        return True
+    
+        
     def create_set(self, network):
         """Set network properties.
 
@@ -92,9 +138,9 @@ class Network():
         
         nn_network_layer_options = {
                 'LayerTypes': self.get_layer_types(),
-                'DenseOptions': self.get_dense_layer_options(),
-                'Conv2DOptions': self.get_conv2d_layer_options(),
-                'DropoutOptions': self.get_dropout_layer_options(),
+                'Dense': self.get_dense_layer_options(),
+                'Conv2D': self.get_conv2d_layer_options(),
+                'Dropout': self.get_dropout_layer_options(),                
                 'NbInitialNetworkLayers': nb_initial_network_layers
         }
         
@@ -111,7 +157,7 @@ class Network():
         
         return {
                 'layer_size': [(28, 28), (14, 14), (7, 7)],
-                'filter_size': [(1, 1), (3, 3), (5, 5), (7, 7)],
+                'kernel_size': [(1, 1), (3, 3), (5, 5), (7, 7)],
                 'nb_filters': [2, 8, 16, 32, 64],
                 'activation': ['relu', 'elu', 'tanh', 'sigmoid']
         }

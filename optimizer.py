@@ -48,7 +48,7 @@ class Optimizer():
         for _ in range(0, count):
             # Create a random network.
             network = Network(self.nn_param_choices)
-            network.create_random()
+            network.create_random_network()
 
             # Add the network to our population.
             pop.append(network)
