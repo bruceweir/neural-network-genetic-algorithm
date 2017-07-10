@@ -1,6 +1,7 @@
 """Class that represents the network to be evolved."""
 import random
 import logging
+import json
 from train import train_and_score
 
 class Network():
@@ -9,20 +10,15 @@ class Network():
     Currently only works for an MLP.
     """
 
-    def __init__(self, nn_param_choices=None):
+    def __init__(self):
         """Initialize our network.
 
-        Args:
-            nn_param_choices (dict): Parameters for the network, includes:
-                nb_neurons (list): [64, 128, 256]
-                nb_layers (list): [1, 2, 3, 4]
-                activation (list): ['relu', 'elu']
-                optimizer (list): ['rmsprop', 'adam']
         """
         self.accuracy = 0.
-        self.nn_param_choices = nn_param_choices
+        
         self.nn_network_layer_options = self.create_network_layer_options()
         self.network_layers = []  # (array): represents network parameters
+
 
     def create_random_network(self):
         """Create a random network."""
@@ -45,6 +41,9 @@ class Network():
         
         self.network_layers.append(self.create_layer(layer_type));
 
+    def insert_layer_with_random_parameters(self, layer_type, index):
+        
+        self.network_layers.insert(index, self.create_layer(layer_type))
             
     def create_random_layer(self, allow_dropout=False):
         
@@ -80,6 +79,12 @@ class Network():
                 i=1
             elif current_layer_type == 'Dropout' and previous_layer_type == 'Dropout':
                 del self.network_layers[i]
+                i=1
+            elif current_layer_type == 'Conv2D' and self.layer_is_not_2D(i-1):
+                self.insert_layer_with_random_parameters('Reshape', i)
+                i=1
+                
+                
             else:
                 i+=1
                 
@@ -108,7 +113,21 @@ class Network():
 
     
     def starts_with_2d_layer(self):
-        return '2D' in self.network_layers[0]['layer_type']
+        return self.layer_is_2D(0)
+    
+    
+    def layer_is_not_2D(self, layer_index):
+        return not self.layer_is_2D(layer_index)
+    
+    
+    def layer_is_2D(self, layer_index):
+        layer = self.network_layers[layer_index]
+        layer_type = layer['layer_type']
+        
+        if '2D' in layer_type or layer_type == 'Reshape':
+            return True
+        
+        return False
     
     
     def create_set(self, network):
@@ -138,13 +157,14 @@ class Network():
 
     def create_network_layer_options(self):
         
-        nb_initial_network_layers = 10
+        nb_initial_network_layers = 5
         
         nn_network_layer_options = {
                 'LayerTypes': self.get_layer_types(),
                 'Dense': self.get_dense_layer_options(),
                 'Conv2D': self.get_conv2d_layer_options(),
-                'Dropout': self.get_dropout_layer_options(),                
+                'Dropout': self.get_dropout_layer_options(),  
+                'Reshape': self.get_reshape_layer_options(),
                 'NbInitialNetworkLayers': nb_initial_network_layers
         }
         
@@ -155,6 +175,12 @@ class Network():
         return {
                 'nb_neurons': [64, 128, 256, 512, 768, 1024],
                 'activation': ['relu', 'elu', 'tanh', 'sigmoid']           
+        }
+        
+    def get_reshape_layer_options(self):
+        
+        return { 
+                'first_dimension_scale': [1, 2, 4, 8, 16, 32] 
         }
     
     def get_conv2d_layer_options(self):
@@ -176,3 +202,11 @@ class Network():
     def get_layer_types(self):
         
         return ['Dense', 'Conv2D', 'Dropout']
+    
+    def print_network(self, just_the_layers=False):
+        
+        if just_the_layers is True:
+            for layer in self.network_layers:
+                print(layer['layer_type'])
+        else:
+            print(json.dumps(self.network_layers, indent=4))

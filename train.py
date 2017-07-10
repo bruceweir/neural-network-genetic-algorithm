@@ -7,18 +7,15 @@ Based on:
 """
 from keras.datasets import mnist, cifar10
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Conv2D, Flatten
+from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 from keras import backend as K
 from IPython.display import SVG
 from keras.utils.vis_utils import model_to_dot
 
-
-
 K.set_image_dim_ordering('tf')
 
-import json
 
 # Helper: Early stopping.
 early_stopper = EarlyStopping(patience=5)
@@ -63,8 +60,8 @@ def get_mnist():
     x_train /= 255
     x_test /= 255
 
-    x_train_conv2d = x_train.reshape(60000, 28, 28)
-    x_test_conv2d = x_test.reshape(10000, 28, 28)
+    x_train_conv2d = x_train.reshape(60000, 28, 28, 1)
+    x_test_conv2d = x_test.reshape(10000, 28, 28, 1)
     # convert class vectors to binary class matrices
     y_train = to_categorical(y_train, nb_classes)
     y_test = to_categorical(y_test, nb_classes)
@@ -82,7 +79,6 @@ def compile_model(network, nb_classes, input_shape):
 
     """
 
-    print(json.dumps(network.network_layers, indent=4))
     # Get our network parameters.
     nb_layers = len(network.network_layers)
 

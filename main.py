@@ -41,17 +41,16 @@ def get_average_accuracy(networks):
 
     return total_accuracy / len(networks)
 
-def generate(generations, population, nn_param_choices, dataset):
+def generate(generations, population, dataset):
     """Generate a network with the genetic algorithm.
 
     Args:
         generations (int): Number of times to evole the population
         population (int): Number of networks in each generation
-        nn_param_choices (dict): Parameter choices for networks
         dataset (str): Dataset to use for training/evaluating
 
     """
-    optimizer = Optimizer(nn_param_choices)
+    optimizer = Optimizer()
     networks = optimizer.create_population(population)
     
     
@@ -100,19 +99,13 @@ def main():
     population = 20  # Number of networks in each generation.
     dataset = 'mnist'
  
-    nn_param_choices = {
-        'nb_neurons': [64, 128, 256, 512, 768, 1024],
-        'nb_layers': [1, 2, 3, 4],
-        'activation': ['relu', 'elu', 'tanh', 'sigmoid'],
-        'optimizer': ['rmsprop', 'adam', 'sgd', 'adagrad',
-                      'adadelta', 'adamax', 'nadam'],
-    }
-
    
     logging.info("***Evolving %d generations with population %d***" %
                  (generations, population))
 
-    generate(generations, population, nn_param_choices, dataset)
+    generate(generations, population, dataset)
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+    #main()
+    
+    
