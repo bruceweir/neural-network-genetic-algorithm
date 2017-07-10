@@ -6,8 +6,6 @@ from train import train_and_score
 
 class Network():
     """Represent a network and let us operate on it.
-
-    Currently only works for an MLP.
     """
 
     def __init__(self):
@@ -34,7 +32,7 @@ class Network():
                 
             self.network_layers.append(self.create_random_layer(allow_dropout));
         
-        self.check_network_structure()
+        #self.check_network_structure()
             
 
     def add_layer_with_random_parameters(self, layer_type):
@@ -67,6 +65,13 @@ class Network():
         
     def check_network_structure(self):
         
+        """ Apply various rules for allowing only certain network structures
+        
+        Insert a Flatten() layer if going from a 2D layer to a Dense layer.
+        Dropout layers cannot immediately follow Dropout layers.
+        Insert a Reshape() layer when going from a 1d layer to a Conv2D layer.
+        Do not allow 2D to 2D reshapes
+        """
         i=1
         
         while i < len(self.network_layers):
@@ -83,8 +88,10 @@ class Network():
             elif current_layer_type == 'Conv2D' and self.layer_is_not_2D(i-1):
                 self.insert_layer_with_random_parameters('Reshape', i)
                 i=1
-                
-                
+            elif current_layer_type == 'Reshape' and self.layer_is_2D(i-1):
+                del self.network_layers[i-1]
+                i=1
+                               
             else:
                 i+=1
                 
@@ -203,10 +210,13 @@ class Network():
         
         return ['Dense', 'Conv2D', 'Dropout']
     
-    def print_network(self, just_the_layers=False):
+    def print_network_as_json(self, just_the_layers=False):
         
         if just_the_layers is True:
             for layer in self.network_layers:
                 print(layer['layer_type'])
         else:
             print(json.dumps(self.network_layers, indent=4))
+
+    def get_network_layer_type(self, index):
+        return self.network_layers[index]['layer_type']
