@@ -85,11 +85,11 @@ class Network():
             elif current_layer_type == 'Dropout' and previous_layer_type == 'Dropout':
                 del self.network_layers[i]
                 i=1
-            elif current_layer_type == 'Conv2D' and self.layer_is_not_2D(i-1):
+            elif current_layer_type == 'Conv2D' and self.network_is_not_2d_at_layer(i-1):
                 self.insert_layer_with_random_parameters('Reshape', i)
                 i=1
-            elif current_layer_type == 'Reshape' and self.layer_is_2D(i-1):
-                del self.network_layers[i-1]
+            elif current_layer_type == 'Reshape' and self.network_is_2d_at_layer(i-1):
+                del self.network_layers[i]
                 i=1
                                
             else:
@@ -111,7 +111,7 @@ class Network():
             
             if layer_type == 'Dense' or layer_type == 'Flatten':
                 return True
-            if '2D' in layer_type:
+            if '2D' in layer_type or layer_type == 'Reshape':
                 return False
             
             index = index-1
@@ -120,14 +120,14 @@ class Network():
 
     
     def starts_with_2d_layer(self):
-        return self.layer_is_2D(0)
+        return self.network_is_2d_at_layer(0)
     
     
-    def layer_is_not_2D(self, layer_index):
-        return not self.layer_is_2D(layer_index)
+    def network_is_not_2d_at_layer(self, layer_index):
+        return not self.network_is_2d_at_layer(layer_index)
     
     
-    def layer_is_2D(self, layer_index):
+    def network_is_2d_at_layer(self, layer_index):
         layer = self.network_layers[layer_index]
         layer_type = layer['layer_type']
         
@@ -167,7 +167,7 @@ class Network():
         nb_initial_network_layers = 5
         
         nn_network_layer_options = {
-                'LayerTypes': self.get_layer_types(),
+                'LayerTypes': self.get_layer_types_for_random_selection(),
                 'Dense': self.get_dense_layer_options(),
                 'Conv2D': self.get_conv2d_layer_options(),
                 'Dropout': self.get_dropout_layer_options(),  
@@ -206,7 +206,7 @@ class Network():
         }
     
     
-    def get_layer_types(self):
+    def get_layer_types_for_random_selection(self):
         
         return ['Dense', 'Conv2D', 'Dropout']
     
