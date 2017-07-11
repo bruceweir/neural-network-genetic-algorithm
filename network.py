@@ -18,12 +18,12 @@ class Network():
         self.network_layers = []  # (array): represents network parameters
 
 
-    def create_random_network(self):
+    def create_random_network(self, number_of_layers=3):
         """Create a random network."""
         
         self.network_layers = []
         
-        for i in range(self.nn_network_layer_options['NbInitialNetworkLayers']):
+        for i in range(number_of_layers):
             allow_dropout = True
             if i==0:
                 allow_dropout = False
@@ -71,13 +71,14 @@ class Network():
         Dropout layers cannot immediately follow Dropout layers.
         Insert a Reshape() layer when going from a 1d layer to a Conv2D layer.
         Do not allow 2D to 2D reshapes
+        The first layer cannot be a Dropout layer
         """
         i=1
         
         while i < len(self.network_layers):
             #print('%d: %s' % (i, self.network_layers[i]['layer_type']))
-            current_layer_type = self.network_layers[i]['layer_type']           
-            previous_layer_type = self.network_layers[i-1]['layer_type']
+            current_layer_type = self.get_network_layer_type(i)           
+            previous_layer_type = self.get_network_layer_type(i-1)
             
             if current_layer_type == 'Dense' and self.network_is_not_1d_at_layer(i-1):
                 self.network_layers.insert(i, {'layer_type':'Flatten', 'layer_parameters':{}})
@@ -95,7 +96,9 @@ class Network():
             else:
                 i+=1
                 
-            
+        while self.get_network_layer_type(0) == 'Dropout' or self.get_network_layer_type(0) == 'Reshape':
+            del self.network_layers[0]
+
 
     def network_is_not_1d_at_layer(self, layer_index):
         
@@ -133,6 +136,8 @@ class Network():
         
         if '2D' in layer_type or layer_type == 'Reshape':
             return True
+        if layer_type == 'Dropout':
+            return self.network_is_2d_at_layer(layer_index - 1)
         
         return False
     
@@ -164,15 +169,13 @@ class Network():
 
     def create_network_layer_options(self):
         
-        nb_initial_network_layers = 5
         
         nn_network_layer_options = {
                 'LayerTypes': self.get_layer_types_for_random_selection(),
                 'Dense': self.get_dense_layer_options(),
                 'Conv2D': self.get_conv2d_layer_options(),
                 'Dropout': self.get_dropout_layer_options(),  
-                'Reshape': self.get_reshape_layer_options(),
-                'NbInitialNetworkLayers': nb_initial_network_layers
+                'Reshape': self.get_reshape_layer_options()
         }
         
         return nn_network_layer_options
@@ -220,3 +223,6 @@ class Network():
 
     def get_network_layer_type(self, index):
         return self.network_layers[index]['layer_type']
+    
+    def get_network_layer_parameters(self, index):
+        return self.network_layers[index]['layer_parameters']

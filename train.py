@@ -94,7 +94,7 @@ def train_and_score(network, dataset):
     #    x_test_choice = x_test_conv2d
         
     model = compile_model(network, nb_classes, input_shape_choice, input_shape_conv2d)
-
+    return 0
     model.fit(x_train_choice, y_train,
               batch_size=batch_size,
               epochs=10000,  # using early stopping, so no real limit
@@ -121,24 +121,28 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
 
     model = Sequential()
 
+    if network.starts_with_2d_layer() and len(input_shape) == 1:
+        model.add(Reshape(input_shape_conv2d, input_shape=input_shape))
+            
+
+    previous_dense_layer_units=0    
     # Add each layer.
     for i in range(nb_layers):
-
-        print(i)
-        layer_type = network.network_layers[i]['layer_type'];
-        layer_parameters = network.network_layers[i]['layer_parameters']
+        
+        layer_type = network.get_network_layer_type(i);
+        layer_parameters = network.get_network_layer_parameters(i)
         # Need input shape for first layer.
         if i == 0:
             if layer_type == 'Dense':
                 model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation'], input_shape=input_shape))
-            elif layer_type == 'Conv2D':
-                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], input_shape=input_shape, padding='same'))#, activation=layer_parameters['activation'], input_shape=input_shape))       
-            elif layer_type == 'Reshape':
-                model.add(Reshape(input_shape_conv2d, input_shape=input_shape))
+                previous_dense_layer_units = layer_parameters['nb_neurons']
+            elif layer_type == 'Conv2D':                
+                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], padding='same'))#, activation=layer_parameters['activation'], input_shape=input_shape))       
             
         else:
             if layer_type == 'Dense':
                 model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation']))
+                previous_dense_layer_units = model.layers[-1].units
             elif layer_type == 'Conv2D':
                 model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], padding='same'))#, strides=layer_parameters['strides'], activation=layer_parameters['activation']))       
             elif layer_type == 'Dropout':
@@ -146,11 +150,11 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
             elif layer_type == 'Flatten':
                 model.add(Flatten())
             elif layer_type == 'Reshape':
-                previous_layer_size = model.get_layer(index=-1).output_shape[1]
+                previous_layer_size = previous_dense_layer_units
                 layer_reshape_factor = layer_parameters['first_dimension_scale']
                 reshape_dimension_0 = int(round(previous_layer_size/layer_reshape_factor))
-                reshape_dimenstion_1 = layer_reshape_factor
-                model.add(Reshape((reshape_dimension_0, reshape_dimenstion_1, 1)))
+                reshape_dimension_1 = layer_reshape_factor
+                model.add(Reshape((reshape_dimension_0, reshape_dimension_1, 1)))
             
         
 

@@ -7,7 +7,7 @@ Created on Mon Jul 10 15:38:41 2017
 
 from network import Network
 from optimizer import Optimizer
-import train
+from train import compile_model
 
 def test_network():
     
@@ -63,7 +63,25 @@ def test_network():
     assert(network.get_network_layer_type(0) == 'Conv2D')
     assert(network.get_network_layer_type(1) == 'Conv2D')
     
-    print('\tDropout layers should be handled correctly, depending if they are following a 1d or 2d layer')
+    print("\t5. The first layer of a network cannot be a Dropout layer")
+    network = Network()
+    network.add_layer_with_random_parameters('Dropout')
+    network.add_layer_with_random_parameters('Dense')
+    network.check_network_structure()
+    
+    assert(len(network.network_layers) == 1)
+    assert(network.get_network_layer_type(0) == 'Dense')
+    
+    print("\t6. The first layer of a network cannot be a Reshape layer (this gets inserted later if require during model compilation)")
+    network = Network()
+    network.add_layer_with_random_parameters('Reshape')
+    network.add_layer_with_random_parameters('Conv2D')
+    network.check_network_structure()
+    
+    assert(len(network.network_layers) == 1)
+    assert(network.get_network_layer_type(0) == 'Conv2D')
+    
+    print('\t7. Dropout layers should be handled correctly, depending if they are following a 1d or 2d layer')
     network = Network()
     network.add_layer_with_random_parameters('Dense')
     network.add_layer_with_random_parameters('Dropout')
@@ -99,6 +117,18 @@ def test_network():
     assert(network.network_is_1d_at_layer(2) is False)
     assert(network.network_is_1d_at_layer(3) is False)
 
+    print('network_is_1d_at_layer(layer_index) should correctly determine if Dropout layers are 1d')
+    network = Network()
+    network.add_layer_with_random_parameters('Dense')
+    network.add_layer_with_random_parameters('Dropout')
+    network.add_layer_with_random_parameters('Conv2D')
+    network.check_network_structure()
+    
+    assert(network.network_is_1d_at_layer(0) is True)
+    assert(network.network_is_1d_at_layer(1) is True)
+    assert(network.network_is_1d_at_layer(2) is False)
+    assert(network.network_is_1d_at_layer(3) is False)
+    
     print('network_is_2d_at_layer(layer_index) should correctly report if a network is 2d at a particular layer')
     network = Network()
     network.add_layer_with_random_parameters('Dense')
@@ -113,6 +143,45 @@ def test_network():
     assert(network.network_is_2d_at_layer(4) is False)
     
     
+    print('network_is_2d_at_layer(layer_index) should correctly determine if Dropout layers are 2d')
+    network = Network()
+    network.add_layer_with_random_parameters('Conv2D')
+    network.add_layer_with_random_parameters('Dropout')
+    network.add_layer_with_random_parameters('Dense')
+    network.check_network_structure()
+    
+    assert(network.network_is_2d_at_layer(0) is True)
+    assert(network.network_is_2d_at_layer(1) is True)
+    assert(network.network_is_2d_at_layer(2) is False)
+    assert(network.network_is_2d_at_layer(3) is False)
+    
+    print('Network.starts_with_2d_layer() reports if the first layer of network is 2d')
+    network = Network()
+    network.add_layer_with_random_parameters('Dense')
+    network.check_network_structure()
+    
+    assert(network.starts_with_2d_layer() is False)
+    
+    network = Network()
+    network.add_layer_with_random_parameters('Conv2D')
+    network.check_network_structure()
+    
+    assert(network.starts_with_2d_layer() is True)
+    
+    print('Network.create_random_network(number_of_layers=3) creates a random network with number_of_layers layers')
+    network = Network()
+    network.create_random_network()
+    assert(len(network.network_layers) == 3)
+    
+    print('The network created by Network.create_random_network() needs to call check_network_structure() before it can be safely compiled')
+    for i in range(10):
+        network = Network()
+        network.create_random_network(10)
+        network.check_network_structure()
+        print('Compiling checked, random model %d...' % i)
+        compile_model(network, 10, (784, ), (28, 28, 1))
+        print('...done compiling')
+        
 print('Running tests....')    
 test_network()
 print('...tests complete')
