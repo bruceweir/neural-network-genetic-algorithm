@@ -11,7 +11,7 @@ from train import compile_model
 
 def test_network():
     
-    print('network.add_layer_with_random_parameters("layer_type") should add a network layer of the requested layer_type')
+    print('network.add_layer_with_random_parameters("layer_type") should add a network layer of the requested layer_type.')
     
     network=Network()
     
@@ -43,7 +43,7 @@ def test_network():
     assert(network.get_network_layer_type(1) == 'Dropout')
     assert(network.get_network_layer_type(2) == 'Dense')
     
-    print("\t3. A Reshape layer should be added between a 2D layer and a 1D layer")
+    print("\t3. A Reshape layer should be added between a 2D layer and a 1D layer.")
     network = Network()
     network.add_layer_with_random_parameters('Dense')
     network.add_layer_with_random_parameters('Conv2D');
@@ -72,7 +72,7 @@ def test_network():
     assert(len(network.network_layers) == 1)
     assert(network.get_network_layer_type(0) == 'Dense')
     
-    print("\t6. The first layer of a network cannot be a Reshape layer (this gets inserted later if require during model compilation)")
+    print("\t6. The first layer of a network cannot be a Reshape layer (this gets inserted later if require during model compilation).")
     network = Network()
     network.add_layer_with_random_parameters('Reshape')
     network.add_layer_with_random_parameters('Conv2D')
@@ -81,7 +81,7 @@ def test_network():
     assert(len(network.network_layers) == 1)
     assert(network.get_network_layer_type(0) == 'Conv2D')
     
-    print('\t7. Dropout layers should be handled correctly, depending if they are following a 1d or 2d layer')
+    print('\t7. Dropout layers should be handled correctly, depending if they are following a 1d or 2d layer.')
     network = Network()
     network.add_layer_with_random_parameters('Dense')
     network.add_layer_with_random_parameters('Dropout')
@@ -104,6 +104,27 @@ def test_network():
     assert(network.get_network_layer_type(2) == 'Flatten')
     assert(network.get_network_layer_type(3) == 'Dense')
     
+    print('\t8. Two Reshape layers are not permitted to be next to each other.')    
+    network = Network()
+    network.add_layer_with_random_parameters('Dense')
+    network.add_layer_with_random_parameters('Reshape')
+    network.add_layer_with_random_parameters('Reshape')
+    network.add_layer_with_random_parameters('Conv2D')
+    network.check_network_structure()
+    
+    assert(len(network.network_layers) == 3)
+    assert(network.get_network_layer_type(0) == 'Dense')
+    assert(network.get_network_layer_type(1) == 'Reshape')
+    assert(network.get_network_layer_type(2) == 'Conv2D')
+    
+    print('\t9. The first layer in the network cannot be a Flatten() layer (if required, these will be added automatically at model compilation).')
+    network = Network()
+    network.add_layer_with_random_parameters('Conv2D')
+    network.add_layer_with_random_parameters('Dense')
+    network.check_network_structure()
+    del network.network_layers[0]
+    network.check_network_structure()
+    assert(network.get_network_layer_type(0) != 'Flatten')
     
     print('network_is_1d_at_layer(layer_index) should correctly report if a network is 1d at a particular layer')
     network = Network()

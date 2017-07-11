@@ -112,22 +112,31 @@ class Optimizer():
 
         """
         if len(network.network_layers) > 1:         
-            mutationType = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'AddLayer'])
+            mutationType = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayer'])
         else:
-            mutationType = random.choice(['AdjustLayerParameter', 'AddLayer'])
+            mutationType = random.choice(['AdjustLayerParameter', 'InsertLayer'])
             
+        
+        
         mutatedLayerIndex = random.choice(range(len(network.network_layers)))
+        mutatedLayerType = network.get_network_layer_type(mutatedLayerIndex)
+        
+        print('Mutating network: %s. Index: %d (%s)' % (mutationType, mutatedLayerIndex, mutatedLayerType))
         # Mutate one of the params.
         if mutationType == 'AdjustLayerParameter':
-            parameter, value = self.get_random_parameter_for_network_layer(network, mutatedLayerIndex)
-            network.network_layers[mutatedLayerIndex]['layer_parameters'][parameter] = value
+            if mutatedLayerType != 'Flatten':
+                parameter, value = self.get_random_parameter_for_network_layer(network, mutatedLayerIndex)
+                network.get_network_layer_parameters(mutatedLayerIndex)[parameter] = value
         elif mutationType == 'RemoveLayer':
             del network.network_layers[mutatedLayerIndex]
-        elif mutationType == 'AddLayer':
-            if len(network.network_layers) > 1 and network.network_layers[-1]['layer_type'] != 'Dropout':
-                network.network_layers.append(network.create_random_layer(allow_dropout = True))
-            else:
-                network.network_layers.append(network.create_random_layer(allow_dropout = False))
+        elif mutationType == 'InsertLayer':
+            allow_dropout = False
+            if len(network.network_layers) > 1 and network.get_network_layer_type(mutatedLayerIndex-1) != 'Dropout':
+                allow_dropout = True
+            
+            network.network_layers.insert(mutatedLayerIndex, network.create_random_layer(allow_dropout = allow_dropout))
+
+        network.check_network_structure()
                 
         return network
 
@@ -145,6 +154,9 @@ class Optimizer():
         elif layer_type == 'Dropout':
             parameter = random.choice(list(network.get_dropout_layer_options().keys()))
             value = random.choice(network.get_dropout_layer_options()[parameter])
+        elif layer_type == 'Reshape':
+            parameter = random.choice(list(network.get_reshape_layer_options().keys()))
+            value = random.choice(network.get_reshape_layer_options()[parameter])
         else:
             raise NameError('Error: unknown layer_type: %s' % layer_type)
             

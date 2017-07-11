@@ -94,7 +94,7 @@ def train_and_score(network, dataset):
     #    x_test_choice = x_test_conv2d
         
     model = compile_model(network, nb_classes, input_shape_choice, input_shape_conv2d)
-    return 0
+
     model.fit(x_train_choice, y_train,
               batch_size=batch_size,
               epochs=10000,  # using early stopping, so no real limit

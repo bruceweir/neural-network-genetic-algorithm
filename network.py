@@ -95,8 +95,10 @@ class Network():
                                
             else:
                 i+=1
+
+        forbidden_first_layers = ['Dropout', 'Reshape', 'Flatten']
                 
-        while self.get_network_layer_type(0) == 'Dropout' or self.get_network_layer_type(0) == 'Reshape':
+        while self.get_network_layer_type(0) in forbidden_first_layers and self.number_of_layers() > 0:
             del self.network_layers[0]
 
 
@@ -226,3 +228,6 @@ class Network():
     
     def get_network_layer_parameters(self, index):
         return self.network_layers[index]['layer_parameters']
+    
+    def number_of_layers(self):
+        return len(self.network_layers)
