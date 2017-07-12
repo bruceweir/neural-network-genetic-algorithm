@@ -9,6 +9,7 @@ from network import Network
 from optimizer import Optimizer
 from train import compile_model
 
+
 def test_network():
     
     print('network.add_layer_with_random_parameters("layer_type") should add a network layer of the requested layer_type.')
@@ -126,6 +127,14 @@ def test_network():
     network.check_network_structure()
     assert(network.get_network_layer_type(0) != 'Flatten')
     
+    print('\t10. A Flatten layer cannot directly follow a 1d layer')
+    network = Network()
+    network.add_layer_with_random_parameters('Dense')
+    network.network_layers.append({'layer_parameters': {}, 'layer_type': 'Flatten'})
+    network.check_network_structure()
+    assert(network.number_of_layers() == 1)
+    assert(network.get_network_layer_type(0) == 'Dense')
+    
     print('network_is_1d_at_layer(layer_index) should correctly report if a network is 1d at a particular layer')
     network = Network()
     network.add_layer_with_random_parameters('Dense')    
@@ -189,10 +198,17 @@ def test_network():
     
     assert(network.starts_with_2d_layer() is True)
     
-    print('Network.create_random_network(number_of_layers=3) creates a random network with number_of_layers layers')
+    print('Network.create_random_network(number_of_layers=3, auto_check = False) creates a random network with number_of_layers layers if auto_check is False')
+    print('The network created by create_random_network() is not guaranteed to be compilable unless auto_check is True')
     network = Network()
     network.create_random_network()
     assert(len(network.network_layers) == 3)
+    
+    network = Network()
+    network.create_random_network(20, True)
+    print('Compiling auto_checked network...')
+    compile_model(network, 10, (784,), (28, 28,1))
+    print('...done compiling.')
     
     print('The network created by Network.create_random_network() needs to call check_network_structure() before it can be safely compiled')
     for i in range(10):
@@ -203,6 +219,54 @@ def test_network():
         compile_model(network, 10, (784, ), (28, 28, 1))
         print('...done compiling')
         
+def test_optimizer():
+    
+    print('optimizer.mutate(network) returns a network object that has either had a layer added, removed or altered. The returned network should compile')
+    network = Network()
+    network.create_random_network(3, True)
+    optimizer = Optimizer()
+    for i in range(10):
+        print('Testing compilation of mutated network: %d' % i)
+        network = optimizer.mutate(network)
+        compile_model(network, 10, (784, ), (28, 28, 1))
+        print('...done compiling')
+
+    print('optimizer.breed(mother, father) returns an array containing 2 children, randomly bred from the network_layers of the parents. The two children should compile')
+    father = Network()
+    father.create_random_network(3, True)
+    mother = Network()
+    mother.create_random_network(3, True)
+    print('Original father\n%s' % father.network_layers)        
+    print('Original mother\n%s' % mother.network_layers)
+    children = optimizer.breed(mother, father)
+    print('Compiling children of first generation...')
+    compile_model(children[0], 10, (784, ), (28, 28, 1))
+    compile_model(children[1], 10, (784, ), (28, 28, 1))
+    print('...compilation done')
+    print('Testing 10 breeding generations')
+    for i in range(100):
+        print('Test %d' % i)
+        mother.create_random_network(10, True)
+        father.create_random_network(10, True)
+        children = optimizer.breed(mother, father)
+        print('Compiling children of generation %d...' % i)
+        children[0].print_network_as_json()
+        compile_model(children[0], 10, (784, ), (28, 28, 1))
+        children[1].print_network_as_json()       
+        compile_model(children[1], 10, (784, ), (28, 28, 1))
+        print('...compilation done')
+    
+
+def to_do():
+    print('TODO')
+    print('\t1. Get proper number of neurons out of Conv2D layer if padding != same')
+    print('\t2. Handle uneven divisions in layer size calc')
+    
 print('Running tests....')    
+
 test_network()
+test_optimizer()
 print('...tests complete')
+
+to_do()
+    

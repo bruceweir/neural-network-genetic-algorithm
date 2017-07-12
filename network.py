@@ -18,7 +18,7 @@ class Network():
         self.network_layers = []  # (array): represents network parameters
 
 
-    def create_random_network(self, number_of_layers=3):
+    def create_random_network(self, number_of_layers=3, auto_check = False):
         """Create a random network."""
         
         self.network_layers = []
@@ -32,8 +32,10 @@ class Network():
                 
             self.network_layers.append(self.create_random_layer(allow_dropout));
         
-        #self.check_network_structure()
+        if auto_check is True:
+            self.check_network_structure()
             
+           
 
     def add_layer_with_random_parameters(self, layer_type):
         
@@ -92,13 +94,16 @@ class Network():
             elif current_layer_type == 'Reshape' and self.network_is_2d_at_layer(i-1):
                 del self.network_layers[i]
                 i=1
+            elif current_layer_type == 'Flatten' and self.network_is_1d_at_layer(i-1):
+                del self.network_layers[i]
+                i=1
                                
             else:
                 i+=1
 
         forbidden_first_layers = ['Dropout', 'Reshape', 'Flatten']
                 
-        while self.get_network_layer_type(0) in forbidden_first_layers and self.number_of_layers() > 0:
+        while  self.number_of_layers() > 0 and self.get_network_layer_type(0) in forbidden_first_layers:
             del self.network_layers[0]
 
 

@@ -9,6 +9,7 @@ from functools import reduce
 from operator import add
 import random
 from network import Network
+import copy
 
 class Optimizer():
     """Class that implements genetic algorithm for MLP optimization."""
@@ -82,22 +83,30 @@ class Optimizer():
             (list): Two network objects
 
         """
+        
+        
+            
         children = []
         for _ in range(2):
 
-            child = {}
+            child = Network()
 
-            # Loop through the parameters and pick params for the kid.
-            for param in self.nn_param_choices:
-                child[param] = random.choice(
-                    [mother.network[param], father.network[param]]
-                )
-
-            # Now create a network object.
-            network = Network(self.nn_param_choices)
-            network.create_set(child)
-
-            children.append(network)
+            if father.number_of_layers() > mother.number_of_layers():               
+                longest_network = father
+                shortest_network = mother
+            else:
+                longest_network = mother
+                shortest_network = father               
+                
+            for i in range(shortest_network.number_of_layers()):
+                    child.network_layers.append(copy.deepcopy(random.choice([shortest_network.network_layers[i], longest_network.network_layers[i]])))
+            for i in range(longest_network.number_of_layers() - shortest_network.number_of_layers()):
+                    if random.random() > 0.5:
+                        child.network_layers.append(copy.deepcopy(longest_network.network_layers[i + shortest_network.number_of_layers()]))
+            
+            child.check_network_structure()
+            
+            children.append(child)
 
         return children
 

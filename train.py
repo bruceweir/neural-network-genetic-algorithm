@@ -13,6 +13,8 @@ from keras.callbacks import EarlyStopping
 from keras import backend as K
 from IPython.display import SVG
 from keras.utils.vis_utils import model_to_dot
+import sys
+from functools import reduce
 
 K.set_image_dim_ordering('tf')
 
@@ -93,7 +95,11 @@ def train_and_score(network, dataset):
     #    x_train_choice = x_train_conv2d
     #    x_test_choice = x_test_conv2d
         
-    model = compile_model(network, nb_classes, input_shape_choice, input_shape_conv2d)
+    try:
+        model = compile_model(network, nb_classes, input_shape_choice, input_shape_conv2d)
+    except:
+        print('********Compilation error\n%s' % network.network_layers)
+        sys.exit()
 
     model.fit(x_train_choice, y_train,
               batch_size=batch_size,
@@ -125,7 +131,7 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
         model.add(Reshape(input_shape_conv2d, input_shape=input_shape))
             
 
-    previous_dense_layer_units=0    
+    number_of_units_in_previous_layer=reduce(lambda x, y: x*y, input_shape)    
     # Add each layer.
     for i in range(nb_layers):
         
@@ -134,26 +140,44 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
         # Need input shape for first layer.
         if i == 0:
             if layer_type == 'Dense':
-                model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation'], input_shape=input_shape))
-                previous_dense_layer_units = layer_parameters['nb_neurons']
+                model.add(Dense(layer_parameters['nb_neurons'], 
+                                activation=layer_parameters['activation'], 
+                                input_shape=input_shape))
+                
+                
+                
             elif layer_type == 'Conv2D':                
-                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], padding='same'))#, activation=layer_parameters['activation'], input_shape=input_shape))       
-            
+                model.add(Conv2D(layer_parameters['nb_filters'], 
+                                 kernel_size=layer_parameters['kernel_size'], 
+                                 strides=layer_parameters['strides'], 
+                                 padding='same', 
+                                 activation=layer_parameters['activation']))
+                
+                
         else:
             if layer_type == 'Dense':
-                model.add(Dense(layer_parameters['nb_neurons'], activation=layer_parameters['activation']))
-                previous_dense_layer_units = model.layers[-1].units
+                model.add(Dense(layer_parameters['nb_neurons'], 
+                                activation=layer_parameters['activation']))
+                
+                
             elif layer_type == 'Conv2D':
-                model.add(Conv2D(layer_parameters['nb_filters'], kernel_size=layer_parameters['kernel_size'], padding='same'))#, strides=layer_parameters['strides'], activation=layer_parameters['activation']))       
+                model.add(Conv2D(layer_parameters['nb_filters'], 
+                                 kernel_size=layer_parameters['kernel_size'], 
+                                 strides=layer_parameters['strides'], 
+                                 padding='same'))
+                
+                
             elif layer_type == 'Dropout':
                 model.add(Dropout(layer_parameters['remove_probability']))
             elif layer_type == 'Flatten':
                 model.add(Flatten())
-            elif layer_type == 'Reshape':
-                previous_layer_size = previous_dense_layer_units
+            elif layer_type == 'Reshape':       
+                previous_layer_size = model.outputs[0]._keras_shape
+                number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_size if x is not None])
                 layer_reshape_factor = layer_parameters['first_dimension_scale']
-                reshape_dimension_0 = int(round(previous_layer_size/layer_reshape_factor))
+                reshape_dimension_0 = int(round(number_of_units_in_previous_layer/layer_reshape_factor))
                 reshape_dimension_1 = layer_reshape_factor
+                print('Reshape: number_of_units_in_previous_layer: %s, reshape_dimension_0: %d, reshape_dimension_1: %d' % (number_of_units_in_previous_layer, reshape_dimension_0, reshape_dimension_1))
                 model.add(Reshape((reshape_dimension_0, reshape_dimension_1, 1)))
             
         
@@ -172,3 +196,11 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     return model
 
 
+def create_test_model():
+    model = Sequential()
+
+    model.add(Dense(512, input_shape=(784,)))
+    model.add(Reshape((32, 16, 1)))
+    model.add(Conv2D(64, (5,5), strides=(2,2), padding='same'))
+    print(model.get_layer(index=-1).output_shape)
+    
