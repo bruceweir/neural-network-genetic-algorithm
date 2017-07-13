@@ -74,7 +74,7 @@ def generate(generations, population, dataset):
 
     print_networks(networks[:5])
     
-    saveFileName = 'best_trained_model(' + time.strftime("%c").replace(" ", "_") + ")"
+    saveFileName = 'best_trained_model-' + time.strftime("%c").replace(" ", "_").replace(":", "_")
     
     networks[0].save_model(saveFileName + ".h5")
     networks[0].save_model_image(saveFileName + ".png")

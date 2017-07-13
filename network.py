@@ -251,4 +251,4 @@ class Network():
             self.trained_model.save(fileName)
             
     def save_model_image(self, fileName):
-        plot_model(self.trained_model, to_file=fileName)
+        plot_model(self.trained_model, to_file=fileName, show_shapes=True)
