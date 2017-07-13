@@ -7,7 +7,7 @@ Created on Mon Jul 10 15:38:41 2017
 
 from network import Network
 from optimizer import Optimizer
-from train import compile_model
+from train import compile_model, get_closest_valid_reshape_for_given_scale
 
 
 def test_network():
@@ -250,22 +250,20 @@ def test_optimizer():
         father.create_random_network(10, True)
         children = optimizer.breed(mother, father)
         print('Compiling children of generation %d...' % i)
-        children[0].print_network_as_json()
         compile_model(children[0], 10, (784, ), (28, 28, 1))
-        children[1].print_network_as_json()       
         compile_model(children[1], 10, (784, ), (28, 28, 1))
         print('...compilation done')
     
-
+    
 def to_do():
     print('TODO')
-    print('\t1. Get proper number of neurons out of Conv2D layer if padding != same')
-    print('\t2. Handle uneven divisions in layer size calc')
+    print('\t1. Deal with kernel size correction if Conv2D layer padding != same')
     
 print('Running tests....')    
 
 test_network()
 test_optimizer()
+#test_train()
 print('...tests complete')
 
 to_do()

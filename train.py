@@ -15,6 +15,7 @@ from IPython.display import SVG
 from keras.utils.vis_utils import model_to_dot
 import sys
 from functools import reduce
+import math
 
 K.set_image_dim_ordering('tf')
 
@@ -62,13 +63,13 @@ def get_mnist():
     x_train /= 255
     x_test /= 255
 
-    x_train_conv2d = x_train.reshape(60000, 28, 28, 1)
-    x_test_conv2d = x_test.reshape(10000, 28, 28, 1)
+    #x_train_conv2d = x_train.reshape(60000, 28, 28, 1)
+    #x_test_conv2d = x_test.reshape(10000, 28, 28, 1)
     # convert class vectors to binary class matrices
     y_train = to_categorical(y_train, nb_classes)
     y_test = to_categorical(y_test, nb_classes)
 
-    return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test, input_shape_conv2d, x_train_conv2d, x_test_conv2d)
+    return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test, input_shape_conv2d)
 
 
 def train_and_score(network, dataset):
@@ -86,29 +87,21 @@ def train_and_score(network, dataset):
         nb_classes, batch_size, input_shape, x_train, \
             x_test, y_train, y_test, input_shape_conv2d, x_train_conv2d, x_test_conv2d = get_mnist()
 
-    input_shape_choice = input_shape
-    x_train_choice = x_train
-    x_test_choice = x_test
-    
-    #if network.starts_with_2d_layer():
-    #    input_shape_choice = input_shape_conv2d
-    #    x_train_choice = x_train_conv2d
-    #    x_test_choice = x_test_conv2d
-        
+
     try:
-        model = compile_model(network, nb_classes, input_shape_choice, input_shape_conv2d)
+        model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
     except:
         print('********Compilation error\n%s' % network.network_layers)
         sys.exit()
 
-    model.fit(x_train_choice, y_train,
+    model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=10000,  # using early stopping, so no real limit
-              verbose=0,
-              validation_data=(x_test_choice, y_test),
+              verbose=True,
+              validation_data=(x_test, y_test),
               callbacks=[early_stopper])
 
-    score = model.evaluate(x_test_choice, y_test, verbose=0)
+    score = model.evaluate(x_test, y_test, verbose=0)
 
     return score[1]  # 1 is accuracy. 0 is loss.
 def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
@@ -159,7 +152,6 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
                 model.add(Dense(layer_parameters['nb_neurons'], 
                                 activation=layer_parameters['activation']))
                 
-                
             elif layer_type == 'Conv2D':
                 model.add(Conv2D(layer_parameters['nb_filters'], 
                                  kernel_size=layer_parameters['kernel_size'], 
@@ -175,10 +167,8 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
                 previous_layer_size = model.outputs[0]._keras_shape
                 number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_size if x is not None])
                 layer_reshape_factor = layer_parameters['first_dimension_scale']
-                reshape_dimension_0 = int(round(number_of_units_in_previous_layer/layer_reshape_factor))
-                reshape_dimension_1 = layer_reshape_factor
-                print('Reshape: number_of_units_in_previous_layer: %s, reshape_dimension_0: %d, reshape_dimension_1: %d' % (number_of_units_in_previous_layer, reshape_dimension_0, reshape_dimension_1))
-                model.add(Reshape((reshape_dimension_0, reshape_dimension_1, 1)))
+                reshape_dimensions = get_closest_valid_reshape_for_given_scale(number_of_units_in_previous_layer, layer_reshape_factor)               
+                model.add(Reshape((reshape_dimensions[0], reshape_dimensions[1], 1)))
             
         
 
@@ -201,6 +191,17 @@ def create_test_model():
 
     model.add(Dense(512, input_shape=(784,)))
     model.add(Reshape((32, 16, 1)))
-    model.add(Conv2D(64, (5,5), strides=(2,2), padding='same'))
+    model.add(Conv2D(64, (5,5), strides=(2,2)))#, padding='same'))
     print(model.get_layer(index=-1).output_shape)
+    
+    
+def get_closest_valid_reshape_for_given_scale(number_of_neurons, reshape_factor):
+    
+    if reshape_factor > number_of_neurons:
+        return (number_of_neurons, 1)
+    
+    while (number_of_neurons/reshape_factor).is_integer() is False and reshape_factor <= number_of_neurons:
+        reshape_factor = reshape_factor+1
+    
+    return(int(number_of_neurons/reshape_factor), reshape_factor)
     
