@@ -4,6 +4,7 @@ import logging
 import json
 from train import train_and_score
 from keras.models import load_model
+from keras.utils import plot_model
 
 class Network():
     """Represent a network and let us operate on it.
@@ -248,3 +249,6 @@ class Network():
             print('Saving model to %s', fileName)
             logging.info('Saving model to ', fileName)            
             self.trained_model.save(fileName)
+            
+    def save_model_image(self, fileName):
+        plot_model(self.trained_model, to_file=fileName)

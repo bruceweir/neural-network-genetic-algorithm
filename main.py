@@ -2,7 +2,7 @@
 import logging
 from optimizer import Optimizer
 from tqdm import tqdm
-
+import time
 
 # Setup logging.
 logging.basicConfig(
@@ -74,7 +74,12 @@ def generate(generations, population, dataset):
 
     print_networks(networks[:5])
     
-    networks[0].save_model('best_trained_model.h5')
+    saveFileName = 'best_trained_model(' + time.strftime("%c").replace(" ", "_") + ")"
+    
+    networks[0].save_model(saveFileName + ".h5")
+    networks[0].save_model_image(saveFileName + ".png")
+    
+    
 
 def print_networks(networks):
     """Print a list of networks.
@@ -92,7 +97,7 @@ def print_networks(networks):
     
 def main():
     """Evolve a network."""
-    generations = 2  # Number of times to evole the population.
+    generations = 2  # Number of times to evolve the population.
     population = 2  # Number of networks in each generation.
     
     dataset = 'mnist'
