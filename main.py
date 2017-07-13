@@ -59,26 +59,22 @@ def generate(generations, population, dataset):
         logging.info("***Doing generation %d of %d***" %
                      (i + 1, generations))
 
-        # Train and get accuracy for networks.
         train_networks(networks, dataset)
 
-        # Get the average accuracy for this generation.
         average_accuracy = get_average_accuracy(networks)
 
-        # Print out the average accuracy each generation.
         logging.info("Generation average: %.2f%%" % (average_accuracy * 100))
         logging.info('-'*80)
 
         # Evolve, except on the last iteration.
         if i != generations - 1:
-            # Do the evolution.
             networks = optimizer.evolve(networks)
 
-    # Sort our final population.
     networks = sorted(networks, key=lambda x: x.accuracy, reverse=True)
 
-    # Print out the top 5 networks.
     print_networks(networks[:5])
+    
+    networks[0].save_model('best_trained_model.h5')
 
 def print_networks(networks):
     """Print a list of networks.
@@ -89,14 +85,16 @@ def print_networks(networks):
     """
     logging.info('-'*80)
     for network in networks:
-        network.print_network()
-        print(network.network)
+        network.log_network()
+        network.print_network_as_json()
+        
 
     
 def main():
     """Evolve a network."""
-    generations = 10  # Number of times to evole the population.
-    population = 20  # Number of networks in each generation.
+    generations = 2  # Number of times to evole the population.
+    population = 2  # Number of networks in each generation.
+    
     dataset = 'mnist'
  
    
@@ -105,7 +103,7 @@ def main():
 
     generate(generations, population, dataset)
 
-#if __name__ == '__main__':
-    #main()
+if __name__ == '__main__':
+    main()
     
     

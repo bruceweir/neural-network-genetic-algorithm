@@ -244,7 +244,7 @@ def test_optimizer():
     compile_model(children[1], 10, (784, ), (28, 28, 1))
     print('...compilation done')
     print('Testing 10 breeding generations')
-    for i in range(100):
+    for i in range(10):
         print('Test %d' % i)
         mother.create_random_network(10, True)
         father.create_random_network(10, True)
@@ -254,11 +254,20 @@ def test_optimizer():
         compile_model(children[1], 10, (784, ), (28, 28, 1))
         print('...compilation done')
     
+    print ('optimizer.create_population(count, initial_length) creates and returns an array containing count networks or length initial_length (unless the network checker adds layers)')
+    pop = optimizer.create_population(10)
+    assert(len(pop) == 10)
+    
+    print('optimizer.evolve(pop) takes a population of networks and breeds and mutates them')
+    pop = optimizer.create_population(10)
+    optimizer.evolve(pop)
+    
+    #pop = [network1, network2]
     
 def to_do():
     print('TODO')
     print('\t1. Deal with kernel size correction if Conv2D layer padding != same')
-    
+    print('\t2. Add other 2D layers, such as Pooling')    
 print('Running tests....')    
 
 test_network()

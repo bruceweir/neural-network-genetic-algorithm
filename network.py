@@ -3,6 +3,7 @@ import random
 import logging
 import json
 from train import train_and_score
+from keras.models import load_model
 
 class Network():
     """Represent a network and let us operate on it.
@@ -16,7 +17,7 @@ class Network():
         
         self.nn_network_layer_options = self.create_network_layer_options()
         self.network_layers = []  # (array): represents network parameters
-
+        self.trained_model = None
 
     def create_random_network(self, number_of_layers=3, auto_check = False):
         """Create a random network."""
@@ -168,11 +169,11 @@ class Network():
         if self.accuracy == 0.:
             self.accuracy = train_and_score(self, dataset)
 
-    def print_network(self):
+    def log_network(self):
         """Print out a network."""
         logging.info(self.network_layers)
         logging.info("Network accuracy: %.2f%%" % (self.accuracy * 100))
-
+        
 
     def create_network_layer_options(self):
         
@@ -228,6 +229,11 @@ class Network():
         else:
             print(json.dumps(self.network_layers, indent=4))
 
+    def print_network_details(self):
+        self.print_network_as_json()
+        print("Network accuracy: %.2f%%" % (self.accuracy * 100))
+        
+        
     def get_network_layer_type(self, index):
         return self.network_layers[index]['layer_type']
     
@@ -236,3 +242,9 @@ class Network():
     
     def number_of_layers(self):
         return len(self.network_layers)
+    
+    def save_model(self, fileName):
+        if self.trained_model is not None and len(fileName) is not 0:
+            print('Saving model to %s', fileName)
+            logging.info('Saving model to ', fileName)            
+            self.trained_model.save(fileName)

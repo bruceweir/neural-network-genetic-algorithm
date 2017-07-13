@@ -32,7 +32,7 @@ class Optimizer():
         self.retain = retain
         
 
-    def create_population(self, count):
+    def create_population(self, count, initial_length = 1):
         """Create a population of random networks.
 
         Args:
@@ -43,34 +43,39 @@ class Optimizer():
             (list): Population of network objects
 
         """
-        pop = []
+        
+        if count < 2:
+            print('Minimum population count is 2. So using that.')
+            count = 2
+            
+        population = []
         for _ in range(0, count):
             # Create a random network.
             network = Network()
-            network.create_random_network()
+            network.create_random_network(initial_length, True)
 
             # Add the network to our population.
-            pop.append(network)
+            population.append(network)
 
-        return pop
+        return population
 
     @staticmethod
     def fitness(network):
         """Return the accuracy, which is our fitness function."""
         return network.accuracy
 
-    def grade(self, pop):
+    def grade(self, population):
         """Find average fitness for a population.
 
         Args:
-            pop (list): The population of networks
+            population (list): The population of networks
 
         Returns:
             (float): The average accuracy of the population
 
         """
-        summed = reduce(add, (self.fitness(network) for network in pop))
-        return summed / float((len(pop)))
+        summed = reduce(add, (self.fitness(network) for network in population))
+        return summed / float((len(population)))
 
     def breed(self, mother, father):
         """Make two children as parts of their parents.
@@ -171,46 +176,59 @@ class Optimizer():
             
         return parameter, value
     
-    def evolve(self, pop):
+    def evolve(self, population):
         """Evolve a population of networks.
 
         Args:
-            pop (list): A list of network parameters
+            population (list): A list of network parameters
 
         Returns:
             (list): The evolved population of networks
 
         """
         # Get scores for each network.
-        graded = [(self.fitness(network), network) for network in pop]
+        graded = [(self.fitness(network), network) for network in population]
 
         # Sort on the scores.
         graded = [x[1] for x in sorted(graded, key=lambda x: x[0], reverse=True)]
 
-        # Get the number we want to keep for the next gen.
-        retain_length = int(len(graded)*self.retain)
+        # Get the number we want to keep for the next gen (with a minimum of 2).
+        retain_length = max([int(len(graded)*self.retain), 2])
 
-        # The parents are every network we want to keep.
+        # The parents are every network we want to keep.       
         parents = graded[:retain_length]
 
-        # For those we aren't keeping, randomly keep some anyway.
+        networks_to_delete = []
+        
+        # For those we aren't keeping, randomly keep some anyway, otherwise 
+        # add them to the networks_to_delete array.
         for individual in graded[retain_length:]:
             if self.random_select > random.random():
                 parents.append(individual)
+            else:
+                networks_to_delete.append(individual)
+
+        # this clean up is probably necessary since the networks now keep
+        # a copy of their trained network, which might be very large
+        while len(networks_to_delete):
+            del networks_to_delete[0]
+        
 
         # Randomly mutate some of the networks we're keeping.
         for individual in parents:
             if self.mutate_chance > random.random():
                 individual = self.mutate(individual)
-
+            
+        print('mutations complete')
         # Now find out how many spots we have left to fill.
         parents_length = len(parents)
-        desired_length = len(pop) - parents_length
+        desired_length = len(population) - parents_length
         children = []
 
         # Add children, which are bred from two remaining networks.
         while len(children) < desired_length:
 
+            print('breeding children')
             # Get a random mom and dad.
             male = random.randint(0, parents_length-1)
             female = random.randint(0, parents_length-1)

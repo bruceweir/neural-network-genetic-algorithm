@@ -85,15 +85,11 @@ def train_and_score(network, dataset):
             x_test, y_train, y_test = get_cifar10()
     elif dataset == 'mnist':
         nb_classes, batch_size, input_shape, x_train, \
-            x_test, y_train, y_test, input_shape_conv2d, x_train_conv2d, x_test_conv2d = get_mnist()
+            x_test, y_train, y_test, input_shape_conv2d = get_mnist()
 
 
-    try:
-        model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
-    except:
-        print('********Compilation error\n%s' % network.network_layers)
-        sys.exit()
-
+    model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
+    
     model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=10000,  # using early stopping, so no real limit
@@ -103,7 +99,10 @@ def train_and_score(network, dataset):
 
     score = model.evaluate(x_test, y_test, verbose=0)
 
+    network.trained_model = model
+    
     return score[1]  # 1 is accuracy. 0 is loss.
+
 def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     """Compile a sequential model.
 
