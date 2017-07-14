@@ -38,15 +38,17 @@ def get_accuracy_stats(networks):
     total_accuracy = 0
     highest_accuracy = 0
     lowest_accuracy = 1
+    highest_scoring_network = None
     
     for network in networks:
         total_accuracy += network.accuracy
         if network.accuracy > highest_accuracy:
             highest_accuracy = network.accuracy
+            highest_scoring_network = network
         if network.accuracy < lowest_accuracy:
             lowest_accuracy = network.accuracy
 
-    return total_accuracy / len(networks), highest_accuracy, lowest_accuracy
+    return total_accuracy / len(networks), highest_accuracy, lowest_accuracy, highest_scoring_network
 
 def generate(generations, population, dataset):
     """Generate a network with the genetic algorithm.
@@ -68,8 +70,10 @@ def generate(generations, population, dataset):
 
         train_networks(networks, dataset)
 
-        average_accuracy, highest_accuracy, lowest_accuracy = get_accuracy_stats(networks)
+        average_accuracy, highest_accuracy, lowest_accuracy, highest_scoring_network = get_accuracy_stats(networks)       
 
+        highest_scoring_network.save_network_details(dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy))
+        
         logging.info("Generation average: %.2f%%" % (average_accuracy * 100))
         logging.info("Generation best: %.2f%%" % (highest_accuracy * 100))
         logging.info("Generation worst: %.2f%%" % (lowest_accuracy * 100))
@@ -83,12 +87,7 @@ def generate(generations, population, dataset):
 
     print_networks(networks[:5])
     
-    saveFileName = dataset + '-model-' + time.strftime("%c").replace(" ", "_").replace(":", "_")
-    saveFileName = saveFileName + '_acc%.4f' % networks[0].accuracy
-    
-    networks[0].save_model_image(saveFileName + ".png")
-    networks[0].save_model(saveFileName + ".h5")
-    
+    save_networks(dataset, networks[:5])
     
 
 def print_networks(networks):
@@ -103,7 +102,22 @@ def print_networks(networks):
         network.log_network()
         network.print_network_as_json()
         
+def save_networks(dataset, networks):
+    
+    """Save the trained models and a image of the networks.
 
+    Args:
+        dataset (string): The name of the dataset, which will preprended to the file name
+        networks (list): The population of networks
+        
+
+    """
+    for i in range(len(networks)):
+        saveFileName = dataset + '-model_%d-' + time.strftime("%c").replace(" ", "_").replace(":", "_") % i
+        saveFileName = saveFileName + '_acc%.4f' % networks[0].accuracy
+    
+        networks[i].save_network_details(saveFileName)
+    
     
 def main():
     """Evolve a network."""

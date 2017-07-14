@@ -244,6 +244,12 @@ class Network():
     def number_of_layers(self):
         return len(self.network_layers)
     
+    def save_network_details(self, file_name_prepend):
+        
+        self.save_model(file_name_prepend + ".h5")
+        self.save_model_image(file_name_prepend + ".png")
+
+        
     def save_model(self, fileName):
         if self.trained_model is not None and len(fileName) is not 0:
             print('Saving model to %s' % fileName)
