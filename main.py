@@ -113,7 +113,7 @@ def save_networks(dataset, networks):
 
     """
     for i in range(len(networks)):
-        saveFileName = dataset + '-model_%d-' + time.strftime("%c").replace(" ", "_").replace(":", "_") % i
+        saveFileName = dataset + '-model_%d-' % i + time.strftime("%c").replace(" ", "_").replace(":", "_")
         saveFileName = saveFileName + '_acc%.4f' % networks[0].accuracy
     
         networks[i].save_network_details(saveFileName)
@@ -124,7 +124,7 @@ def main():
     generations = 2  # Number of times to evolve the population.
     population = 2  # Number of networks in each generation.
     
-    dataset = 'cifar10' #'cifar10' or 'mnist'
+    dataset = 'mnist' #'cifar10' or 'mnist'
  
    
     logging.info("***Evolving %d generations with population %d***" %
