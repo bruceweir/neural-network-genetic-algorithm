@@ -246,8 +246,8 @@ class Network():
     
     def save_model(self, fileName):
         if self.trained_model is not None and len(fileName) is not 0:
-            print('Saving model to %s', fileName)
-            logging.info('Saving model to ', fileName)            
+            print('Saving model to %s' % fileName)
+            logging.info('Saving model to %s' % fileName)            
             self.trained_model.save(fileName)
             
     def save_model_image(self, fileName):
