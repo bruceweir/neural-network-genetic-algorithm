@@ -25,7 +25,7 @@ def train_networks(networks, dataset):
         pbar.update(1)
     pbar.close()
 
-def get_average_accuracy(networks):
+def get_accuracy_stats(networks):
     """Get the average accuracy for a group of networks.
 
     Args:
@@ -36,10 +36,17 @@ def get_average_accuracy(networks):
 
     """
     total_accuracy = 0
+    highest_accuracy = 0
+    lowest_accuracy = 1
+    
     for network in networks:
         total_accuracy += network.accuracy
+        if network.accuracy > highest_accuracy:
+            highest_accuracy = network.accuracy
+        if network.accuracy < lowest_accuracy:
+            lowest_accuracy = network.accuracy
 
-    return total_accuracy / len(networks)
+    return total_accuracy / len(networks), highest_accuracy, lowest_accuracy
 
 def generate(generations, population, dataset):
     """Generate a network with the genetic algorithm.
@@ -61,9 +68,11 @@ def generate(generations, population, dataset):
 
         train_networks(networks, dataset)
 
-        average_accuracy = get_average_accuracy(networks)
+        average_accuracy, highest_accuracy, lowest_accuracy = get_accuracy_stats(networks)
 
         logging.info("Generation average: %.2f%%" % (average_accuracy * 100))
+        logging.info("Generation best: %.2f%%" % (highest_accuracy * 100))
+        logging.info("Generation worst: %.2f%%" % (lowest_accuracy * 100))
         logging.info('-'*80)
 
         # Evolve, except on the last iteration.
@@ -74,7 +83,7 @@ def generate(generations, population, dataset):
 
     print_networks(networks[:5])
     
-    saveFileName = 'best_trained_model-' + time.strftime("%c").replace(" ", "_").replace(":", "_")
+    saveFileName = dataset + '-model-' + time.strftime("%c").replace(" ", "_").replace(":", "_")
     saveFileName = saveFileName + '_acc%.4f' % networks[0].accuracy
     
     networks[0].save_model_image(saveFileName + ".png")
@@ -101,7 +110,7 @@ def main():
     generations = 2  # Number of times to evolve the population.
     population = 2  # Number of networks in each generation.
     
-    dataset = 'mnist'
+    dataset = 'cifar10' #'cifar10' or 'mnist'
  
    
     logging.info("***Evolving %d generations with population %d***" %

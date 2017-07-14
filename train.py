@@ -29,7 +29,7 @@ def get_cifar10():
     nb_classes = 10
     batch_size = 64
     input_shape = (3072,)
-
+    input_shape_conv2d = (32, 32, 3)
     # Get the data.
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_train = x_train.reshape(50000, 3072)
@@ -43,7 +43,7 @@ def get_cifar10():
     y_train = to_categorical(y_train, nb_classes)
     y_test = to_categorical(y_test, nb_classes)
 
-    return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test)
+    return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test, input_shape_conv2d)
 
 def get_mnist():
     """Retrieve the MNIST dataset and process the data."""
@@ -82,7 +82,7 @@ def train_and_score(network, dataset):
     """
     if dataset == 'cifar10':
         nb_classes, batch_size, input_shape, x_train, \
-            x_test, y_train, y_test = get_cifar10()
+            x_test, y_train, y_test, input_shape_conv2d = get_cifar10()
     elif dataset == 'mnist':
         nb_classes, batch_size, input_shape, x_train, \
             x_test, y_train, y_test, input_shape_conv2d = get_mnist()
@@ -116,6 +116,7 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     
     # Get our network parameters.
     nb_layers = len(network.network_layers)
+    n_channels = input_shape_conv2d[2]
 
     model = Sequential()
 
@@ -155,7 +156,8 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
                 model.add(Conv2D(layer_parameters['nb_filters'], 
                                  kernel_size=layer_parameters['kernel_size'], 
                                  strides=layer_parameters['strides'], 
-                                 padding='same'))
+                                 padding='same',
+                                 activation=layer_parameters['activation']))
                 
                 
             elif layer_type == 'Dropout':
@@ -167,7 +169,7 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
                 number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_size if x is not None])
                 layer_reshape_factor = layer_parameters['first_dimension_scale']
                 reshape_dimensions = get_closest_valid_reshape_for_given_scale(number_of_units_in_previous_layer, layer_reshape_factor)               
-                model.add(Reshape((reshape_dimensions[0], reshape_dimensions[1], 1)))
+                model.add(Reshape((reshape_dimensions[0], reshape_dimensions[1], 1)))#n_channels)))
             
         
 
