@@ -121,8 +121,8 @@ def save_networks(dataset, networks):
     
 def main():
     """Evolve a network."""
-    generations = 2  # Number of times to evolve the population.
-    population = 2  # Number of networks in each generation.
+    generations = 20  # Number of times to evolve the population.
+    population = 10  # Number of networks in each generation.
     
     dataset = 'mnist' #'cifar10' or 'mnist'
  

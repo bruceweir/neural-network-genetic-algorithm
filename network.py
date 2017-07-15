@@ -52,7 +52,7 @@ class Network():
         if allow_dropout == True:
             layer_type = random.choice(self.nn_network_layer_options['LayerTypes'])
         else:
-            layer_type = random.choice(self.nn_network_layer_options['LayerTypes'][:2])
+            layer_type = random.choice(self.nn_network_layer_options['LayerTypes'][:-1])
     
         return self.create_layer(layer_type)
         
@@ -90,12 +90,12 @@ class Network():
             elif current_layer_type == 'Dropout' and previous_layer_type == 'Dropout':
                 del self.network_layers[i]
                 i=1
-            elif current_layer_type == 'Conv2D' and self.network_is_not_2d_at_layer(i-1):
+            elif (current_layer_type == 'Conv2D' or current_layer_type == 'MaxPooling2D') and self.network_is_not_2d_at_layer(i-1):
                 self.insert_layer_with_random_parameters('Reshape', i)
                 i=1
             elif current_layer_type == 'Reshape' and self.network_is_2d_at_layer(i-1):
                 del self.network_layers[i]
-                i=1
+                i=1            
             elif current_layer_type == 'Flatten' and self.network_is_1d_at_layer(i-1):
                 del self.network_layers[i]
                 i=1
@@ -184,7 +184,8 @@ class Network():
                 'Dense': self.get_dense_layer_options(),
                 'Conv2D': self.get_conv2d_layer_options(),
                 'Dropout': self.get_dropout_layer_options(),  
-                'Reshape': self.get_reshape_layer_options()
+                'Reshape': self.get_reshape_layer_options(),
+                'MaxPooling2D': self.get_maxpooling2d_layer_options()
         }
         
         return nn_network_layer_options
@@ -217,10 +218,16 @@ class Network():
                 'remove_probability':[.5, .3, .2]
         }
     
+    def get_maxpooling2d_layer_options(self):
+        
+        return {
+                'pool_size': [(2, 2), (4, 4), (6, 6)]
+        }
+    
     
     def get_layer_types_for_random_selection(self):
         
-        return ['Dense', 'Conv2D', 'Dropout']
+        return ['Dense', 'Conv2D', 'MaxPooling2D', 'Dropout'] #make sure Dropout is the final entry
     
     def print_network_as_json(self, just_the_layers=False):
         

@@ -7,7 +7,7 @@ Based on:
 """
 from keras.datasets import mnist, cifar10
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape
+from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 from keras import backend as K
@@ -89,7 +89,7 @@ def train_and_score(network, dataset):
 
 
     model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
-    
+
     model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=10000,  # using early stopping, so no real limit
@@ -122,6 +122,7 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
 
     if network.starts_with_2d_layer() and len(input_shape) == 1:
         model.add(Reshape(input_shape_conv2d, input_shape=input_shape))
+        previous_layer_size = model.outputs[0]._keras_shape
             
 
     number_of_units_in_previous_layer=reduce(lambda x, y: x*y, input_shape)    
@@ -130,22 +131,12 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
         
         layer_type = network.get_network_layer_type(i);
         layer_parameters = network.get_network_layer_parameters(i)
+                
         # Need input shape for first layer.
-        if i == 0:
-            if layer_type == 'Dense':
-                model.add(Dense(layer_parameters['nb_neurons'], 
+        if i == 0 and layer_type == 'Dense':
+            model.add(Dense(layer_parameters['nb_neurons'], 
                                 activation=layer_parameters['activation'], 
                                 input_shape=input_shape))
-                
-                
-                
-            elif layer_type == 'Conv2D':                
-                model.add(Conv2D(layer_parameters['nb_filters'], 
-                                 kernel_size=layer_parameters['kernel_size'], 
-                                 strides=layer_parameters['strides'], 
-                                 padding='same', 
-                                 activation=layer_parameters['activation']))
-                
                 
         else:
             if layer_type == 'Dense':
@@ -158,19 +149,25 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
                                  strides=layer_parameters['strides'], 
                                  padding='same',
                                  activation=layer_parameters['activation']))
-                
-                
+            elif layer_type == 'MaxPooling2D':
+                pool_size = []
+                pool_size.append(min([layer_parameters['pool_size'][0], previous_layer_size[1]]))
+                pool_size.append(min([layer_parameters['pool_size'][1], previous_layer_size[2]]))
+                model.add(MaxPooling2D(pool_size=pool_size))
+
             elif layer_type == 'Dropout':
                 model.add(Dropout(layer_parameters['remove_probability']))
+
             elif layer_type == 'Flatten':
                 model.add(Flatten())
-            elif layer_type == 'Reshape':       
-                previous_layer_size = model.outputs[0]._keras_shape
+
+            elif layer_type == 'Reshape':                      
                 number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_size if x is not None])
                 layer_reshape_factor = layer_parameters['first_dimension_scale']
                 reshape_dimensions = get_closest_valid_reshape_for_given_scale(number_of_units_in_previous_layer, layer_reshape_factor)               
                 model.add(Reshape((reshape_dimensions[0], reshape_dimensions[1], 1)))#n_channels)))
             
+        previous_layer_size = model.outputs[0]._keras_shape
         
 
     # Output layer.

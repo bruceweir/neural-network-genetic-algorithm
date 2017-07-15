@@ -54,6 +54,15 @@ def test_network():
     assert(network.get_network_layer_type(1) == 'Reshape')
     assert(network.get_network_layer_type(2) == 'Conv2D')
     
+    network = Network()
+    network.add_layer_with_random_parameters('Dense')
+    network.add_layer_with_random_parameters('MaxPooling2D');
+    network.check_network_structure()
+    
+    assert(network.get_network_layer_type(0) == 'Dense')
+    assert(network.get_network_layer_type(1) == 'Reshape')
+    assert(network.get_network_layer_type(2) == 'MaxPooling2D')
+    
     print("\t4. A Reshape cannot be called between 2 2D layers")
     network = Network()
     network.add_layer_with_random_parameters('Conv2D')
@@ -267,7 +276,7 @@ def test_optimizer():
 def to_do():
     print('TODO')
     print('\t1. Deal with kernel size correction if Conv2D layer padding != same')
-    print('\t2. Add other 2D layers, such as Pooling')    
+    print('\t2. Improve check for 2D layers when making sure that the network structure is sensible')    
 print('Running tests....')    
 
 test_network()
