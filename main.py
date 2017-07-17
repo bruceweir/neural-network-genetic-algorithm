@@ -58,16 +58,18 @@ def get_accuracy_stats(networks):
 
     return total_accuracy / len(networks), highest_accuracy, lowest_accuracy, highest_scoring_network
 
-def generate(generations, population, dataset):
+def generate(generations, population, dataset, forbidden_layer_types):
     """Generate a network with the genetic algorithm.
 
     Args:
         generations (int): Number of times to evole the population
         population (int): Number of networks in each generation
         dataset (str): Dataset to use for training/evaluating
+        forbidden_layer_types:  An array of layer types that should NOT be used, options
+                            currently are: 'Dense', 'Conv2D', 'MaxPooling2D'
 
     """
-    optimizer = Optimizer()
+    optimizer = Optimizer(forbidden_layer_types)
     networks = optimizer.create_population(population)
     
     
@@ -126,24 +128,28 @@ def save_networks(dataset, networks):
         save_file_name = save_file_name + '_acc%.4f' % networks[0].accuracy
         save_file_name = os.path.join(save_directory, save_file_name)       
         networks[i].save_network_details(save_file_name)
-    
+  
 
-def main():
-    """Evolve a network."""
-    generations = 2  # Number of times to evolve the population.
-    population = 2  # Number of networks in each generation.
+
+def run_experiment(dataset='mnist', generations=40, population=10, forbidden_layer_types=[]):
+    """Evolve a network.
     
-    dataset = 'mnist' #'cifar10' or 'mnist'
- 
+    dataset: The name of the data set to run on, currently either 'mnist' or 'cifar10'
+    generations: The number of breeding generations to run over
+    population: The breeding population at each step
+    forbidden_layer_types:  An array of layer types that should NOT be used, options
+                            currently are: 'Dense', 'Conv2D', 'MaxPooling2D'
+    """
+    
     
     logging.info("***Evolving %d generations with population %d***" %
                  (generations, population))
 
     print('Saving results and log file to: ' + save_directory)    
     
-    generate(generations, population, dataset)
+    generate(generations, population, dataset, forbidden_layer_types)
 
 if __name__ == '__main__':
-    main()
+    print('Run the command: "run_experiment()" to start the algorithm training')
     
     

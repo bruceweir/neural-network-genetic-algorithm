@@ -15,7 +15,7 @@ class Optimizer():
     """Class that implements genetic algorithm for MLP optimization."""
 
     def __init__(self, retain=0.4,
-                 random_select=0.1, mutate_chance=0.2):
+                 random_select=0.1, mutate_chance=0.2, forbidden_layer_types=[]):
         """Create an optimizer.
 
         Args:
@@ -30,6 +30,7 @@ class Optimizer():
         self.mutate_chance = mutate_chance
         self.random_select = random_select
         self.retain = retain
+        self.forbidden_layer_types = forbidden_layer_types
         
 
     def create_population(self, count, initial_length = 1):
@@ -51,7 +52,7 @@ class Optimizer():
         population = []
         for _ in range(0, count):
             # Create a random network.
-            network = Network()
+            network = Network(self.forbidden_layer_types)
             network.create_random_network(initial_length, True)
 
             # Add the network to our population.

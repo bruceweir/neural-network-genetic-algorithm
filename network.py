@@ -13,7 +13,7 @@ class Network():
     """Represent a network and let us operate on it.
     """
 
-    def __init__(self):
+    def __init__(self, forbidden_layer_types=[]):
         """Initialize our network.
 
         """
@@ -22,6 +22,7 @@ class Network():
         self.nn_network_layer_options = self.create_network_layer_options()
         self.network_layers = []  # (array): represents network parameters
         self.trained_model = None
+        self.forbidden_layer_types = forbidden_layer_types
 
     def create_random_network(self, number_of_layers=3, auto_check = False):
         """Create a random network."""
@@ -52,10 +53,12 @@ class Network():
             
     def create_random_layer(self, allow_dropout=False):
         
-        if allow_dropout == True:
-            layer_type = random.choice(self.nn_network_layer_options['LayerTypes'])
-        else:
-            layer_type = random.choice([choice for choice in self.nn_network_layer_options['LayerTypes'] if choice != 'Dropout'])
+        layers_not_to_select = self.forbidden_layer_types
+        
+        if allow_dropout == False:
+            layers_not_to_select.append('Dropout')
+
+        layer_type = random.choice([choice for choice in self.nn_network_layer_options['LayerTypes'] if choice not in layers_not_to_select])
     
         return self.create_layer(layer_type)
         
@@ -93,7 +96,7 @@ class Network():
             elif current_layer_type == 'Dropout' and previous_layer_type == 'Dropout':
                 del self.network_layers[i]
                 i=1
-            elif (current_layer_type == 'Conv2D' or current_layer_type == 'MaxPooling2D') and self.network_is_not_2d_at_layer(i-1):
+            elif self.network_is_2d_at_layer(i) and current_layer_type != 'Reshape' and self.network_is_not_2d_at_layer(i-1):# (current_layer_type == 'Conv2D' or current_layer_type == 'MaxPooling2D') and self.network_is_not_2d_at_layer(i-1):
                 self.insert_layer_with_random_parameters('Reshape', i)
                 i=1
             elif current_layer_type == 'Reshape' and self.network_is_2d_at_layer(i-1):
@@ -187,10 +190,8 @@ class Network():
         logging.info(self.network_layers)
         logging.info("Network accuracy: %.2f%%" % (self.accuracy * 100))
         
-
     def create_network_layer_options(self):
-        
-        
+               
         nn_network_layer_options = {
                 'LayerTypes': self.get_layer_types_for_random_selection(),
                 'Dense': self.get_dense_layer_options(),

@@ -227,7 +227,15 @@ def test_network():
         print('Compiling checked, random model %d...' % i)
         compile_model(network, 10, (784, ), (28, 28, 1))
         print('...done compiling')
-        
+    
+    print('Any network created with a forbidden_layer_types argument should not contain any layers of the types listed in the forbidden_layer_types array')
+    for i in range(10):
+        network = Network(['Conv2D'])
+        network.create_random_network(10, True)
+        for l in range(network.number_of_layers()):
+            assert(network.get_network_layer_type(l) is not 'Conv2D')
+    
+    
 def test_optimizer():
     
     print('optimizer.mutate(network) returns a network object that has either had a layer added, removed or altered. The returned network should compile')
@@ -253,7 +261,7 @@ def test_optimizer():
     compile_model(children[1], 10, (784, ), (28, 28, 1))
     print('...compilation done')
     print('Testing 10 breeding generations')
-    for i in range(100):
+    for i in range(10):
         print('Test %d' % i)
         mother.create_random_network(10, True)
         father.create_random_network(10, True)

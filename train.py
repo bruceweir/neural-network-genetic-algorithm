@@ -116,8 +116,7 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     
     # Get our network parameters.
     nb_layers = len(network.network_layers)
-    n_channels = input_shape_conv2d[2]
-
+    
     model = Sequential()
 
     if network.starts_with_2d_layer() and len(input_shape) == 1:
