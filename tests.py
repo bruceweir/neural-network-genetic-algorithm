@@ -253,7 +253,7 @@ def test_optimizer():
     compile_model(children[1], 10, (784, ), (28, 28, 1))
     print('...compilation done')
     print('Testing 10 breeding generations')
-    for i in range(10):
+    for i in range(100):
         print('Test %d' % i)
         mother.create_random_network(10, True)
         father.create_random_network(10, True)
@@ -275,8 +275,9 @@ def test_optimizer():
     
 def to_do():
     print('TODO')
-    print('\t1. Deal with kernel size correction if Conv2D layer padding != same')
+    print('\t1. Deal with kernel size correction if Conv2D layer padding != same - use kernel size check')
     print('\t2. Improve check for 2D layers when making sure that the network structure is sensible')    
+    print('\t3. Replace network_layer content with actual keras layer class instances')
 print('Running tests....')    
 
 test_network()

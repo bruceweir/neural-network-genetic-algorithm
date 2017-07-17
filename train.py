@@ -144,15 +144,15 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
                                 activation=layer_parameters['activation']))
                 
             elif layer_type == 'Conv2D':
+                kernel_size = get_checked_2d_kernel_size_for_layer(previous_layer_size, layer_parameters['kernel_size'])
+                
                 model.add(Conv2D(layer_parameters['nb_filters'], 
-                                 kernel_size=layer_parameters['kernel_size'], 
+                                 kernel_size=kernel_size, 
                                  strides=layer_parameters['strides'], 
-                                 padding='same',
+               #                  padding='same',
                                  activation=layer_parameters['activation']))
             elif layer_type == 'MaxPooling2D':
-                pool_size = []
-                pool_size.append(min([layer_parameters['pool_size'][0], previous_layer_size[1]]))
-                pool_size.append(min([layer_parameters['pool_size'][1], previous_layer_size[2]]))
+                pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_size, layer_parameters['pool_size'])
                 model.add(MaxPooling2D(pool_size=pool_size))
 
             elif layer_type == 'Dropout':
@@ -202,4 +202,10 @@ def get_closest_valid_reshape_for_given_scale(number_of_neurons, reshape_factor)
         reshape_factor = reshape_factor+1
     
     return(int(number_of_neurons/reshape_factor), reshape_factor)
+
+def get_checked_2d_kernel_size_for_layer(previous_layer_size, requested_kernel_size):
     
+    kernel_size = []
+    kernel_size.append(min([requested_kernel_size[0], previous_layer_size[1]]))
+    kernel_size.append(min([requested_kernel_size[1], previous_layer_size[2]]))
+    return kernel_size

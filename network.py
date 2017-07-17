@@ -5,6 +5,8 @@ import json
 from train import train_and_score
 from keras.models import load_model
 from keras.utils import plot_model
+from IPython.display import SVG
+from keras.utils.vis_utils import model_to_dot
 
 class Network():
     """Represent a network and let us operate on it.
@@ -116,6 +118,9 @@ class Network():
     
     def network_is_1d_at_layer(self, layer_index):
                
+        if layer_index >= self.number_of_layers():
+            return False
+        
         index = layer_index
         
         while index > -1:
@@ -132,6 +137,9 @@ class Network():
 
     
     def starts_with_2d_layer(self):
+        if self.number_of_layers() == 0:
+            return False
+        
         return self.network_is_2d_at_layer(0)
     
     
@@ -140,6 +148,9 @@ class Network():
     
     
     def network_is_2d_at_layer(self, layer_index):
+        
+        if layer_index >= self.number_of_layers():
+            return False
         layer = self.network_layers[layer_index]
         layer_type = layer['layer_type']
         
@@ -243,9 +254,17 @@ class Network():
         
         
     def get_network_layer_type(self, index):
+        
+        if index >= self.number_of_layers():
+            return None
+        
         return self.network_layers[index]['layer_type']
     
     def get_network_layer_parameters(self, index):
+        
+        if index >= self.number_of_layers():
+            return None
+        
         return self.network_layers[index]['layer_parameters']
     
     def number_of_layers(self):
@@ -266,3 +285,8 @@ class Network():
     def save_model_image(self, fileName):
         if self.trained_model is not None and len(fileName) is not 0:
             plot_model(self.trained_model, to_file=fileName, show_shapes=True)
+    
+    def draw_model_on_interactive_session(self, model):
+        
+        SVG(model_to_dot(model).create(prog='dot', format='svg'))
+        
