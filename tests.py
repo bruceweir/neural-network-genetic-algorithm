@@ -278,7 +278,7 @@ def to_do():
     
     print('\t1. Improve check for 2D layers when making sure that the network structure is sensible')    
     print('\t2. Move to Functional keras API')
-    print('\t3. Make results saving be to a new folder each time')
+    
 print('Running tests....')    
 
 test_network()

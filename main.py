@@ -80,7 +80,7 @@ def generate(generations, population, dataset):
 
         average_accuracy, highest_accuracy, lowest_accuracy, highest_scoring_network = get_accuracy_stats(networks)       
 
-        highest_scoring_network.save_network_details(dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy))
+        highest_scoring_network.save_network_details(os.path.join(save_directory, dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy)))
         
         logging.info("Generation average: %.2f%%" % (average_accuracy * 100))
         logging.info("Generation best: %.2f%%" % (highest_accuracy * 100))
