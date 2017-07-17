@@ -95,7 +95,7 @@ class Optimizer():
         children = []
         for _ in range(2):
 
-            child = Network()
+            child = Network(self.forbidden_layer_types)
 
             if father.number_of_layers() > mother.number_of_layers():               
                 longest_network = father
