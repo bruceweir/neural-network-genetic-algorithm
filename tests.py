@@ -275,7 +275,7 @@ def test_optimizer():
     
 def to_do():
     print('TODO')
-    print('\t1. Deal with kernel size correction if Conv2D layer padding != same - use kernel size check')
+    
     print('\t2. Improve check for 2D layers when making sure that the network structure is sensible')    
     print('\t3. Replace network_layer content with actual keras layer class instances')
 print('Running tests....')    

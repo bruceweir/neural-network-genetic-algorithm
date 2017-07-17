@@ -4,7 +4,8 @@ import logging
 import json
 from train import train_and_score
 from keras.models import load_model
-from keras.utils import plot_model
+#from keras.utils import plot_mode
+from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D
 from IPython.display import SVG
 from keras.utils.vis_utils import model_to_dot
 
@@ -54,7 +55,7 @@ class Network():
         if allow_dropout == True:
             layer_type = random.choice(self.nn_network_layer_options['LayerTypes'])
         else:
-            layer_type = random.choice(self.nn_network_layer_options['LayerTypes'][:-1])
+            layer_type = random.choice([choice for choice in self.nn_network_layer_options['LayerTypes'] if choice != 'Dropout'])
     
         return self.create_layer(layer_type)
         
@@ -238,7 +239,7 @@ class Network():
     
     def get_layer_types_for_random_selection(self):
         
-        return ['Dense', 'Conv2D', 'MaxPooling2D', 'Dropout'] #make sure Dropout is the final entry
+        return ['Dense', 'Conv2D', 'MaxPooling2D', 'Dropout']
     
     def print_network_as_json(self, just_the_layers=False):
         
