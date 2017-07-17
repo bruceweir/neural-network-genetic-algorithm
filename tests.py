@@ -276,8 +276,9 @@ def test_optimizer():
 def to_do():
     print('TODO')
     
-    print('\t2. Improve check for 2D layers when making sure that the network structure is sensible')    
-    print('\t3. Replace network_layer content with actual keras layer class instances')
+    print('\t1. Improve check for 2D layers when making sure that the network structure is sensible')    
+    print('\t2. Move to Functional keras API')
+    print('\t3. Make results saving be to a new folder each time')
 print('Running tests....')    
 
 test_network()

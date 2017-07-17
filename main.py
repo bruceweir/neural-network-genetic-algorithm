@@ -3,14 +3,22 @@ import logging
 from optimizer import Optimizer
 from tqdm import tqdm
 import time
+import os
 
+save_directory = os.path.dirname(os.path.realpath(__file__))
+save_directory = os.path.join(save_directory, 'results')
+save_directory = os.path.join(save_directory, time.strftime("%c").replace(" ", "_").replace(":", "_"))
+os.makedirs(save_directory)
+   
 # Setup logging.
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%m/%d/%Y %I:%M:%S %p',
-    level=logging.DEBUG,
-    filename='log.txt'
+    level=logging.DEBUG,  
+    filename= os.path.join(save_directory, 'log.txt')
+    
 )
+
 
 def train_networks(networks, dataset):
     """Train each network.
@@ -86,9 +94,10 @@ def generate(generations, population, dataset):
     networks = sorted(networks, key=lambda x: x.accuracy, reverse=True)
 
     print_networks(networks[:5])
-    
+
     save_networks(dataset, networks[:5])
     
+    #logging.shutdown()
 
 def print_networks(networks):
     """Print a list of networks.
@@ -113,23 +122,25 @@ def save_networks(dataset, networks):
 
     """
     for i in range(len(networks)):
-        saveFileName = dataset + '-model_%d-' % i + time.strftime("%c").replace(" ", "_").replace(":", "_")
-        saveFileName = saveFileName + '_acc%.4f' % networks[0].accuracy
+        save_file_name = dataset + '-model_%d-' % i
+        save_file_name = save_file_name + '_acc%.4f' % networks[0].accuracy
+        save_file_name = os.path.join(save_directory, save_file_name)       
+        networks[i].save_network_details(save_file_name)
     
-        networks[i].save_network_details(saveFileName)
-    
-    
+
 def main():
     """Evolve a network."""
-    generations = 20  # Number of times to evolve the population.
-    population = 10  # Number of networks in each generation.
+    generations = 2  # Number of times to evolve the population.
+    population = 2  # Number of networks in each generation.
     
     dataset = 'mnist' #'cifar10' or 'mnist'
  
-   
+    
     logging.info("***Evolving %d generations with population %d***" %
                  (generations, population))
 
+    print('Saving results and log file to: ' + save_directory)    
+    
     generate(generations, population, dataset)
 
 if __name__ == '__main__':

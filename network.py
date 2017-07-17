@@ -4,7 +4,7 @@ import logging
 import json
 from train import train_and_score
 from keras.models import load_model
-#from keras.utils import plot_mode
+from keras.utils import plot_model
 from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D
 from IPython.display import SVG
 from keras.utils.vis_utils import model_to_dot
