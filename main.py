@@ -1,9 +1,41 @@
 """Entry point to evolving the neural network. Start here."""
+import argparse
 import logging
 from optimizer import Optimizer
 from tqdm import tqdm
 import time
 import os
+
+parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm',
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('-d', '--dataset', 
+                    help='The name of the dataset to use, either "mnist" or "cifar10."',
+                    default='mnist')
+parser.add_argument('-g', '--generations', 
+                    help='The number of breeding generations to run for.',
+                    type=int,
+                    default=40)
+parser.add_argument('-p', '--population', 
+                    help='The size of the populations for each breeding cycle.',
+                    type=int,
+                    default=10)
+parser.add_argument('-f', '--forbiddenlayers',
+                    help='One or more layer types that should NOT be added to the networks. Options are Dense, Conv2D, MaxPooling2D',
+                    nargs='+')
+
+args = parser.parse_args()
+print('Dataset: ' + args.dataset)
+print('Generations: %d' % args.generations)
+print('Population: %d' % args.population)
+if args.forbiddenlayers:
+    print('Forbidden Layers: %s' % args.forbiddenlayers)
+
+
+#parser.add_argument('dataset', 
+#                    metavar='dataset', 
+#                    type=string, 
+#                    nargs=1, 
+#                    help='The name of the dataset to use, either "mnist" or "cifar10"')
 
 save_directory = os.path.dirname(os.path.realpath(__file__))
 save_directory = os.path.join(save_directory, 'results')
@@ -150,6 +182,6 @@ def run_experiment(dataset='mnist', generations=40, population=10, forbidden_lay
     generate(generations, population, dataset, forbidden_layer_types)
 
 if __name__ == '__main__':
-    print('Run the command: "run_experiment()" to start the algorithm training')
-    
+ #   print(' ')
+    run_experiment(args.dataset, args.generations, args.population, args.forbiddenlayers)
     
