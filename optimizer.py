@@ -14,8 +14,8 @@ import copy
 class Optimizer():
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, retain=0.4,
-                 random_select=0.1, mutate_chance=0.2, forbidden_layer_types=[]):
+    def __init__(self, forbidden_layer_types=[], retain=0.4,
+                 random_select=0.1, mutate_chance=0.2):
         """Create an optimizer.
 
         Args:

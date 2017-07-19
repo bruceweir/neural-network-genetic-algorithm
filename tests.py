@@ -283,9 +283,7 @@ def test_optimizer():
     
 def to_do():
     print('TODO')
-    
-    print('\t1. Improve check for 2D layers when making sure that the network structure is sensible')    
-    print('\t2. Move to Functional keras API')
+    print('\t1. Move to Functional keras API')
     
 print('Running tests....')    
 
