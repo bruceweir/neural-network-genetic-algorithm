@@ -22,7 +22,8 @@ parser.add_argument('-p', '--population',
 parser.add_argument('-f', '--forbiddenlayers',
                     help='One or more layer types that should NOT be added to the networks. Options are Dense, Conv2D, MaxPooling2D',
                     nargs='+',
-                    choices=['Dense', 'Conv2D', 'MaxPooling2D'])
+                    choices=['Dense', 'Conv2D', 'MaxPooling2D'],
+                    default=[])
 
 args = parser.parse_args()
 print('Dataset: ' + args.dataset)
