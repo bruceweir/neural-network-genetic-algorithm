@@ -14,8 +14,8 @@ import copy
 class Optimizer():
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, forbidden_layer_types=[], retain=0.4,
-                 random_select=0.1, mutate_chance=0.2):
+    def __init__(self, **kwargs):#self, forbidden_layer_types=[], retain=0.4,
+                 #random_select=0.1, mutate_chance=0.2):
         """Create an optimizer.
 
         Args:
@@ -27,13 +27,16 @@ class Optimizer():
                 randomly mutated
 
         """
-        self.mutate_chance = mutate_chance
-        self.random_select = random_select
-        self.retain = retain
-        self.forbidden_layer_types = forbidden_layer_types
+        self.mutate_chance = kwargs['mutate_chance']
+        self.random_select = kwargs['random_select']
+        self.retain = kwargs['retain']
+        self.forbidden_layer_types = kwargs['forbidden_layer_types']
+        self.population_size = kwargs['population']
+        self.initial_network_length = kwargs['initial_network_length']
+        
         
 
-    def create_population(self, count, initial_length = 1):
+    def create_population(self):#count, initial_length = 1):
         """Create a population of random networks.
 
         Args:
@@ -45,15 +48,16 @@ class Optimizer():
 
         """
         
-        if count < 2:
+        
+        if self.population_size < 2:
             print('Minimum population count is 2. So using that.')
-            count = 2
+            self.population_size = 2
             
         population = []
-        for _ in range(0, count):
+        for _ in range(0, self.population_size):
             # Create a random network.
             network = Network(self.forbidden_layer_types)
-            network.create_random_network(initial_length, True)
+            network.create_random_network(self.initial_network_length, True)
 
             # Add the network to our population.
             population.append(network)
@@ -120,7 +124,7 @@ class Optimizer():
         """Randomly mutate one part of the network.
 
         Args:
-            network (dict): The network parameters to mutate
+            network: A network object to mutate
 
         Returns:
             (Network): A randomly mutated network object
@@ -185,7 +189,7 @@ class Optimizer():
         """Evolve a population of networks.
 
         Args:
-            population (list): A list of network parameters
+            population (list): A list of networks
 
         Returns:
             (list): The evolved population of networks
