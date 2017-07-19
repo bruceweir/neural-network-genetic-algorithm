@@ -241,7 +241,9 @@ def test_optimizer():
     print('optimizer.mutate(network) returns a network object that has either had a layer added, removed or altered. The returned network should compile')
     network = Network()
     network.create_random_network(3, True)
-    optimizer = Optimizer()
+    
+    args={'mutate_chance':0.2, 'random_select':0.1, 'retain':0.4, 'forbidden_layer_types':[], 'population':10, 'initial_network_length':1}
+    optimizer = Optimizer(**args)
     for i in range(10):
         print('Testing compilation of mutated network: %d' % i)
         network = optimizer.mutate(network)

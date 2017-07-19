@@ -14,8 +14,7 @@ import copy
 class Optimizer():
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, **kwargs):#self, forbidden_layer_types=[], retain=0.4,
-                 #random_select=0.1, mutate_chance=0.2):
+    def __init__(self, **kwargs):
         """Create an optimizer.
 
         Args:
@@ -31,16 +30,16 @@ class Optimizer():
         self.random_select = kwargs['random_select']
         self.retain = kwargs['retain']
         self.forbidden_layer_types = kwargs['forbidden_layer_types']
-        self.population_size = kwargs['population']
-        self.initial_network_length = kwargs['initial_network_length']
+        #self.population_size = kwargs['population']
+        #self.initial_network_length = kwargs['initial_network_length']
         
         
 
-    def create_population(self):#count, initial_length = 1):
+    def create_population(self, population_size, initial_network_length=1):
         """Create a population of random networks.
 
         Args:
-            count (int): Number of networks to generate, aka the
+            population_size (int): Number of networks to generate, aka the
                 size of the population
 
         Returns:
@@ -49,15 +48,15 @@ class Optimizer():
         """
         
         
-        if self.population_size < 2:
+        if population_size < 2:
             print('Minimum population count is 2. So using that.')
-            self.population_size = 2
+            population_size = 2
             
         population = []
-        for _ in range(0, self.population_size):
+        for _ in range(0, population_size):
             # Create a random network.
             network = Network(self.forbidden_layer_types)
-            network.create_random_network(self.initial_network_length, True)
+            network.create_random_network(initial_network_length, True)
 
             # Add the network to our population.
             population.append(network)

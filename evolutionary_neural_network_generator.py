@@ -15,7 +15,7 @@ parser.add_argument('-g', '--generations',
                     help='The number of breeding generations to run for.',
                     type=int,
                     default=40)
-parser.add_argument('-p', '--population', 
+parser.add_argument('-p', '--population_size', 
                     help='The size of the populations for each breeding cycle.',
                     type=int,
                     default=10)
@@ -43,7 +43,7 @@ parser.add_argument('--initial_network_length',
 args = parser.parse_args()
 print('Dataset: ' + args.dataset)
 print('Generations: %d' % args.generations)
-print('Population: %d' % args.population)
+print('Population Size: %d' % args.population_size)
 if args.forbidden_layer_types:
     print('forbidden_layer_types: %s' % args.forbidden_layer_types)
 
@@ -75,13 +75,15 @@ class Evolutionary_Neural_Network_Generator():
                 filename= os.path.join(save_directory, 'log.txt')   
                 )
 
-        self.optimizer = Optimizer(**kwargs)
-        self.networks = self.optimizer.create_population()
         
         self.dataset = kwargs['dataset']
         self.generations = kwargs['generations']
-        self.population = kwargs['population']
-        self.forbidden_layer_types = kwargs['forbidden_layer_types']
+        
+        self.population_size = kwargs['population_size']
+        self.initial_network_length = kwargs['initial_network_length']       
+        
+        self.optimizer = Optimizer(**kwargs)
+        self.networks = self.optimizer.create_population(self.population_size, self.initial_network_length)        
         
         self.run_experiment()
     
@@ -201,7 +203,7 @@ class Evolutionary_Neural_Network_Generator():
         
         
         logging.info("***Evolving %d generations with population %d***" %
-                     (self.generations, self.population))
+                     (self.generations, self.population_size))
     
         print('Saving results and log file to: ' + self.save_directory)    
         
