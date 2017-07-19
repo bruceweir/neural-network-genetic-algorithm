@@ -81,108 +81,7 @@ class Optimizer():
         summed = reduce(add, (self.fitness(network) for network in population))
         return summed / float((len(population)))
 
-    def breed(self, mother, father):
-        """Make two children as parts of their parents.
 
-        Args:
-            mother (dict): Network parameters
-            father (dict): Network parameters
-
-        Returns:
-            (list): Two network objects
-
-        """
-        
-        
-            
-        children = []
-        for _ in range(2):
-
-            child = Network(self.forbidden_layer_types)
-
-            if father.number_of_layers() > mother.number_of_layers():               
-                longest_network = father
-                shortest_network = mother
-            else:
-                longest_network = mother
-                shortest_network = father               
-                
-            for i in range(shortest_network.number_of_layers()):
-                    child.network_layers.append(copy.deepcopy(random.choice([shortest_network.network_layers[i], longest_network.network_layers[i]])))
-            for i in range(longest_network.number_of_layers() - shortest_network.number_of_layers()):
-                    if random.random() > 0.5:
-                        child.network_layers.append(copy.deepcopy(longest_network.network_layers[i + shortest_network.number_of_layers()]))
-            
-            child.check_network_structure()
-            
-            children.append(child)
-
-        return children
-
-    def mutate(self, network):
-        """Randomly mutate one part of the network.
-
-        Args:
-            network: A network object to mutate
-
-        Returns:
-            (Network): A randomly mutated network object
-
-        """
-        if len(network.network_layers) > 1:         
-            mutationType = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayer'])
-        else:
-            mutationType = random.choice(['AdjustLayerParameter', 'InsertLayer'])
-            
-        
-        
-        mutatedLayerIndex = random.choice(range(len(network.network_layers)))
-        mutatedLayerType = network.get_network_layer_type(mutatedLayerIndex)
-        
-        print('Mutating network: %s. Index: %d (%s)' % (mutationType, mutatedLayerIndex, mutatedLayerType))
-        # Mutate one of the params.
-        if mutationType == 'AdjustLayerParameter':
-            if mutatedLayerType != 'Flatten':
-                parameter, value = self.get_random_parameter_for_network_layer(network, mutatedLayerIndex)
-                network.get_network_layer_parameters(mutatedLayerIndex)[parameter] = value
-        elif mutationType == 'RemoveLayer':
-            del network.network_layers[mutatedLayerIndex]
-        elif mutationType == 'InsertLayer':
-            allow_dropout = False
-            if len(network.network_layers) > 1 and network.get_network_layer_type(mutatedLayerIndex-1) != 'Dropout':
-                allow_dropout = True
-            
-            network.network_layers.insert(mutatedLayerIndex, network.create_random_layer(allow_dropout = allow_dropout))
-
-        network.check_network_structure()
-                
-        return network
-
-    def get_random_parameter_for_network_layer(self, network, layer_index):
-        
-        network_layer = network.network_layers[layer_index]
-        layer_type = network_layer['layer_type']
-    
-        if layer_type == 'Dense':
-            parameter = random.choice(list(network.get_dense_layer_options().keys()))
-            value = random.choice(network.get_dense_layer_options()[parameter])
-        elif layer_type == 'Conv2D':
-            parameter = random.choice(list(network.get_conv2d_layer_options().keys()))
-            value = random.choice(network.get_conv2d_layer_options()[parameter])
-        elif layer_type == 'Dropout':
-            parameter = random.choice(list(network.get_dropout_layer_options().keys()))
-            value = random.choice(network.get_dropout_layer_options()[parameter])
-        elif layer_type == 'Reshape':
-            parameter = random.choice(list(network.get_reshape_layer_options().keys()))
-            value = random.choice(network.get_reshape_layer_options()[parameter])
-        elif layer_type == 'MaxPooling2D':
-            parameter = random.choice(list(network.get_maxpooling2d_layer_options().keys()))
-            value = random.choice(network.get_maxpooling2d_layer_options()[parameter])
-
-        else:
-            raise NameError('Error: unknown layer_type: %s' % layer_type)
-            
-        return parameter, value
     
     def evolve(self, population):
         """Evolve a population of networks.
@@ -258,3 +157,108 @@ class Optimizer():
         parents.extend(children)
 
         return parents
+    
+    
+    def mutate(self, network):
+        """Randomly mutate one part of the network.
+
+        Args:
+            network: A network object to mutate
+
+        Returns:
+            (Network): A randomly mutated network object
+
+        """
+        if len(network.network_layers) > 1:         
+            mutationType = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayer'])
+        else:
+            mutationType = random.choice(['AdjustLayerParameter', 'InsertLayer'])
+            
+        
+        
+        mutatedLayerIndex = random.choice(range(len(network.network_layers)))
+        mutatedLayerType = network.get_network_layer_type(mutatedLayerIndex)
+        
+        print('Mutating network: %s. Index: %d (%s)' % (mutationType, mutatedLayerIndex, mutatedLayerType))
+        # Mutate one of the params.
+        if mutationType == 'AdjustLayerParameter':
+            if mutatedLayerType != 'Flatten':
+                parameter, value = self.get_random_parameter_for_network_layer(network, mutatedLayerIndex)
+                network.get_network_layer_parameters(mutatedLayerIndex)[parameter] = value
+        elif mutationType == 'RemoveLayer':
+            del network.network_layers[mutatedLayerIndex]
+        elif mutationType == 'InsertLayer':
+            allow_dropout = False
+            if len(network.network_layers) > 1 and network.get_network_layer_type(mutatedLayerIndex-1) != 'Dropout':
+                allow_dropout = True
+            
+            network.network_layers.insert(mutatedLayerIndex, network.create_random_layer(allow_dropout = allow_dropout))
+
+        network.check_network_structure()
+                
+        return network
+
+    
+    def breed(self, mother, father):
+        """Make two children as parts of their parents.
+
+        Args:
+            mother (dict): Network parameters
+            father (dict): Network parameters
+
+        Returns:
+            (list): Two network objects
+
+        """
+        
+            
+        babies = []
+        for _ in range(2):
+
+            baby = Network(self.forbidden_layer_types)
+
+            if father.number_of_layers() > mother.number_of_layers():               
+                longest_network = father
+                shortest_network = mother
+            else:
+                longest_network = mother
+                shortest_network = father               
+                
+            for i in range(shortest_network.number_of_layers()):
+                    baby.network_layers.append(copy.deepcopy(random.choice([shortest_network.network_layers[i], longest_network.network_layers[i]])))
+            for i in range(longest_network.number_of_layers() - shortest_network.number_of_layers()):
+                    if random.random() > 0.5:
+                        baby.network_layers.append(copy.deepcopy(longest_network.network_layers[i + shortest_network.number_of_layers()]))
+            
+            baby.check_network_structure()
+            
+            babies.append(baby)
+
+        return babies
+
+    
+    def get_random_parameter_for_network_layer(self, network, layer_index):
+        
+        network_layer = network.network_layers[layer_index]
+        layer_type = network_layer['layer_type']
+    
+        if layer_type == 'Dense':
+            parameter = random.choice(list(network.get_dense_layer_options().keys()))
+            value = random.choice(network.get_dense_layer_options()[parameter])
+        elif layer_type == 'Conv2D':
+            parameter = random.choice(list(network.get_conv2d_layer_options().keys()))
+            value = random.choice(network.get_conv2d_layer_options()[parameter])
+        elif layer_type == 'Dropout':
+            parameter = random.choice(list(network.get_dropout_layer_options().keys()))
+            value = random.choice(network.get_dropout_layer_options()[parameter])
+        elif layer_type == 'Reshape':
+            parameter = random.choice(list(network.get_reshape_layer_options().keys()))
+            value = random.choice(network.get_reshape_layer_options()[parameter])
+        elif layer_type == 'MaxPooling2D':
+            parameter = random.choice(list(network.get_maxpooling2d_layer_options().keys()))
+            value = random.choice(network.get_maxpooling2d_layer_options()[parameter])
+
+        else:
+            raise NameError('Error: unknown layer_type: %s' % layer_type)
+            
+        return parameter, value
