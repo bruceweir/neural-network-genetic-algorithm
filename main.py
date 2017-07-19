@@ -19,7 +19,7 @@ parser.add_argument('-p', '--population',
                     help='The size of the populations for each breeding cycle.',
                     type=int,
                     default=10)
-parser.add_argument('-f', '--forbiddenlayers',
+parser.add_argument('-f', '--forbidden_layer_types',
                     help='One or more layer types that should NOT be added to the networks. Options are Dense, Conv2D, MaxPooling2D',
                     nargs='+',
                     choices=['Dense', 'Conv2D', 'MaxPooling2D'],
@@ -29,10 +29,10 @@ args = parser.parse_args()
 print('Dataset: ' + args.dataset)
 print('Generations: %d' % args.generations)
 print('Population: %d' % args.population)
-if args.forbiddenlayers:
-    print('Forbidden Layers: %s' % args.forbiddenlayers)
+if args.forbidden_layer_types:
+    print('forbidden_layer_types: %s' % args.forbidden_layer_types)
 
-
+print(vars(args))
 #parser.add_argument('dataset', 
 #                    metavar='dataset', 
 #                    type=string, 
@@ -185,5 +185,5 @@ def run_experiment(dataset='mnist', generations=40, population=10, forbidden_lay
 
 if __name__ == '__main__':
  #   print(' ')
-    run_experiment(args.dataset, args.generations, args.population, args.forbiddenlayers)
+    run_experiment(**vars(args))#args.dataset, args.generations, args.population, args.forbiddenlayers)
     
