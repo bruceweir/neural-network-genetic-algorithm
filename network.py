@@ -41,15 +41,17 @@ class Network():
         if auto_check is True:
             self.check_network_structure()
             
-           
+        self.clear_trained_model()   
 
     def add_layer_with_random_parameters(self, layer_type):
         
         self.network_layers.append(self.create_layer(layer_type));
+        self.clear_trained_model()
 
     def insert_layer_with_random_parameters(self, layer_type, index):
         
         self.network_layers.insert(index, self.create_layer(layer_type))
+        self.clear_trained_model()
             
     def create_random_layer(self, allow_dropout=False):
         
@@ -85,6 +87,8 @@ class Network():
         """
         i=1
         
+        network_changed = False
+        
         while i < len(self.network_layers):
             #print('%d: %s' % (i, self.network_layers[i]['layer_type']))
             current_layer_type = self.get_network_layer_type(i)           
@@ -92,18 +96,23 @@ class Network():
             
             if current_layer_type == 'Dense' and self.network_is_not_1d_at_layer(i-1):
                 self.network_layers.insert(i, {'layer_type':'Flatten', 'layer_parameters':{}})
+                network_changed = True
                 i=1
             elif current_layer_type == 'Dropout' and previous_layer_type == 'Dropout':
                 del self.network_layers[i]
+                network_changed = True
                 i=1
             elif self.network_is_2d_at_layer(i) and current_layer_type != 'Reshape' and self.network_is_not_2d_at_layer(i-1):# (current_layer_type == 'Conv2D' or current_layer_type == 'MaxPooling2D') and self.network_is_not_2d_at_layer(i-1):
                 self.insert_layer_with_random_parameters('Reshape', i)
+                network_changed = True
                 i=1
             elif current_layer_type == 'Reshape' and self.network_is_2d_at_layer(i-1):
                 del self.network_layers[i]
+                network_changed = True
                 i=1            
             elif current_layer_type == 'Flatten' and self.network_is_1d_at_layer(i-1):
                 del self.network_layers[i]
+                network_changed = True
                 i=1
                                
             else:
@@ -113,6 +122,10 @@ class Network():
                 
         while  self.number_of_layers() > 0 and self.get_network_layer_type(0) in forbidden_first_layers:
             del self.network_layers[0]
+            network_changed = True
+            
+        if network_changed is True:
+            self.clear_trained_model()
 
 
     def network_is_not_1d_at_layer(self, layer_index):
@@ -166,15 +179,6 @@ class Network():
         return False
     
     
-    def create_set(self, network):
-        """Set network properties.
-
-        Args:
-            network (dict): The network parameters
-
-        """
-        self.network_layers = network
-
     def train(self, dataset):
         """Train the network and record the accuracy.
 
@@ -292,3 +296,7 @@ class Network():
         
         SVG(model_to_dot(model).create(prog='dot', format='svg'))
         
+    def clear_trained_model(self):
+        if self.trained_model is not None:
+            del self.trained_model
+            self.trained_model = None

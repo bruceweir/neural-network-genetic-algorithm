@@ -26,10 +26,11 @@ class Optimizer():
                 randomly mutated
 
         """
-        self.mutate_chance = kwargs['mutate_chance']
-        self.random_select = kwargs['random_select']
-        self.retain = kwargs['retain']
-        self.forbidden_layer_types = kwargs['forbidden_layer_types']
+        self.mutate_chance = kwargs.get('mutate_chance', 0.2)
+        self.random_select = kwargs.get('random_select', 0.1)
+        self.retain = kwargs.get('retain', 0.4)
+        self.forbidden_layer_types = kwargs.get('forbidden_layer_types', [])
+        self.elitist = kwargs.get('elitist', False)
         #self.population_size = kwargs['population']
         #self.initial_network_length = kwargs['initial_network_length']
         
@@ -122,7 +123,12 @@ class Optimizer():
         
 
         # Randomly mutate some of the networks we're keeping.
-        for individual in parents:
+        first_parent_to_mutate = 0
+        
+        if self.elitist is True:
+            first_parent_to_mutate = 1
+            
+        for individual in parents[first_parent_to_mutate:]:
             if self.mutate_chance > random.random():
                 individual = self.mutate(individual)
             

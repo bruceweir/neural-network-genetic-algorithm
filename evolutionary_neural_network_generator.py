@@ -40,6 +40,10 @@ parser.add_argument('--initial_network_length',
                     help='The number of layers that newly generated networks should have.',
                     type=int,
                     default=1)
+parser.add_argument('--elitist',
+                    help='Do not mutate the best candidate after every generation',
+                    action='store_true')
+
 args = parser.parse_args()
 print('Dataset: ' + args.dataset)
 print('Generations: %d' % args.generations)

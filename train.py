@@ -90,16 +90,18 @@ def train_and_score(network, dataset):
 
     model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
 
-    model.fit(x_train, y_train,
-              batch_size=batch_size,
-              epochs=10000,  # using early stopping, so no real limit
-              verbose=True,
-              validation_data=(x_test, y_test),
-              callbacks=[early_stopper])
+    if network.trained_model is None:
+        model.fit(x_train, y_train,
+                  batch_size=batch_size,
+                  epochs=10000,  # using early stopping, so no real limit
+                  verbose=True,
+                  validation_data=(x_test, y_test),
+                  callbacks=[early_stopper])
 
-    score = model.evaluate(x_test, y_test, verbose=0)
+        network.trained_model = model
+    
+    score = network.trained_model.evaluate(x_test, y_test, verbose=0)
 
-    network.trained_model = model
     
     return score[1]  # 1 is accuracy. 0 is loss.
 
