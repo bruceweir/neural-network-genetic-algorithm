@@ -5,6 +5,8 @@ from optimizer import Optimizer
 from tqdm import tqdm
 import time
 import os
+from IPython.display import SVG
+from keras.utils.vis_utils import model_to_dot
 
 parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -212,6 +214,12 @@ class Evolutionary_Neural_Network_Generator():
         print('Saving results and log file to: ' + self.save_directory)    
         
         self.run_evolutionary_generations()
+
+
+def draw_model_on_interactive_session(self, model):
+        
+    SVG(model_to_dot(model).create(prog='dot', format='svg'))
+
 
 if __name__ == '__main__':
             

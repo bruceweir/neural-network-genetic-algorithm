@@ -3,11 +3,10 @@ import random
 import logging
 import json
 from train import train_and_score
-from keras.models import load_model
+from network_layer_options import *
+#from keras.models import load_model
 from keras.utils import plot_model
-from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D
-from IPython.display import SVG
-from keras.utils.vis_utils import model_to_dot
+#from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D
 
 class Network():
     """Represent a network and let us operate on it.
@@ -17,137 +16,139 @@ class Network():
         """Initialize our network.
 
         """
-        self.accuracy = 0.
-        
+        self.accuracy = 0.0
         self.nn_network_layer_options = self.create_network_layer_options()
         self.network_layers = []
         self.trained_model = None
         self.forbidden_layer_types = forbidden_layer_types
 
-    def create_random_network(self, number_of_layers=3, auto_check = False):
+    def create_random_network(self, number_of_layers=3, auto_check=False):
         """Create a random network."""
-        
+
         self.network_layers = []
-        
+
         for i in range(number_of_layers):
             allow_dropout = True
-            if i==0:
+            if i == 0:
                 allow_dropout = False
-                
-            self.add_random_layer(allow_dropout);
-        
-        
+
+            self.add_random_layer(allow_dropout)
+
+
         if auto_check is True:
             self.check_network_structure()
-            
+
     def add_random_layer(self, allow_dropout):
-        
+
         self.network_layers.append(self.create_random_layer(allow_dropout))
         self.clear_trained_model()
-        
+
+
     def add_layer_with_random_parameters(self, layer_type):
-        
-        self.network_layers.append(self.create_layer(layer_type));
+
+        self.network_layers.append(self.create_layer(layer_type))
         self.clear_trained_model()
 
     def insert_layer_with_random_parameters(self, index, layer_type):
-        
-        self.insert_layer(index, self.create_layer(layer_type))        
 
-    
-    def insert_random_layer(self, index, allow_dropout = True):
-        
+        self.insert_layer(index, self.create_layer(layer_type))
+
+
+    def insert_random_layer(self, index, allow_dropout=True):
+
         self.insert_layer(index, self.create_random_layer(allow_dropout))
 
-        
+
     def insert_layer(self, index, layer):
-        
+
         self.network_layers.insert(index, layer)
         self.clear_trained_model()
 
-        
+
     def delete_layer(self, layer_index):
         if layer_index > len(self.network_layers):
             return
-        
+
         del self.network_layers[layer_index]
         self.clear_trained_model()
-        
-        
+
+
     def change_network_layer_parameter(self, layer_index, parameter, value):
-        
+
         parameters = self.get_network_layer_parameters(layer_index)
-        
+
         if parameter in parameters:
             parameters[parameter] = value
             print('Network.change_network_layer_parameter() %s, %s' % (parameter, value))
             self.clear_trained_model()
         else:
             raise ValueError('Network.change_network_layer_parameter(). Unknown parameter')
-        
+
         self.clear_trained_model()
-        
+
+
     def create_random_layer(self, allow_dropout=False):
-        
-        layers_not_to_select = self.forbidden_layer_types[:] # [:] creates a new list, rather than copying by reference
-        
+
+        # [:] creates a new list, rather than copying by reference
+        layers_not_to_select = self.forbidden_layer_types[:]
+
         if allow_dropout == False:
             layers_not_to_select.append('Dropout')
 
         layer_type = random.choice([choice for choice in self.nn_network_layer_options['LayerTypes'] if choice not in layers_not_to_select])
-    
+
         return self.create_layer(layer_type)
-        
-        
+
+
     def create_layer(self, layer_type):
-        
+
         layer_parameters = {}
-        
+
         for key in self.nn_network_layer_options[layer_type]:
-                layer_parameters[key] = random.choice(self.nn_network_layer_options[layer_type][key])
-        
+            layer_parameters[key] = random.choice(self.nn_network_layer_options[layer_type][key])
+
         return {'layer_type': layer_type, 'layer_parameters': layer_parameters}
-    
-        
+
+
     def check_network_structure(self):
-        
+
         """ Apply various rules for allowing only certain network structures
-        
+
         Insert a Flatten() layer if going from a 2D layer to a Dense layer.
         Dropout layers cannot immediately follow Dropout layers.
         Insert a Reshape() layer when going from a 1d layer to a Conv2D layer.
         Do not allow 2D to 2D reshapes
         The first layer cannot be a Dropout layer
         """
-        i=1
-        
+        i = 1
+
         network_changed = False
-        
+
         while i < len(self.network_layers):
             #print('%d: %s' % (i, self.network_layers[i]['layer_type']))
-            current_layer_type = self.get_network_layer_type(i)           
+            current_layer_type = self.get_network_layer_type(i)
             previous_layer_type = self.get_network_layer_type(i-1)
-            
+
             if current_layer_type == 'Dense' and self.network_is_not_1d_at_layer(i-1):
                 self.network_layers.insert(i, {'layer_type':'Flatten', 'layer_parameters':{}})
                 network_changed = True
-                i=1
+                i = 1
             elif current_layer_type == 'Dropout' and previous_layer_type == 'Dropout':
                 del self.network_layers[i]
                 network_changed = True
-                i=1
+                i = 1
             elif self.network_is_2d_at_layer(i) and current_layer_type != 'Reshape' and self.network_is_not_2d_at_layer(i-1):# (current_layer_type == 'Conv2D' or current_layer_type == 'MaxPooling2D') and self.network_is_not_2d_at_layer(i-1):
                 self.insert_layer_with_random_parameters(i, 'Reshape')
                 network_changed = True
-                i=1
+                i = 1
             elif current_layer_type == 'Reshape' and self.network_is_2d_at_layer(i-1):
                 del self.network_layers[i]
                 network_changed = True
-                i=1            
+                i = 1
             elif current_layer_type == 'Flatten' and self.network_is_1d_at_layer(i-1):
                 del self.network_layers[i]
                 network_changed = True
-                i=1
+                i = 1
                                
             else:
                 i+=1
@@ -231,54 +232,16 @@ class Network():
     def create_network_layer_options(self):
                
         nn_network_layer_options = {
-                'LayerTypes': self.get_layer_types_for_random_selection(),
-                'Dense': self.get_dense_layer_options(),
-                'Conv2D': self.get_conv2d_layer_options(),
-                'Dropout': self.get_dropout_layer_options(),  
-                'Reshape': self.get_reshape_layer_options(),
-                'MaxPooling2D': self.get_maxpooling2d_layer_options()
+                'LayerTypes': get_layer_types_for_random_selection(),
+                'Dense': get_dense_layer_options(),
+                'Conv2D': get_conv2d_layer_options(),
+                'Dropout': get_dropout_layer_options(),  
+                'Reshape': get_reshape_layer_options(),
+                'MaxPooling2D': get_maxpooling2d_layer_options()
         }
         
         return nn_network_layer_options
 
-    def get_dense_layer_options(self):
-    
-        return {
-                'nb_neurons': [64, 128, 256, 512, 768, 1024],
-                'activation': ['relu', 'elu', 'tanh', 'sigmoid']           
-        }
-        
-    def get_reshape_layer_options(self):
-        
-        return { 
-                'first_dimension_scale': [1, 2, 4, 8, 16, 32] 
-        }
-    
-    def get_conv2d_layer_options(self):
-        
-        return {
-                'strides': [(1, 1), (2, 2), (4, 4)],
-                'kernel_size': [(1, 1), (3, 3), (5, 5), (7, 7)],
-                'nb_filters': [2, 8, 16, 32, 64],
-                'activation': ['relu', 'elu', 'tanh', 'sigmoid']
-        }
-    
-    def get_dropout_layer_options(self):
-        
-        return {
-                'remove_probability':[.3, .2, .1]
-        }
-    
-    def get_maxpooling2d_layer_options(self):
-        
-        return {
-                'pool_size': [(2, 2), (4, 4), (6, 6)]
-        }
-    
-    
-    def get_layer_types_for_random_selection(self):
-        
-        return ['Dense', 'Conv2D', 'MaxPooling2D', 'Dropout']
     
     def change_random_parameter_for_layer(self, index):
         
@@ -311,19 +274,19 @@ class Network():
         option_function = None
         
         if layer_type == 'Dense':
-            option_function = self.get_dense_layer_options
+            option_function = get_dense_layer_options
             
         elif layer_type == 'Conv2D':
-            option_function = self.get_conv2d_layer_options
+            option_function = get_conv2d_layer_options
             
         elif layer_type == 'Dropout':
-            option_function = self.get_dropout_layer_options
+            option_function = get_dropout_layer_options
             
         elif layer_type == 'Reshape':
-            option_function = self.get_reshape_layer_options
+            option_function = get_reshape_layer_options
             
         elif layer_type == 'MaxPooling2D':
-            option_function = self.get_maxpooling2d_layer_options
+            option_function = get_maxpooling2d_layer_options
             
         else:
             raise NameError('Error: unknown layer_type: %s' % layer_type)
@@ -333,8 +296,8 @@ class Network():
     def get_value_of_parameter_for_layer(self, index, parameter):
                  
         return self.get_network_layer_parameters(index)[parameter]
-        
-    
+
+
     def print_network_as_json(self, just_the_layers=False):
         
         if just_the_layers is True:
@@ -381,9 +344,6 @@ class Network():
         if self.trained_model is not None and len(fileName) is not 0:
             plot_model(self.trained_model, to_file=fileName, show_shapes=True)
     
-    def draw_model_on_interactive_session(self, model):
-        
-        SVG(model_to_dot(model).create(prog='dot', format='svg'))
         
     def clear_trained_model(self):
         if self.trained_model is not None:
