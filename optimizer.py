@@ -189,16 +189,16 @@ class Optimizer():
         # Mutate one of the params.
         if mutationType == 'AdjustLayerParameter':
             if mutatedLayerType != 'Flatten':
-                parameter, value = self.get_random_parameter_for_network_layer(network, mutatedLayerIndex)
+                parameter, value = network.get_random_parameter_for_layer_type(network.get_network_layer_type(mutatedLayerIndex))
                 network.change_network_layer_parameter(mutatedLayerIndex, parameter, value)
-        elif mutationType == 'RemoveLayer':
-            del network.network_layers[mutatedLayerIndex]
+        elif mutationType == 'RemoveLayer':           
+            network.delete_layer(mutatedLayerIndex)
         elif mutationType == 'InsertLayer':
             allow_dropout = False
             if len(network.network_layers) > 1 and network.get_network_layer_type(mutatedLayerIndex-1) != 'Dropout':
                 allow_dropout = True
             
-            network.network_layers.insert(mutatedLayerIndex, network.create_random_layer(allow_dropout = allow_dropout))
+            network.insert_random_layer(mutatedLayerIndex, allow_dropout)
 
         network.check_network_structure()
                 
@@ -242,12 +242,4 @@ class Optimizer():
 
         return babies
 
-    
-    def get_random_parameter_for_network_layer(self, network, layer_index):
-        
-        layer_type = network.get_network_layer_type(layer_index)
-        parameter, value = network.get_random_parameter_for_layer_type(layer_type)
-        
-        return parameter, value
-    
     

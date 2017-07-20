@@ -20,7 +20,7 @@ class Network():
         self.accuracy = 0.
         
         self.nn_network_layer_options = self.create_network_layer_options()
-        self.network_layers = []  # (array): represents network parameters
+        self.network_layers = []
         self.trained_model = None
         self.forbidden_layer_types = forbidden_layer_types
 
@@ -34,23 +34,46 @@ class Network():
             if i==0:
                 allow_dropout = False
                 
-            self.network_layers.append(self.create_random_layer(allow_dropout));
+            self.add_random_layer(allow_dropout);
+        
         
         if auto_check is True:
             self.check_network_structure()
             
-        self.clear_trained_model()   
-
+    def add_random_layer(self, allow_dropout):
+        
+        self.network_layers.append(self.create_random_layer(allow_dropout))
+        self.clear_trained_model()
+        
     def add_layer_with_random_parameters(self, layer_type):
         
         self.network_layers.append(self.create_layer(layer_type));
         self.clear_trained_model()
 
-    def insert_layer_with_random_parameters(self, layer_type, index):
+    def insert_layer_with_random_parameters(self, index, layer_type):
         
-        self.network_layers.insert(index, self.create_layer(layer_type))
+        self.insert_layer(index, self.create_layer(layer_type))        
+
+    
+    def insert_random_layer(self, index, allow_dropout = True):
+        
+        self.insert_layer(index, self.create_random_layer(allow_dropout))
+
+        
+    def insert_layer(self, index, layer):
+        
+        self.network_layers.insert(index, layer)
         self.clear_trained_model()
-            
+
+        
+    def delete_layer(self, layer_index):
+        if layer_index > len(self.network_layers):
+            return
+        
+        del self.network_layers[layer_index]
+        self.clear_trained_model()
+        
+        
     def change_network_layer_parameter(self, layer_index, parameter, value):
         
         parameters = self.get_network_layer_parameters(layer_index)
@@ -61,6 +84,8 @@ class Network():
             self.clear_trained_model()
         else:
             raise ValueError('Network.change_network_layer_parameter(). Unknown parameter')
+        
+        self.clear_trained_model()
         
     def create_random_layer(self, allow_dropout=False):
         
@@ -112,7 +137,7 @@ class Network():
                 network_changed = True
                 i=1
             elif self.network_is_2d_at_layer(i) and current_layer_type != 'Reshape' and self.network_is_not_2d_at_layer(i-1):# (current_layer_type == 'Conv2D' or current_layer_type == 'MaxPooling2D') and self.network_is_not_2d_at_layer(i-1):
-                self.insert_layer_with_random_parameters('Reshape', i)
+                self.insert_layer_with_random_parameters(i, 'Reshape')
                 network_changed = True
                 i=1
             elif current_layer_type == 'Reshape' and self.network_is_2d_at_layer(i-1):
