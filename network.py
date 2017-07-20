@@ -33,8 +33,6 @@ class Network():
             allow_dropout = True
             if i==0:
                 allow_dropout = False
-            else:
-                allow_dropout = True
                 
             self.network_layers.append(self.create_random_layer(allow_dropout));
         
@@ -53,9 +51,20 @@ class Network():
         self.network_layers.insert(index, self.create_layer(layer_type))
         self.clear_trained_model()
             
+    def change_network_layer_parameter(self, layer_index, parameter, value):
+        
+        parameters = self.get_network_layer_parameters(layer_index)
+        
+        if parameter in parameters:
+            parameters[parameter] = value
+            print('Network.change_network_layer_parameter() %s, %s' % (parameter, value))
+            self.clear_trained_model()
+        else:
+            raise ValueError('Network.change_network_layer_parameter(). Unknown parameter')
+        
     def create_random_layer(self, allow_dropout=False):
         
-        layers_not_to_select = self.forbidden_layer_types
+        layers_not_to_select = self.forbidden_layer_types[:] # [:] creates a new list, rather than copying by reference
         
         if allow_dropout == False:
             layers_not_to_select.append('Dropout')
@@ -232,7 +241,7 @@ class Network():
     def get_dropout_layer_options(self):
         
         return {
-                'remove_probability':[.5, .3, .2]
+                'remove_probability':[.3, .2, .1]
         }
     
     def get_maxpooling2d_layer_options(self):

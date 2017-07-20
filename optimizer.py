@@ -190,7 +190,7 @@ class Optimizer():
         if mutationType == 'AdjustLayerParameter':
             if mutatedLayerType != 'Flatten':
                 parameter, value = self.get_random_parameter_for_network_layer(network, mutatedLayerIndex)
-                network.get_network_layer_parameters(mutatedLayerIndex)[parameter] = value
+                network.change_network_layer_parameter(mutatedLayerIndex, parameter, value)
         elif mutationType == 'RemoveLayer':
             del network.network_layers[mutatedLayerIndex]
         elif mutationType == 'InsertLayer':
