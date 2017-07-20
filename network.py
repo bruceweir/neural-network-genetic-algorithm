@@ -255,6 +255,29 @@ class Network():
         
         return ['Dense', 'Conv2D', 'MaxPooling2D', 'Dropout']
     
+    def get_random_parameter_for_layer_type(self, layer_type):
+        
+        if layer_type == 'Dense':
+            parameter = random.choice(list(self.get_dense_layer_options().keys()))
+            value = random.choice(self.get_dense_layer_options()[parameter])
+        elif layer_type == 'Conv2D':
+            parameter = random.choice(list(self.get_conv2d_layer_options().keys()))
+            value = random.choice(self.get_conv2d_layer_options()[parameter])
+        elif layer_type == 'Dropout':
+            parameter = random.choice(list(self.get_dropout_layer_options().keys()))
+            value = random.choice(self.get_dropout_layer_options()[parameter])
+        elif layer_type == 'Reshape':
+            parameter = random.choice(list(self.get_reshape_layer_options().keys()))
+            value = random.choice(self.get_reshape_layer_options()[parameter])
+        elif layer_type == 'MaxPooling2D':
+            parameter = random.choice(list(self.get_maxpooling2d_layer_options().keys()))
+            value = random.choice(self.get_maxpooling2d_layer_options()[parameter])
+
+        else:
+            raise NameError('Error: unknown layer_type: %s' % layer_type)
+            
+        return parameter, value
+        
     def print_network_as_json(self, just_the_layers=False):
         
         if just_the_layers is True:

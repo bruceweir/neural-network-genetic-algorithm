@@ -245,26 +245,9 @@ class Optimizer():
     
     def get_random_parameter_for_network_layer(self, network, layer_index):
         
-        network_layer = network.network_layers[layer_index]
-        layer_type = network_layer['layer_type']
-    
-        if layer_type == 'Dense':
-            parameter = random.choice(list(network.get_dense_layer_options().keys()))
-            value = random.choice(network.get_dense_layer_options()[parameter])
-        elif layer_type == 'Conv2D':
-            parameter = random.choice(list(network.get_conv2d_layer_options().keys()))
-            value = random.choice(network.get_conv2d_layer_options()[parameter])
-        elif layer_type == 'Dropout':
-            parameter = random.choice(list(network.get_dropout_layer_options().keys()))
-            value = random.choice(network.get_dropout_layer_options()[parameter])
-        elif layer_type == 'Reshape':
-            parameter = random.choice(list(network.get_reshape_layer_options().keys()))
-            value = random.choice(network.get_reshape_layer_options()[parameter])
-        elif layer_type == 'MaxPooling2D':
-            parameter = random.choice(list(network.get_maxpooling2d_layer_options().keys()))
-            value = random.choice(network.get_maxpooling2d_layer_options()[parameter])
-
-        else:
-            raise NameError('Error: unknown layer_type: %s' % layer_type)
-            
+        layer_type = network.get_network_layer_type(layer_index)
+        parameter, value = network.get_random_parameter_for_layer_type(layer_type)
+        
         return parameter, value
+    
+    
