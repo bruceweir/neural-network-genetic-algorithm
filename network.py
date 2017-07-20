@@ -280,29 +280,61 @@ class Network():
         
         return ['Dense', 'Conv2D', 'MaxPooling2D', 'Dropout']
     
+    def change_random_parameter_for_layer(self, index):
+        
+        layer_type = self.get_network_layer_type(index)
+        parameter = self.get_random_parameter_for_layer_type(layer_type)
+        current_value = self.get_value_of_parameter_for_layer(index, parameter)
+        new_value = self.get_random_value_of_parameter_for_layer_type(layer_type, parameter, current_value)                
+        self.change_network_layer_parameter(index, parameter, new_value)
+        
+        
     def get_random_parameter_for_layer_type(self, layer_type):
         
-        if layer_type == 'Dense':
-            parameter = random.choice(list(self.get_dense_layer_options().keys()))
-            value = random.choice(self.get_dense_layer_options()[parameter])
-        elif layer_type == 'Conv2D':
-            parameter = random.choice(list(self.get_conv2d_layer_options().keys()))
-            value = random.choice(self.get_conv2d_layer_options()[parameter])
-        elif layer_type == 'Dropout':
-            parameter = random.choice(list(self.get_dropout_layer_options().keys()))
-            value = random.choice(self.get_dropout_layer_options()[parameter])
-        elif layer_type == 'Reshape':
-            parameter = random.choice(list(self.get_reshape_layer_options().keys()))
-            value = random.choice(self.get_reshape_layer_options()[parameter])
-        elif layer_type == 'MaxPooling2D':
-            parameter = random.choice(list(self.get_maxpooling2d_layer_options().keys()))
-            value = random.choice(self.get_maxpooling2d_layer_options()[parameter])
+        option_function = self.get_option_function_for_layer_type(layer_type)
+        
+        parameter = random.choice(list(option_function().keys()))
+          
+        return parameter
 
+
+    def get_random_value_of_parameter_for_layer_type(self, layer_type, parameter, value_to_exclude=None):
+        
+        option_function = self.get_option_function_for_layer_type(layer_type)
+        value = random.choice([choice for choice in option_function()[parameter] if choice != value_to_exclude])
+
+        return value        
+
+            
+    def get_option_function_for_layer_type(self, layer_type):
+        
+        option_function = None
+        
+        if layer_type == 'Dense':
+            option_function = self.get_dense_layer_options
+            
+        elif layer_type == 'Conv2D':
+            option_function = self.get_conv2d_layer_options
+            
+        elif layer_type == 'Dropout':
+            option_function = self.get_dropout_layer_options
+            
+        elif layer_type == 'Reshape':
+            option_function = self.get_reshape_layer_options
+            
+        elif layer_type == 'MaxPooling2D':
+            option_function = self.get_maxpooling2d_layer_options
+            
         else:
             raise NameError('Error: unknown layer_type: %s' % layer_type)
-            
-        return parameter, value
         
+        return option_function
+
+    def get_value_of_parameter_for_layer(self, index, parameter):
+                 
+        return self.get_network_layer_parameters(index)[parameter]
+        
+    
     def print_network_as_json(self, just_the_layers=False):
         
         if just_the_layers is True:

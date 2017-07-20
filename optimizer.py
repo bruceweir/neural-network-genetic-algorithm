@@ -130,7 +130,7 @@ class Optimizer():
             
         for individual in parents[first_parent_to_mutate:]:
             if self.mutate_chance > random.random():
-                individual = self.mutate(individual)
+                self.mutate(individual)
             
         print('mutations complete')
         # Now find out how many spots we have left to fill.
@@ -175,22 +175,23 @@ class Optimizer():
             (Network): A randomly mutated network object
 
         """
-        if len(network.network_layers) > 1:         
+        if network.number_of_layers() > 1:         
             mutationType = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayer'])
         else:
             mutationType = random.choice(['AdjustLayerParameter', 'InsertLayer'])
             
         
         
-        mutatedLayerIndex = random.choice(range(len(network.network_layers)))
+        mutatedLayerIndex = random.choice(range(network.number_of_layers()))
         mutatedLayerType = network.get_network_layer_type(mutatedLayerIndex)
         
         print('Mutating network: %s. Index: %d (%s)' % (mutationType, mutatedLayerIndex, mutatedLayerType))
         # Mutate one of the params.
         if mutationType == 'AdjustLayerParameter':
             if mutatedLayerType != 'Flatten':
-                parameter, value = network.get_random_parameter_for_layer_type(network.get_network_layer_type(mutatedLayerIndex))
-                network.change_network_layer_parameter(mutatedLayerIndex, parameter, value)
+                network.change_random_parameter_for_layer(mutatedLayerIndex)
+            else:
+                self.mutate(network)
         elif mutationType == 'RemoveLayer':           
             network.delete_layer(mutatedLayerIndex)
         elif mutationType == 'InsertLayer':
@@ -202,7 +203,7 @@ class Optimizer():
 
         network.check_network_structure()
                 
-        return network
+        #return network
 
     
     def breed(self, mother, father):

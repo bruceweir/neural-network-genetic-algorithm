@@ -246,7 +246,7 @@ def test_optimizer():
     optimizer = Optimizer(**args)
     for i in range(10):
         print('Testing compilation of mutated network: %d' % i)
-        network = optimizer.mutate(network)
+        optimizer.mutate(network)
         compile_model(network, 10, (784, ), (28, 28, 1))
         print('...done compiling')
 
