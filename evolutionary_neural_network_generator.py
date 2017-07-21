@@ -213,11 +213,11 @@ class Evolutionary_Neural_Network_Generator():
         self.run_evolutionary_generations()
 
 
-def draw_model_on_interactive_session(self, model):
+def draw_model_on_interactive_session(model):
         
     SVG(model_to_dot(model).create(prog='dot', format='svg'))
 
-
+    
 if __name__ == '__main__':
             
     Evolutionary_Neural_Network_Generator = Evolutionary_Neural_Network_Generator(vars(args))
