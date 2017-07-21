@@ -11,7 +11,7 @@ from keras.utils.vis_utils import model_to_dot
 parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm. Source: https://github.com/bruceweir/neural-network-genetic-algorithm. Originally forked from: https://github.com/harvitronix/neural-network-genetic-algorithm.',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-d', '--dataset', 
-                    help='The name of the dataset to use, either "mnist" or "cifar10."',
+                    help='The name of the dataset to use, either "mnist" or "cifar10"',
                     default='mnist')
 parser.add_argument('-g', '--generations', 
                     help='The number of breeding generations to run for.',
@@ -22,7 +22,7 @@ parser.add_argument('-p', '--population_size',
                     type=int,
                     default=10)
 parser.add_argument('-f', '--forbidden_layer_types',
-                    help='One or more layer types that should NOT be added to the networks. Options are Dense, Conv2D, MaxPooling2D',
+                    help='An array of one or more layer types that should NOT be added to the networks. Options are Dense, Conv2D, MaxPooling2D',
                     nargs='+',
                     choices=['Dense', 'Conv2D', 'MaxPooling2D'],
                     default=[])
@@ -39,7 +39,7 @@ parser.add_argument('--retain',
                     type=float,
                     default=0.4)
 parser.add_argument('--initial_network_length',
-                    help='The number of layers that newly generated networks should have.',
+                    help='The number of hidden layers that newly generated networks should have.',
                     type=int,
                     default=1)
 parser.add_argument('--elitist',
@@ -65,7 +65,7 @@ class Evolutionary_Neural_Network_Generator():
         
         save_directory = os.path.dirname(os.path.realpath(__file__))
         save_directory = os.path.join(save_directory, 'results')
-        self.save_directory = os.path.join(save_directory, time.strftime("%c").replace(" ", "_").replace(":", "_"))
+        save_directory = os.path.join(save_directory, time.strftime("%c").replace(" ", "_").replace(":", "_"))
         os.makedirs(self.save_directory)
    
         # Setup logging.
