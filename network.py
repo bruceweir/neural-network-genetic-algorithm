@@ -221,7 +221,7 @@ class Network():
             dataset (str): Name of dataset to use.
 
         """
-        if self.accuracy == 0.:
+        if self.trained_model == None:
             self.accuracy = train_and_score(self, dataset)
 
     def log_network(self):

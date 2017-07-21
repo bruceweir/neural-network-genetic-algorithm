@@ -247,7 +247,8 @@ def test_optimizer():
     for i in range(10):
         print('Testing compilation of mutated network: %d' % i)
         optimizer.mutate(network)
-        compile_model(network, 10, (784, ), (28, 28, 1))
+        model = compile_model(network, 10, (784, ), (28, 28, 1))
+        del model
         print('...done compiling')
 
     print('optimizer.breed(mother, father) returns an array containing 2 children, randomly bred from the network_layers of the parents. The two children should compile')

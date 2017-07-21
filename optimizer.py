@@ -196,7 +196,7 @@ class Optimizer():
             network.delete_layer(mutatedLayerIndex)
         elif mutationType == 'InsertLayer':
             allow_dropout = False
-            if len(network.network_layers) > 1 and network.get_network_layer_type(mutatedLayerIndex-1) != 'Dropout':
+            if network.number_of_layers() > 1 and network.get_network_layer_type(mutatedLayerIndex-1) != 'Dropout':
                 allow_dropout = True
             
             network.insert_random_layer(mutatedLayerIndex, allow_dropout)
