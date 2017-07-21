@@ -63,9 +63,9 @@ class Evolutionary_Neural_Network_Generator():
     
     def __init__(self, kwargs):
         
-        save_directory = os.path.dirname(os.path.realpath(__file__))
-        save_directory = os.path.join(save_directory, 'results')
-        save_directory = os.path.join(save_directory, time.strftime("%c").replace(" ", "_").replace(":", "_"))
+        self.save_directory = os.path.dirname(os.path.realpath(__file__))
+        self.save_directory = os.path.join(self.save_directory, 'results')
+        self.save_directory = os.path.join(self.save_directory, time.strftime("%c").replace(" ", "_").replace(":", "_"))
         os.makedirs(self.save_directory)
    
         # Setup logging.
@@ -73,7 +73,7 @@ class Evolutionary_Neural_Network_Generator():
                 format='%(asctime)s - %(levelname)s - %(message)s',
                 datefmt='%m/%d/%Y %I:%M:%S %p',
                 level=logging.DEBUG,  
-                filename= os.path.join(save_directory, 'log.txt')   
+                filename= os.path.join(self.save_directory, 'log.txt')   
                 )
 
         
