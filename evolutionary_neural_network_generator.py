@@ -8,7 +8,7 @@ import os
 from IPython.display import SVG
 from keras.utils.vis_utils import model_to_dot
 
-parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm',
+parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm. Source: https://github.com/bruceweir/neural-network-genetic-algorithm. Originally forked from: https://github.com/harvitronix/neural-network-genetic-algorithm.',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-d', '--dataset', 
                     help='The name of the dataset to use, either "mnist" or "cifar10."',
