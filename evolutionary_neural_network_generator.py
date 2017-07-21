@@ -47,11 +47,6 @@ parser.add_argument('--elitist',
                     action='store_true')
 
 args = parser.parse_args()
-print('Dataset: ' + args.dataset)
-print('Generations: %d' % args.generations)
-print('Population Size: %d' % args.population_size)
-if args.forbidden_layer_types:
-    print('forbidden_layer_types: %s' % args.forbidden_layer_types)
 
 print(vars(args))
 #parser.add_argument('dataset', 
