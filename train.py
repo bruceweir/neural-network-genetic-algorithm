@@ -6,8 +6,8 @@ Based on:
 
 """
 from keras.datasets import mnist, cifar10
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D
+from keras.models import Model
+from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D, Input
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 from keras import backend as K
@@ -117,66 +117,77 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     """
     
     # Get our network parameters.
-    nb_layers = len(network.network_layers)
     
-    model = Sequential()
-
+    inputs = Input(shape=input_shape)
+    previous_layer_shape = inputs.shape.as_list()
+    
     if network.starts_with_2d_layer() and len(input_shape) == 1:
-        model.add(Reshape(input_shape_conv2d, input_shape=input_shape))
-        previous_layer_size = model.outputs[0]._keras_shape
+        layer = Reshape(input_shape_conv2d)(inputs)
+        previous_layer_shape = layer.shape.as_list()
             
 
-    number_of_units_in_previous_layer=reduce(lambda x, y: x*y, input_shape)    
+    number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
     # Add each layer.
-    for i in range(nb_layers):
+    for i in range(network.number_of_layers()):
         
         layer_type = network.get_network_layer_type(i);
         layer_parameters = network.get_network_layer_parameters(i)
                 
         # Need input shape for first layer.
         if i == 0 and layer_type == 'Dense':
-            model.add(Dense(layer_parameters['nb_neurons'], 
-                                activation=layer_parameters['activation'], 
-                                input_shape=input_shape))
+            layer = Dense(layer_parameters['nb_neurons'], 
+                                activation=layer_parameters['activation'])(inputs)
+            previous_layer_shape = layer.shape.as_list()
                 
         else:
             if layer_type == 'Dense':
-                model.add(Dense(layer_parameters['nb_neurons'], 
-                                activation=layer_parameters['activation']))
+                layer = Dense(layer_parameters['nb_neurons'], 
+                                activation=layer_parameters['activation'])(layer)
+                previous_layer_shape = layer.shape.as_list()
                 
             elif layer_type == 'Conv2D':
-                kernel_size = get_checked_2d_kernel_size_for_layer(previous_layer_size, layer_parameters['kernel_size'])
+                kernel_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['kernel_size'])
                 
-                model.add(Conv2D(layer_parameters['nb_filters'], 
+                
+                layer = Conv2D(layer_parameters['nb_filters'], 
                                  kernel_size=kernel_size, 
                                  strides=layer_parameters['strides'], 
                #                  padding='same',
-                                 activation=layer_parameters['activation']))
+                                 activation=layer_parameters['activation'])(layer)
+                previous_layer_shape = layer.shape.as_list()
+                
             elif layer_type == 'MaxPooling2D':
-                pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_size, layer_parameters['pool_size'])
-                model.add(MaxPooling2D(pool_size=pool_size))
-
+                pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['pool_size'])
+                layer = MaxPooling2D(pool_size=pool_size)(layer)
+                previous_layer_shape = layer.shape.as_list()
+                
             elif layer_type == 'Dropout':
-                model.add(Dropout(layer_parameters['remove_probability']))
-
+                layer = Dropout(layer_parameters['remove_probability'])(layer)
+                previous_layer_shape = layer.shape.as_list()
+                
             elif layer_type == 'Flatten':
-                model.add(Flatten())
+                layer = Flatten()(layer)
+                #dont get previous layer shape from here
 
-            elif layer_type == 'Reshape':                      
-                number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_size if x is not None])
+            elif layer_type == 'Reshape':                                     
                 layer_reshape_factor = layer_parameters['first_dimension_scale']
                 reshape_dimensions = get_closest_valid_reshape_for_given_scale(number_of_units_in_previous_layer, layer_reshape_factor)               
-                model.add(Reshape((reshape_dimensions[0], reshape_dimensions[1], 1)))#n_channels)))
+                layer = Reshape((reshape_dimensions[0], reshape_dimensions[1], 1))(layer)
+                previous_layer_shape = layer.shape.as_list()
             
-        previous_layer_size = model.outputs[0]._keras_shape
+        
+        number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
+        
         
 
     # Output layer.
     if network.network_is_not_1d_at_layer(len(network.network_layers)-1):
-        model.add(Flatten())
+        layer = Flatten()(layer)
     
-    model.add(Dense(nb_classes, activation='softmax'))
+    predictions = Dense(nb_classes, activation='softmax')(layer)
 
+    model = Model(inputs=inputs, outputs=predictions)
+    
     model.compile(loss='categorical_crossentropy', optimizer='adam',
                   metrics=['accuracy'])
 
