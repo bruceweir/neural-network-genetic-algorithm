@@ -17,4 +17,9 @@ To run the genetic algorithm:
 
 Options are viewable via the -h switch
 
+
+To Run the Unit Tests:
+
+```python3 tests.py```
+
 You can set your network parameter choices by editing network_layer_options.py. You can also choose whether to use the MNIST or CIFAR10 datasets. Simply set `-dataset` to either `mnist` or `cifar10`.
