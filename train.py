@@ -124,6 +124,8 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     if network.starts_with_2d_layer() and len(input_shape) == 1:
         layer = Reshape(input_shape_conv2d)(inputs)
         previous_layer_shape = layer._keras_shape
+    else:
+        layer=inputs
             
 
     number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
@@ -136,7 +138,7 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
         # Need input shape for first layer.
         if i == 0 and layer_type == 'Dense':
             layer = Dense(layer_parameters['nb_neurons'], 
-                                activation=layer_parameters['activation'])(inputs)
+                                activation=layer_parameters['activation'])(layer)
                 
         else:
             if layer_type == 'Dense':

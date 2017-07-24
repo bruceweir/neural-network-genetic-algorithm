@@ -236,6 +236,23 @@ def test_network():
         for l in range(network.number_of_layers()):
             assert(network.get_network_layer_type(l) is not 'Conv2D')
     
+def test_network_graph():
+
+    network = Network()
+    first_node_id = network.add_random_layer()
+    assert(network.network_graph.number_of_nodes() == 1)
+    
+    second_node_id = network.add_random_layer(True, first_node_id)
+    assert(network.network_graph.number_of_nodes() == 2)
+    
+    assert(len(network.get_downstream_nodes(first_node_id)) == 1)
+    assert(len(network.get_downstream_nodes(second_node_id)) == 0)
+    
+    assert(network.get_downstream_nodes(first_node_id)[0] == second_node_id)
+    
+    assert(len(network.get_upstream_nodes(second_node_id)) == 1)
+    assert(network.get_upstream_nodes(second_node_id)[0] == first_node_id)
+    
     
 def test_optimizer():
     
@@ -292,8 +309,9 @@ def to_do():
     
 print('Running tests....')    
 
-test_network()
-test_optimizer()
+#test_network()
+test_network_graph()
+#test_optimizer()
 #test_train()
 print('...tests complete')
 
