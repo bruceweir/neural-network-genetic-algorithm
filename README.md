@@ -22,4 +22,6 @@ To Run the Unit Tests:
 
 ```python3 tests.py```
 
-You can set your network parameter choices by editing network_layer_options.py. You can also choose whether to use the MNIST or CIFAR10 datasets. Simply set `-dataset` to either `mnist` or `cifar10`.
+You can set your network parameter choices by editing network_layer_options.py. 
+
+You can also choose whether to use the MNIST or CIFAR10 datasets. Simply set `-dataset` switch to either `mnist` or `cifar10`.
