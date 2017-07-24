@@ -213,12 +213,13 @@ def test_network():
     network.create_random_network()
     assert(len(network.network_layers) == 3)
     
-    network = Network()
-    network.create_random_network(20, True)
-    print('Compiling auto_checked network...')
-    compile_model(network, 10, (784,), (28, 28,1))
-    print('...done compiling.')
-    
+    for i in range(10):
+        network = Network()
+        network.create_random_network(20, True)
+        print('Compiling auto_checked network...%d'% i)
+        compile_model(network, 10, (784,), (28, 28,1))
+        print('...done compiling.')
+        
     print('The network created by Network.create_random_network() needs to call check_network_structure() before it can be safely compiled')
     for i in range(10):
         network = Network()
@@ -287,6 +288,7 @@ def test_optimizer():
 def to_do():
     print('TODO')
     print('\t1. Move to Functional keras API')
+    print('\t2. Add branching network structures')
     
 print('Running tests....')    
 

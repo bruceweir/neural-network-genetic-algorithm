@@ -119,11 +119,11 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     # Get our network parameters.
     
     inputs = Input(shape=input_shape)
-    previous_layer_shape = inputs.shape.as_list()
+    previous_layer_shape = inputs._keras_shape
     
     if network.starts_with_2d_layer() and len(input_shape) == 1:
         layer = Reshape(input_shape_conv2d)(inputs)
-        previous_layer_shape = layer.shape.as_list()
+        previous_layer_shape = layer._keras_shape
             
 
     number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
@@ -137,13 +137,11 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
         if i == 0 and layer_type == 'Dense':
             layer = Dense(layer_parameters['nb_neurons'], 
                                 activation=layer_parameters['activation'])(inputs)
-            previous_layer_shape = layer.shape.as_list()
                 
         else:
             if layer_type == 'Dense':
                 layer = Dense(layer_parameters['nb_neurons'], 
                                 activation=layer_parameters['activation'])(layer)
-                previous_layer_shape = layer.shape.as_list()
                 
             elif layer_type == 'Conv2D':
                 kernel_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['kernel_size'])
@@ -154,16 +152,13 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
                                  strides=layer_parameters['strides'], 
                #                  padding='same',
                                  activation=layer_parameters['activation'])(layer)
-                previous_layer_shape = layer.shape.as_list()
                 
             elif layer_type == 'MaxPooling2D':
                 pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['pool_size'])
                 layer = MaxPooling2D(pool_size=pool_size)(layer)
-                previous_layer_shape = layer.shape.as_list()
                 
             elif layer_type == 'Dropout':
                 layer = Dropout(layer_parameters['remove_probability'])(layer)
-                previous_layer_shape = layer.shape.as_list()
                 
             elif layer_type == 'Flatten':
                 layer = Flatten()(layer)
@@ -173,11 +168,13 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
                 layer_reshape_factor = layer_parameters['first_dimension_scale']
                 reshape_dimensions = get_closest_valid_reshape_for_given_scale(number_of_units_in_previous_layer, layer_reshape_factor)               
                 layer = Reshape((reshape_dimensions[0], reshape_dimensions[1], 1))(layer)
-                previous_layer_shape = layer.shape.as_list()
-            
+                
         
+        #if len([x for x in layer.shape.as_list() if x is not None]) > 0:
+        previous_layer_shape = layer._keras_shape
         number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
-        
+            
+                
         
 
     # Output layer.
