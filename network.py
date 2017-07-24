@@ -349,3 +349,5 @@ class Network():
         if self.trained_model is not None:
             del self.trained_model
             self.trained_model = None
+
+    

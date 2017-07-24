@@ -210,3 +210,5 @@ def get_checked_2d_kernel_size_for_layer(previous_layer_size, requested_kernel_s
     kernel_size.append(min([requested_kernel_size[0], previous_layer_size[1]]))
     kernel_size.append(min([requested_kernel_size[1], previous_layer_size[2]]))
     return kernel_size
+
+

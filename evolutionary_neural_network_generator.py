@@ -75,7 +75,8 @@ class Evolutionary_Neural_Network_Generator():
                 level=logging.DEBUG,  
                 filename= os.path.join(self.save_directory, 'log.txt')   
                 )
-
+        
+        
         
         self.dataset = kwargs['dataset']
         self.generations = kwargs['generations']
@@ -202,7 +203,8 @@ class Evolutionary_Neural_Network_Generator():
                                 currently are: 'Dense', 'Conv2D', 'MaxPooling2D'
         """
         
-        
+        logging.info("Running experiment with: %s" % vars(args))
+
         logging.info("***Evolving %d generations with population %d***" %
                      (self.generations, self.population_size))
     
@@ -211,11 +213,11 @@ class Evolutionary_Neural_Network_Generator():
         self.run_evolutionary_generations()
 
 
-def draw_model_on_interactive_session(self, model):
+def draw_model_on_interactive_session(model):
         
     SVG(model_to_dot(model).create(prog='dot', format='svg'))
 
-
+    
 if __name__ == '__main__':
             
     Evolutionary_Neural_Network_Generator = Evolutionary_Neural_Network_Generator(vars(args))
