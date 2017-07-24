@@ -31,7 +31,7 @@ def get_conv2d_layer_options():
     return {
         'strides': [(1, 1), (2, 2), (4, 4)],
         'kernel_size': [(1, 1), (3, 3), (5, 5), (7, 7)],
-        'nb_filters': [2, 8, 16, 32, 64],
+        'nb_filters': [2, 4, 8, 16, 32],
         'activation': ['relu', 'elu', 'tanh', 'sigmoid']
     }
 
