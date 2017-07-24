@@ -238,6 +238,8 @@ def test_network():
     
 def test_network_graph():
 
+    print('Testing the network graph implementation')
+    print('\t. The network is directional, but it should be possible to trace the upstream and downstream connections for each layer')
     network = Network()
     first_node_id = network.add_random_layer()
     assert(network.network_graph.number_of_nodes() == 1)
@@ -245,15 +247,83 @@ def test_network_graph():
     second_node_id = network.add_random_layer(True, first_node_id)
     assert(network.network_graph.number_of_nodes() == 2)
     
-    assert(len(network.get_downstream_nodes(first_node_id)) == 1)
-    assert(len(network.get_downstream_nodes(second_node_id)) == 0)
+    assert(len(network.get_downstream_layers(first_node_id)) == 1)
+    assert(len(network.get_downstream_layers(second_node_id)) == 0)
     
-    assert(network.get_downstream_nodes(first_node_id)[0] == second_node_id)
+    assert(network.get_downstream_layers(first_node_id)[0] == second_node_id)
     
-    assert(len(network.get_upstream_nodes(second_node_id)) == 1)
-    assert(network.get_upstream_nodes(second_node_id)[0] == first_node_id)
+    assert(len(network.get_upstream_layers(second_node_id)) == 1)
+    assert(network.get_upstream_layers(second_node_id)[0] == first_node_id)
     
+    print('\t Deleting a layer should correctly rearrange the upstream and downstream edges')
+    network = Network()
+    first_node_id = network.add_random_layer()
+    second_node_id = network.add_random_layer(True, first_node_id)
+    third_node_id = network.add_random_layer(True, second_node_id)
     
+    network.delete_layer(second_node_id)
+    assert(len(network.get_downstream_layers(first_node_id)) == 1)
+    assert(network.get_downstream_layers(first_node_id)[0] == third_node_id)
+    
+    assert(len(network.get_upstream_layers(third_node_id)) == 1)
+    assert(network.get_upstream_layers(third_node_id)[0] == first_node_id)
+    
+    assert(network.network_graph.has_node(second_node_id) == False)
+    
+    print('\t When deleting a layer, all the upstream layers should end up connected to all the downstream layers')
+    network = Network()
+    first_level_node_1 = network.add_random_layer()
+    first_level_node_2 = network.add_random_layer()
+    second_level_node_1 = network.add_random_layer()
+    
+    network.connect_layers(first_level_node_1, second_level_node_1)
+    network.connect_layers(first_level_node_2, second_level_node_1)
+    
+    third_level_node_1 = network.add_random_layer()
+    third_level_node_2 = network.add_random_layer()
+    third_level_node_3 = network.add_random_layer()
+    
+    network.connect_layers(second_level_node_1, third_level_node_1)
+    network.connect_layers(second_level_node_1, third_level_node_2)
+    network.connect_layers(second_level_node_1, third_level_node_3)
+    
+    assert(len(network.get_upstream_layers(second_level_node_1)) == 2)
+    assert(network.get_upstream_layers(second_level_node_1)[0] == first_level_node_1)
+    assert(network.get_upstream_layers(second_level_node_1)[1] == first_level_node_2)
+    
+    assert(len(network.get_downstream_layers(second_level_node_1)) == 3)
+    assert(network.get_downstream_layers(second_level_node_1)[0] == third_level_node_1)
+    assert(network.get_downstream_layers(second_level_node_1)[1] == third_level_node_2)
+    assert(network.get_downstream_layers(second_level_node_1)[2] == third_level_node_3)
+    
+    network.delete_layer(second_level_node_1)
+    assert(network.network_graph.has_node(second_level_node_1) is False)
+    
+    assert(len(network.get_downstream_layers(first_level_node_1)) == 3)
+    assert(network.get_downstream_layers(first_level_node_1)[0] == third_level_node_1)
+    assert(network.get_downstream_layers(first_level_node_1)[1] == third_level_node_2)
+    assert(network.get_downstream_layers(first_level_node_1)[2] == third_level_node_3)
+    
+    assert(len(network.get_downstream_layers(first_level_node_2)) == 3)
+    assert(network.get_downstream_layers(first_level_node_2)[0] == third_level_node_1)
+    assert(network.get_downstream_layers(first_level_node_2)[1] == third_level_node_2)
+    assert(network.get_downstream_layers(first_level_node_2)[2] == third_level_node_3)
+    
+    assert(len(network.get_upstream_layers(third_level_node_1)) == 2)
+    assert(network.get_upstream_layers(third_level_node_1)[0] == first_level_node_1)
+    assert(network.get_upstream_layers(third_level_node_1)[1] == first_level_node_2)
+    
+    assert(len(network.get_upstream_layers(third_level_node_2)) == 2)
+    assert(network.get_upstream_layers(third_level_node_2)[0] == first_level_node_1)
+    assert(network.get_upstream_layers(third_level_node_2)[1] == first_level_node_2)
+    
+    assert(len(network.get_upstream_layers(third_level_node_3)) == 2)
+    assert(network.get_upstream_layers(third_level_node_3)[0] == first_level_node_1)
+    assert(network.get_upstream_layers(third_level_node_3)[1] == first_level_node_2)
+
+    print('Inserting a layer should result in all the connections between the upstream and downstream layers adjacent to this layer being rerouted through it')
+    assert(False)
+
 def test_optimizer():
     
     print('optimizer.mutate(network) returns a network object that has either had a layer added, removed or altered. The returned network should compile')

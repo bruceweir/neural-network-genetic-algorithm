@@ -25,7 +25,7 @@ class Network():
         self.network_graph = nx.DiGraph()
         self.layer_id = 0
 
-    def get_new_graph_node_id(self):
+    def get_new_layer_id(self):
         
         self.layer_id += 1
         return self.layer_id
@@ -48,72 +48,84 @@ class Network():
         if auto_check is True:
             self.check_network_structure()
 
-    def add_random_layer(self, allow_dropout = True, upstream_node_id = None):
+    def add_random_layer(self, allow_dropout = True, upstream_layer_id = None):
 
         
         self.network_layers.append(self.create_random_layer(allow_dropout))
         
-        new_node_id = self.get_new_graph_node_id()
-        self.network_graph.add_node(new_node_id, self.create_random_layer(allow_dropout))
+        new_layer_id = self.get_new_layer_id()
+        self.network_graph.add_node(new_layer_id, self.create_random_layer(allow_dropout))
         
-        if upstream_node_id is not None:
-            self.network_graph.add_edge(upstream_node_id, new_node_id)
+        if upstream_layer_id is not None:
+            self.connect_layers(upstream_layer_id, new_layer_id)
         
         self.clear_trained_model()
         
-        return new_node_id
+        return new_layer_id
+
+    def connect_layers(self, upstream_layer_id, layer_id):
+        if self.network_graph.has_node(upstream_layer_id) is not True or self.network_graph.has_node(layer_id) is not True:
+            return
+        
+        self.network_graph.add_edge(upstream_layer_id, layer_id)
 
 
-    def add_layer_with_random_parameters(self, layer_type, upstream_node_id = None):
+    def add_layer_with_random_parameters(self, layer_type, upstream_layer_id = None):
 
         self.network_layers.append(self.create_layer(layer_type))
         
-        new_node_id = self.get_new_graph_node_id()       
-        self.network_graph.add_node(new_node_id, self.create_layer(layer_type))
-        if upstream_node_id is not None:
-            self.network_graph.add_edge(self.network_graph(upstream_node_id, new_node_id))
+        new_layer_id = self.get_new_layer_id()       
+        self.network_graph.add_node(new_layer_id, self.create_layer(layer_type))
+        
+        if upstream_layer_id is not None:
+            self.connect_layers(upstream_layer_id, new_layer_id)
             
         
         self.clear_trained_model()
 
-    def insert_layer_with_random_parameters(self, layer_type, upstream_node_id = None, downstream_node_id= None):
+    def insert_layer_with_random_parameters(self, layer_type, upstream_layer_id = None, downstream_node_id= None):
 
-        self.insert_layer_between_layers(self.create_layer(layer_type), upstream_node_id, downstream_node_id)
-
-
-    def insert_random_layer(self, allow_dropout=True, upstream_node_id = None, downstream_node_id= None):
-
-        self.insert_layer_between_layers(self.create_random_layer(allow_dropout), upstream_node_id, downstream_node_id)
+        self.insert_layer_between_layers(self.create_layer(layer_type), upstream_layer_id, downstream_node_id)
 
 
-    def insert_layer_between_layers(self, layer, upstream_node_id, downstream_node_id):
+    def insert_random_layer(self, allow_dropout=True, upstream_layer_id = None, downstream_node_id= None):
+
+        self.insert_layer_between_layers(self.create_random_layer(allow_dropout), upstream_layer_id, downstream_node_id)
+
+
+    def insert_layer_between_layers(self, layer, upstream_layer_id, downstream_node_id):
         
-        new_node_id = self.get_new_graph_node_id()
-        self.network_graph.add(new_node_id, layer)
+        new_layer_id = self.get_new_layer_id()
+        self.network_graph.add(new_layer_id, layer)
         
-        if upstream_node_id is not None and downstream_node_id is not None:
-            self.network_graph.remove_edge(downstream_node_id, upstream_node_id)           
+        if upstream_layer_id is not None and downstream_node_id is not None:
+            self.network_graph.remove_edge(downstream_node_id, upstream_layer_id)           
             
-        if upstream_node_id is not None:
-            self.network_graph.add_edge(upstream_node_id, new_node_id);
+        if upstream_layer_id is not None:
+            self.connect_layers(upstream_layer_id, new_layer_id);
         if downstream_node_id is not None:
-            self.network_graph.add_edge(downstream_node_id, new_node_id)
+            self.connect_layers(downstream_node_id, new_layer_id)
             
         self.clear_trained_model()
                 
 
-    def delete_layer(self, node_id):
+    def delete_layer(self, layer_id):
         
-        if self.network_graph.has_node(node_id) is not True:
+        if self.network_graph.has_node(layer_id) is not True:
             return
         
-        upstream_nodes = self.get_upstream_nodes(self, node_id)
-        downstream_nodes = self.get_downstream_nodes(self, node_id)
+        upstream_layers = self.get_upstream_layers(layer_id)
+        downstream_layers = self.get_downstream_layers(layer_id)
         
-        del self.network_layers[layer_index]
+        self.network_graph.remove_node(layer_id)
+        
+        for up in upstream_layers:
+            for down in downstream_layers:
+                self.connect_layers(up, down)
+                
         self.clear_trained_model()
 
-    def get_upstream_nodes(self, node_id):
+    def get_upstream_layers(self, node_id):
         
         if self.network_graph.has_node(node_id) is not True:        
             return []
@@ -121,7 +133,7 @@ class Network():
         return self.network_graph.reverse().neighbors(node_id)
 
     
-    def get_downstream_nodes(self, node_id):
+    def get_downstream_layers(self, node_id):
         
         if self.network_graph.has_node(node_id) is not True:
             return []
