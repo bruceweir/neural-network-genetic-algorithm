@@ -391,13 +391,6 @@ def test_network_graph():
     assert(network.network_is_1d_at_layer(layer_3) is True)
     assert(network.network_is_2d_at_layer(layer_3) is False)
 
-    print('\t Layer Dimension checking should work correctly in branched networks.')
-    network = Network()
-    first_layer_1 = network.add_layer_with_random_parameters('Dense')
-    first_layer_2 = network.add_layer_with_random_parameters('Dense')
-    second_layer_1 = network.add_layer_with_random_parameters('Dense')
-    network.connect_layers(first_layer_1, second_layer_1)
-    network.connect_layers(first_layer_2, second_layer_1)
     
     
     

@@ -119,73 +119,79 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     # Get our network parameters.
     
     inputs = Input(shape=input_shape)
-    previous_layer_shape = inputs._keras_shape
-    
-    if network.starts_with_2d_layer() and len(input_shape) == 1:
-        layer = Reshape(input_shape_conv2d)(inputs)
-        previous_layer_shape = layer._keras_shape
-    else:
-        layer=inputs
-            
-
-    number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
-    # Add each layer.
+    layer = inputs
+    previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
+     # Add each layer.
     for i in range(network.number_of_layers()):
         
+        
+        print(previous_layer_shape)
         layer_type = network.get_network_layer_type(i);
         layer_parameters = network.get_network_layer_parameters(i)
-                
-        # Need input shape for first layer.
-        if i == 0 and layer_type == 'Dense':
-            layer = Dense(layer_parameters['nb_neurons'], 
-                                activation=layer_parameters['activation'])(layer)
-                
-        else:
-            if layer_type == 'Dense':
+   
+        #if network.layer_type_is_1d(layer_type) and number_of_dimensions_in_previous_layer > 1:
+        #    layer = Flatten()(layer)
+        #    previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
+         
+        #if network.layer_type_is_2d(layer_type) and number_of_dimensions_in_previous_layer < 3: #3 dimensions with n channels
+        #    reshape_size = get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
+        #    layer= Reshape((reshape_size[0], reshape_size[1], 1))(layer)
+        #    previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
+ 
+        if layer_type == 'Dense':
+            try:
                 layer = Dense(layer_parameters['nb_neurons'], 
-                                activation=layer_parameters['activation'])(layer)
-                
-            elif layer_type == 'Conv2D':
+                              activation=layer_parameters['activation'])(layer)
+            except:
+                layer = Flatten()(layer)
+                layer = Dense(layer_parameters['nb_neurons'], 
+                              activation=layer_parameters['activation'])(layer)
+            
+        elif layer_type == 'Conv2D':
+            
+            
+            try:
                 kernel_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['kernel_size'])
-                
-                
                 layer = Conv2D(layer_parameters['nb_filters'], 
                                  kernel_size=kernel_size, 
                                  strides=layer_parameters['strides'], 
-               #                  padding='same',
                                  activation=layer_parameters['activation'])(layer)
+            except (ValueError, IndexError):
+                reshape_size = get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
+                layer= Reshape((reshape_size[0], reshape_size[1], 1))(layer)
+                previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
+                kernel_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['kernel_size'])
+                layer = Conv2D(layer_parameters['nb_filters'], 
+                                 kernel_size=kernel_size, 
+                                 strides=layer_parameters['strides'], 
+                                 activation=layer_parameters['activation'])(layer)
+                previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
                 
-            elif layer_type == 'MaxPooling2D':
-                pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['pool_size'])
+        elif layer_type == 'MaxPooling2D':
+            try:
+                pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['pool_size'])            
+                layer = MaxPooling2D(pool_size=pool_size)(layer)
+            except (ValueError, IndexError):
+                reshape_size = get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
+                layer= Reshape((reshape_size[0], reshape_size[1], 1))(layer)
+                previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
+                pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['pool_size'])            
                 layer = MaxPooling2D(pool_size=pool_size)(layer)
                 
-            elif layer_type == 'Dropout':
-                layer = Dropout(layer_parameters['remove_probability'])(layer)
-                
-            elif layer_type == 'Flatten':
-                layer = Flatten()(layer)
-                #dont get previous layer shape from here
-
-            elif layer_type == 'Reshape':                                     
-                layer_reshape_factor = layer_parameters['first_dimension_scale']
-                reshape_dimensions = get_closest_valid_reshape_for_given_scale(number_of_units_in_previous_layer, layer_reshape_factor)               
-                layer = Reshape((reshape_dimensions[0], reshape_dimensions[1], 1))(layer)
-                
-        
-        #if len([x for x in layer.shape.as_list() if x is not None]) > 0:
-        previous_layer_shape = layer._keras_shape
-        number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
+        elif layer_type == 'Dropout':
+            layer = Dropout(layer_parameters['remove_probability'])(layer)
             
-                
+        
+        previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
         
 
     # Output layer.
-    if network.network_is_not_1d_at_layer(len(network.network_layers)-1):
+    if network.layer_type_is_not_1d(network.get_network_layer_type(network.number_of_layers()-1)):
         layer = Flatten()(layer)
     
     predictions = Dense(nb_classes, activation='softmax')(layer)
 
-    model = Model(inputs=inputs, outputs=predictions)
+    model = Model(inputs=inputs, outputs=predictions, name='Output')
     
     model.compile(loss='categorical_crossentropy', optimizer='adam',
                   metrics=['accuracy'])
@@ -194,6 +200,12 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
 
     return model
 
+def get_compiled_layer_shape_details(layer):
+    previous_layer_shape = layer._keras_shape
+    number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
+    number_of_dimensions_in_previous_layer = len([x for x in previous_layer_shape if x is not None])
+    
+    return previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer
 
 def create_test_model():
     model = Sequential()
@@ -203,6 +215,21 @@ def create_test_model():
     model.add(Conv2D(64, (5,5), strides=(2,2)))#, padding='same'))
     print(model.get_layer(index=-1).output_shape)
     
+
+def get_reshape_size_closest_to_square(number_of_neurons):
+    
+    dimension1 = math.sqrt(number_of_neurons)
+    dimension2 = number_of_neurons / dimension1
+    
+    dimension1 = float(math.ceil(dimension1))
+    
+    while dimension2.is_integer() is False:
+        dimension1 -= 1
+        dimension2 = number_of_neurons / dimension1
+        
+    
+    return (int(dimension1), int(dimension2))
+        
     
 def get_closest_valid_reshape_for_given_scale(number_of_neurons, reshape_factor):
     

@@ -23,7 +23,7 @@ class Network():
         self.trained_model = None
         self.forbidden_layer_types = forbidden_layer_types
         self.network_graph = nx.DiGraph()
-        self.layer_id = 0
+        self.layer_id = -1
 
     def get_new_layer_id(self):
         
@@ -287,6 +287,25 @@ class Network():
             return all([self.network_is_2d_at_layer(layer_id) for layer_id in upstream_layer_ids])
             
         return False
+
+    def layer_type_is_not_1d(self, layer_type):
+        
+        return not self.layer_type_is_1d(layer_type)
+    
+    
+    def layer_type_is_1d(self, layer_type):
+        
+        return layer_type in ['Dense']
+    
+    
+    def layer_type_is_not_2d(self, layer_type):
+        
+        return not self.layer_type_is_2d(layer_type)
+    
+    
+    def layer_type_is_2d(self, layer_type):
+        
+        return '2D' in layer_type
     
     
     def train(self, dataset):
