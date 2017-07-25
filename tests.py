@@ -321,8 +321,50 @@ def test_network_graph():
     assert(network.get_upstream_layers(third_level_node_3)[0] == first_level_node_1)
     assert(network.get_upstream_layers(third_level_node_3)[1] == first_level_node_2)
 
-    print('Inserting a layer should result in all the connections between the upstream and downstream layers adjacent to this layer being rerouted through it')
-    assert(False)
+    print('Inserting a layer should result in the connection between the upstream and downstream layer being rerouted through the new layer')
+    network = Network()
+    first_layer_id = network.add_random_layer()
+    second_layer_id = network.add_random_layer(True, first_layer_id)
+    
+    inserted_layer_id = network.insert_random_layer(True, first_layer_id, second_layer_id)
+    
+    assert(len(network.get_downstream_layers(first_layer_id)) == 1)
+    assert(network.get_downstream_layers(first_layer_id)[0] == inserted_layer_id)
+    assert(len(network.get_downstream_layers(inserted_layer_id)) == 1)
+    assert(network.get_downstream_layers(inserted_layer_id)[0] == second_layer_id)
+    
+    print('\t The layer type and parameters should be retrievable using network.get_network_layer_details(layer_id)')
+    network = Network()
+    layer_id = network.add_layer_with_random_parameters('Dropout')
+    
+    layer_type, layer_parameters = network.get_network_layer_details(layer_id)
+    assert(layer_type == 'Dropout')
+    assert('remove_probability' in layer_parameters)
+    
+    print('\t The layer type alone should be retrievable using network.get_network_layer_type(layer_id)')
+    layer_type = network.get_network_layer_type(layer_id)
+    assert(layer_type == 'Dropout')
+    
+    print('\t The layer parameters alone should be retrievable using network.get_network_layer_parameters(layer_id)')
+    layer_parameters = network.get_network_layer_parameters(layer_id)
+    assert('remove_probability' in layer_parameters)
+    
+    print('\t network.change_network_layer_parameter(layer_id, parameter, value) should change the parameter value of a layer')
+    layer_parameters = network.get_network_layer_parameters(layer_id)
+    assert(layer_parameters['remove_probability'] != 99)
+    
+    network.change_network_layer_parameter(layer_id, 'remove_probability', 99)
+    layer_parameters = network.get_network_layer_parameters(layer_id)
+    assert(layer_parameters['remove_probability'] == 99)
+    
+    print('\t network.number_of_layers() should return the number of layers in the network')
+    network = Network()
+    layer_id = network.add_random_layer()
+    assert(network.number_of_layers() == 1)
+    
+    network.add_random_layer(True, layer_id)
+    assert(network.number_of_layers() == 2)
+    #assert(False)
 
 def test_optimizer():
     
@@ -374,8 +416,7 @@ def test_optimizer():
     
 def to_do():
     print('TODO')
-    print('\t1. Move to Functional keras API')
-    print('\t2. Add branching network structures')
+    print('\t1. Add branching network structures')
     
 print('Running tests....')    
 

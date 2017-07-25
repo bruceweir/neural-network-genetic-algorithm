@@ -19,7 +19,7 @@ class Network():
         """
         self.accuracy = 0.0
         self.nn_network_layer_options = self.create_network_layer_options()
-        self.network_layers = []
+        
         self.trained_model = None
         self.forbidden_layer_types = forbidden_layer_types
         self.network_graph = nx.DiGraph()
@@ -34,7 +34,6 @@ class Network():
     def create_random_network(self, number_of_layers=3, auto_check=False):
         """Create a random network."""
 
-        self.network_layers = []
         self.network_graph = nx.DiGraph()
 
         for i in range(number_of_layers):
@@ -51,8 +50,6 @@ class Network():
     def add_random_layer(self, allow_dropout = True, upstream_layer_id = None):
 
         
-        self.network_layers.append(self.create_random_layer(allow_dropout))
-        
         new_layer_id = self.get_new_layer_id()
         self.network_graph.add_node(new_layer_id, self.create_random_layer(allow_dropout))
         
@@ -64,6 +61,7 @@ class Network():
         return new_layer_id
 
     def connect_layers(self, upstream_layer_id, layer_id):
+        
         if self.network_graph.has_node(upstream_layer_id) is not True or self.network_graph.has_node(layer_id) is not True:
             return
         
@@ -72,8 +70,6 @@ class Network():
 
     def add_layer_with_random_parameters(self, layer_type, upstream_layer_id = None):
 
-        self.network_layers.append(self.create_layer(layer_type))
-        
         new_layer_id = self.get_new_layer_id()       
         self.network_graph.add_node(new_layer_id, self.create_layer(layer_type))
         
@@ -82,31 +78,35 @@ class Network():
             
         
         self.clear_trained_model()
+        
+        return new_layer_id
 
     def insert_layer_with_random_parameters(self, layer_type, upstream_layer_id = None, downstream_node_id= None):
 
-        self.insert_layer_between_layers(self.create_layer(layer_type), upstream_layer_id, downstream_node_id)
+        return self.insert_layer_between_layers(self.create_layer(layer_type), upstream_layer_id, downstream_node_id)
 
 
     def insert_random_layer(self, allow_dropout=True, upstream_layer_id = None, downstream_node_id= None):
 
-        self.insert_layer_between_layers(self.create_random_layer(allow_dropout), upstream_layer_id, downstream_node_id)
+        return self.insert_layer_between_layers(self.create_random_layer(allow_dropout), upstream_layer_id, downstream_node_id)
 
 
-    def insert_layer_between_layers(self, layer, upstream_layer_id, downstream_node_id):
+    def insert_layer_between_layers(self, layer, upstream_layer_id, downstream_layer_id):
         
         new_layer_id = self.get_new_layer_id()
-        self.network_graph.add(new_layer_id, layer)
+        self.network_graph.add_node(new_layer_id, layer)
         
-        if upstream_layer_id is not None and downstream_node_id is not None:
-            self.network_graph.remove_edge(downstream_node_id, upstream_layer_id)           
+        if upstream_layer_id is not None and downstream_layer_id is not None:
+            self.network_graph.remove_edge(upstream_layer_id, downstream_layer_id)           
             
         if upstream_layer_id is not None:
             self.connect_layers(upstream_layer_id, new_layer_id);
-        if downstream_node_id is not None:
-            self.connect_layers(downstream_node_id, new_layer_id)
+        if downstream_layer_id is not None:
+            self.connect_layers(new_layer_id, downstream_layer_id)
             
         self.clear_trained_model()
+        
+        return new_layer_id
                 
 
     def delete_layer(self, layer_id):
@@ -140,9 +140,11 @@ class Network():
         
         return self.network_graph.neighbors(node_id)
     
-    def change_network_layer_parameter(self, layer_index, parameter, value):
+    
+       
+    def change_network_layer_parameter(self, layer_id, parameter, value):
 
-        parameters = self.get_network_layer_parameters(layer_index)
+        parameters = self.get_network_layer_parameters(layer_id)
 
         if parameter in parameters:
             parameters[parameter] = value
@@ -378,22 +380,33 @@ class Network():
         print("Network accuracy: %.2f%%" % (self.accuracy * 100))
         
         
-    def get_network_layer_type(self, index):
+    def get_network_layer_type(self, layer_id):
         
-        if index >= self.number_of_layers():
-            return None
+        layer_type, _ = self.get_network_layer_details(layer_id)
         
-        return self.network_layers[index]['layer_type']
+        return layer_type
     
-    def get_network_layer_parameters(self, index):
+    
+    def get_network_layer_parameters(self, layer_id):
         
-        if index >= self.number_of_layers():
-            return None
+        _, parameters = self.get_network_layer_details(layer_id)
         
-        return self.network_layers[index]['layer_parameters']
+        return parameters
+    
+    
+    def get_network_layer_details(self, layer_id):
+        
+        layer_info = [(layer_info) for node_id, layer_info in self.network_graph.node.items() if node_id == layer_id]
+        
+        if len(layer_info) == 0:
+            return None, None
+        
+        return layer_info[0]['layer_type'], layer_info[0]['layer_parameters']
+ 
     
     def number_of_layers(self):
-        return len(self.network_layers)
+        return len(self.network_graph)
+    
     
     def save_network_details(self, file_name_prepend):
         
