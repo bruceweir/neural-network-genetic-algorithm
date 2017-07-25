@@ -238,8 +238,8 @@ def test_network():
     
 def test_network_graph():
 
-    print('Testing the network graph implementation')
-    print('\t. The network is directional, but it should be possible to trace the upstream and downstream connections for each layer')
+    print('Testing the network graph implementation.')
+    print('\t. The network is directional, but it should be possible to trace the upstream and downstream connections for each layer.')
     network = Network()
     first_node_id = network.add_random_layer()
     assert(network.network_graph.number_of_nodes() == 1)
@@ -255,7 +255,7 @@ def test_network_graph():
     assert(len(network.get_upstream_layers(second_node_id)) == 1)
     assert(network.get_upstream_layers(second_node_id)[0] == first_node_id)
     
-    print('\t Deleting a layer should correctly rearrange the upstream and downstream edges')
+    print('\t Deleting a layer should correctly rearrange the upstream and downstream edges.')
     network = Network()
     first_node_id = network.add_random_layer()
     second_node_id = network.add_random_layer(True, first_node_id)
@@ -270,7 +270,7 @@ def test_network_graph():
     
     assert(network.network_graph.has_node(second_node_id) == False)
     
-    print('\t When deleting a layer, all the upstream layers should end up connected to all the downstream layers')
+    print('\t When deleting a layer, all the upstream layers should end up connected to all the downstream layers.')
     network = Network()
     first_level_node_1 = network.add_random_layer()
     first_level_node_2 = network.add_random_layer()
@@ -321,7 +321,7 @@ def test_network_graph():
     assert(network.get_upstream_layers(third_level_node_3)[0] == first_level_node_1)
     assert(network.get_upstream_layers(third_level_node_3)[1] == first_level_node_2)
 
-    print('Inserting a layer should result in the connection between the upstream and downstream layer being rerouted through the new layer')
+    print('Inserting a layer should result in the connection between the upstream and downstream layer being rerouted through the new layer.')
     network = Network()
     first_layer_id = network.add_random_layer()
     second_layer_id = network.add_random_layer(True, first_layer_id)
@@ -333,7 +333,7 @@ def test_network_graph():
     assert(len(network.get_downstream_layers(inserted_layer_id)) == 1)
     assert(network.get_downstream_layers(inserted_layer_id)[0] == second_layer_id)
     
-    print('\t The layer type and parameters should be retrievable using network.get_network_layer_details(layer_id)')
+    print('\t The layer type and parameters should be retrievable using network.get_network_layer_details(layer_id).')
     network = Network()
     layer_id = network.add_layer_with_random_parameters('Dropout')
     
@@ -341,15 +341,15 @@ def test_network_graph():
     assert(layer_type == 'Dropout')
     assert('remove_probability' in layer_parameters)
     
-    print('\t The layer type alone should be retrievable using network.get_network_layer_type(layer_id)')
+    print('\t The layer type alone should be retrievable using network.get_network_layer_type(layer_id).')
     layer_type = network.get_network_layer_type(layer_id)
     assert(layer_type == 'Dropout')
     
-    print('\t The layer parameters alone should be retrievable using network.get_network_layer_parameters(layer_id)')
+    print('\t The layer parameters alone should be retrievable using network.get_network_layer_parameters(layer_id).')
     layer_parameters = network.get_network_layer_parameters(layer_id)
     assert('remove_probability' in layer_parameters)
     
-    print('\t network.change_network_layer_parameter(layer_id, parameter, value) should change the parameter value of a layer')
+    print('\t network.change_network_layer_parameter(layer_id, parameter, value) should change the parameter value of a layer.')
     layer_parameters = network.get_network_layer_parameters(layer_id)
     assert(layer_parameters['remove_probability'] != 99)
     
@@ -357,7 +357,7 @@ def test_network_graph():
     layer_parameters = network.get_network_layer_parameters(layer_id)
     assert(layer_parameters['remove_probability'] == 99)
     
-    print('\t network.number_of_layers() should return the number of layers in the network')
+    print('\t network.number_of_layers() should return the number of layers in the network.')
     network = Network()
     layer_id = network.add_random_layer()
     assert(network.number_of_layers() == 1)
@@ -365,7 +365,7 @@ def test_network_graph():
     network.add_random_layer(True, layer_id)
     assert(network.number_of_layers() == 2)
     
-    print('\t network.network_is_1d_at_layer(layer_id) should correctly traverse the parent layers to check dimensionality')
+    print('\t network.network_is_1d_at_layer(layer_id) should correctly traverse the parent layers to check dimensionality.')
     network = Network()
     layer_1 = network.add_layer_with_random_parameters('Dense')
     assert(network.network_is_1d_at_layer(layer_1) is True)
@@ -376,13 +376,31 @@ def test_network_graph():
     layer_2 = network.add_layer_with_random_parameters('Dropout', layer_1)
     assert(network.network_is_1d_at_layer(layer_2) is True)
     assert(network.network_is_2d_at_layer(layer_2) is False)
-
+    
+    layer_3 = network.add_layer_with_random_parameters('Reshape', layer_2)
+    assert(network.network_is_1d_at_layer(layer_3) is False)
+    assert(network.network_is_2d_at_layer(layer_3) is True)
+    
     network = Network()
     layer_1 = network.add_layer_with_random_parameters('Conv2D')
     layer_2 = network.add_layer_with_random_parameters('Dropout', layer_1)
     assert(network.network_is_1d_at_layer(layer_2) is False)
     assert(network.network_is_2d_at_layer(layer_2) is True)
 
+    layer_3 = network.add_layer_with_random_parameters('Flatten', layer_2)
+    assert(network.network_is_1d_at_layer(layer_3) is True)
+    assert(network.network_is_2d_at_layer(layer_3) is False)
+
+    print('\t Layer Dimension checking should work correctly in branched networks.')
+    network = Network()
+    first_layer_1 = network.add_layer_with_random_parameters('Dense')
+    first_layer_2 = network.add_layer_with_random_parameters('Dense')
+    second_layer_1 = network.add_layer_with_random_parameters('Dense')
+    network.connect_layers(first_layer_1, second_layer_1)
+    network.connect_layers(first_layer_2, second_layer_1)
+    
+    
+    
 
 def test_optimizer():
     

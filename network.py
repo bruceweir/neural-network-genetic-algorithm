@@ -173,8 +173,9 @@ class Network():
 
         layer_parameters = {}
 
-        for key in self.nn_network_layer_options[layer_type]:
-            layer_parameters[key] = random.choice(self.nn_network_layer_options[layer_type][key])
+        if layer_type != 'Flatten':
+            for key in self.nn_network_layer_options[layer_type]:
+                layer_parameters[key] = random.choice(self.nn_network_layer_options[layer_type][key])
 
         return {'layer_type': layer_type, 'layer_parameters': layer_parameters}
 
@@ -252,10 +253,9 @@ class Network():
             if '2D' in layer_type or layer_type == 'Reshape':
                 return False
             
-            input_layer_ids = self.get_upstream_layers(layer_id)
+            upstream_layer_ids = self.get_upstream_layers(layer_id)
             
-            for layer_ids in input_layer_ids:
-                return self.network_is_1d_at_layer(layer_ids)
+            return all([self.network_is_1d_at_layer(layer_id) for layer_id in upstream_layer_ids])
                 
             
         return True
@@ -283,11 +283,9 @@ class Network():
         if '2D' in layer_type or layer_type == 'Reshape':
             return True
         if layer_type == 'Dropout':
-            input_layer_ids = self.get_upstream_layers(layer_id)
-        
-            for layer_ids in input_layer_ids:
-                return self.network_is_2d_at_layer(layer_ids)
-        
+            upstream_layer_ids = self.get_upstream_layers(layer_id)        
+            return all([self.network_is_2d_at_layer(layer_id) for layer_id in upstream_layer_ids])
+            
         return False
     
     
