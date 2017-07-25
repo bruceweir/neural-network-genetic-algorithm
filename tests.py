@@ -364,7 +364,25 @@ def test_network_graph():
     
     network.add_random_layer(True, layer_id)
     assert(network.number_of_layers() == 2)
-    #assert(False)
+    
+    print('\t network.network_is_1d_at_layer(layer_id) should correctly traverse the parent layers to check dimensionality')
+    network = Network()
+    layer_1 = network.add_layer_with_random_parameters('Dense')
+    assert(network.network_is_1d_at_layer(layer_1) is True)
+    assert(network.network_is_2d_at_layer(layer_1) is False)
+
+    network = Network()
+    layer_1 = network.add_layer_with_random_parameters('Dense')
+    layer_2 = network.add_layer_with_random_parameters('Dropout', layer_1)
+    assert(network.network_is_1d_at_layer(layer_2) is True)
+    assert(network.network_is_2d_at_layer(layer_2) is False)
+
+    network = Network()
+    layer_1 = network.add_layer_with_random_parameters('Conv2D')
+    layer_2 = network.add_layer_with_random_parameters('Dropout', layer_1)
+    assert(network.network_is_1d_at_layer(layer_2) is False)
+    assert(network.network_is_2d_at_layer(layer_2) is True)
+
 
 def test_optimizer():
     

@@ -237,23 +237,27 @@ class Network():
         return not self.network_is_1d_at_layer(layer_index)
     
     
-    def network_is_1d_at_layer(self, layer_index):
+    def network_is_1d_at_layer(self, layer_id):
                
-        if layer_index >= self.number_of_layers():
-            return False
         
-        index = layer_index
-        
-        while index > -1:
-            layer_type = self.network_layers[index]['layer_type']
+        while(True):
+            if self.network_graph.has_node(layer_id) is False:
+                raise ValueError('Network.network_is_1d_at_layer(). Unknown layer_id')
+    
+                    
+            layer_type = self.get_network_layer_type(layer_id)
             
             if layer_type == 'Dense' or layer_type == 'Flatten':
                 return True
             if '2D' in layer_type or layer_type == 'Reshape':
                 return False
             
-            index = index-1
-        
+            input_layer_ids = self.get_upstream_layers(layer_id)
+            
+            for layer_ids in input_layer_ids:
+                return self.network_is_1d_at_layer(layer_ids)
+                
+            
         return True
 
     
@@ -268,17 +272,21 @@ class Network():
         return not self.network_is_2d_at_layer(layer_index)
     
     
-    def network_is_2d_at_layer(self, layer_index):
+    def network_is_2d_at_layer(self, layer_id):
         
-        if layer_index >= self.number_of_layers():
-            return False
-        layer = self.network_layers[layer_index]
-        layer_type = layer['layer_type']
+        
+        if self.network_graph.has_node(layer_id) is False:
+            raise ValueError('network.network_is_2d_at_layer(). Unknown layer_id')
+            
+        layer_type = self.get_network_layer_type(layer_id)
         
         if '2D' in layer_type or layer_type == 'Reshape':
             return True
         if layer_type == 'Dropout':
-            return self.network_is_2d_at_layer(layer_index - 1)
+            input_layer_ids = self.get_upstream_layers(layer_id)
+        
+            for layer_ids in input_layer_ids:
+                return self.network_is_2d_at_layer(layer_ids)
         
         return False
     
