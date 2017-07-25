@@ -176,32 +176,24 @@ class Optimizer():
 
         """
         if network.number_of_layers() > 1:         
-            mutationType = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayer'])
+            mutation_type = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayer'])
         else:
-            mutationType = random.choice(['AdjustLayerParameter', 'InsertLayer'])
+            mutation_type = random.choice(['AdjustLayerParameter', 'InsertLayer'])
             
         
         
-        mutatedLayerIndex = random.choice(range(network.number_of_layers()))
-        mutatedLayerType = network.get_network_layer_type(mutatedLayerIndex)
+        mutated_layer_id = random.choice(range(network.number_of_layers()))
+        mutated_layer_type = network.get_network_layer_type(mutated_layer_id)
         
-        print('Mutating network: %s. Index: %d (%s)' % (mutationType, mutatedLayerIndex, mutatedLayerType))
+        print('Mutating network: %s. Index: %d (%s)' % (mutation_type, mutated_layer_id, mutated_layer_type))
         # Mutate one of the params.
-        if mutationType == 'AdjustLayerParameter':
-            if mutatedLayerType != 'Flatten':
-                network.change_random_parameter_for_layer(mutatedLayerIndex)
-            else:
-                self.mutate(network)
-        elif mutationType == 'RemoveLayer':           
-            network.delete_layer(mutatedLayerIndex)
-        elif mutationType == 'InsertLayer':
-            allow_dropout = False
-            if network.number_of_layers() > 1 and network.get_network_layer_type(mutatedLayerIndex-1) != 'Dropout':
-                allow_dropout = True
-            
-            network.insert_random_layer(mutatedLayerIndex, allow_dropout)
+        if mutation_type == 'AdjustLayerParameter':
+            self.mutate(network)
+        elif mutation_type == 'RemoveLayer':           
+            network.delete_layer(mutated_layer_id)
+        elif mutation_type == 'InsertLayer':
+            network.insert_random_layer(mutated_layer_id)
 
-        network.check_network_structure()
                 
         #return network
 
@@ -237,7 +229,6 @@ class Optimizer():
                     if random.random() > 0.5:
                         baby.network_layers.append(copy.deepcopy(longest_network.network_layers[i + shortest_network.number_of_layers()]))
             
-            baby.check_network_structure()
             
             babies.append(baby)
 

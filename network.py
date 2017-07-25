@@ -31,21 +31,20 @@ class Network():
         return self.layer_id
     
     
-    def create_random_network(self, number_of_layers=3, auto_check=False):
+    def create_random_network(self, number_of_layers=3):
         """Create a random network."""
 
         self.network_graph = nx.DiGraph()
+        
+        previous_layer_id = None
 
         for i in range(number_of_layers):
             allow_dropout = True
             if i == 0:
                 allow_dropout = False
 
-            self.add_random_layer(allow_dropout)
+            previous_layer_id = self.add_random_layer(allow_dropout, previous_layer_id)
 
-
-        if auto_check is True:
-            self.check_network_structure()
 
     def add_random_layer(self, allow_dropout = True, upstream_layer_id = None):
 
@@ -178,134 +177,6 @@ class Network():
                 layer_parameters[key] = random.choice(self.nn_network_layer_options[layer_type][key])
 
         return {'layer_type': layer_type, 'layer_parameters': layer_parameters}
-
-
-    def check_network_structure(self):
-
-        """ Apply various rules for allowing only certain network structures
-
-        Insert a Flatten() layer if going from a 2D layer to a Dense layer.
-        Dropout layers cannot immediately follow Dropout layers.
-        Insert a Reshape() layer when going from a 1d layer to a Conv2D layer.
-        Do not allow 2D to 2D reshapes
-        The first layer cannot be a Dropout layer
-        """
-        i = 1
-
-        network_changed = False
-
-        while i < len(self.network_layers):
-            #print('%d: %s' % (i, self.network_layers[i]['layer_type']))
-            current_layer_type = self.get_network_layer_type(i)
-            previous_layer_type = self.get_network_layer_type(i-1)
-
-            if current_layer_type == 'Dense' and self.network_is_not_1d_at_layer(i-1):
-                self.network_layers.insert(i, {'layer_type':'Flatten', 'layer_parameters':{}})
-                network_changed = True
-                i = 1
-            elif current_layer_type == 'Dropout' and previous_layer_type == 'Dropout':
-                del self.network_layers[i]
-                network_changed = True
-                i = 1
-            elif self.network_is_2d_at_layer(i) and current_layer_type != 'Reshape' and self.network_is_not_2d_at_layer(i-1):# (current_layer_type == 'Conv2D' or current_layer_type == 'MaxPooling2D') and self.network_is_not_2d_at_layer(i-1):
-                self.insert_layer_with_random_parameters(i, 'Reshape')
-                network_changed = True
-                i = 1
-            elif current_layer_type == 'Reshape' and self.network_is_2d_at_layer(i-1):
-                del self.network_layers[i]
-                network_changed = True
-                i = 1
-            elif current_layer_type == 'Flatten' and self.network_is_1d_at_layer(i-1):
-                del self.network_layers[i]
-                network_changed = True
-                i = 1
-                               
-            else:
-                i+=1
-
-        forbidden_first_layers = ['Dropout', 'Reshape', 'Flatten']
-                
-        while  self.number_of_layers() > 0 and self.get_network_layer_type(0) in forbidden_first_layers:
-            del self.network_layers[0]
-            network_changed = True
-            
-        if network_changed is True:
-            self.clear_trained_model()
-
-
-    def network_is_not_1d_at_layer(self, layer_index):
-        
-        return not self.network_is_1d_at_layer(layer_index)
-    
-    
-    def network_is_1d_at_layer(self, layer_id):
-               
-        
-        while(True):
-            if self.network_graph.has_node(layer_id) is False:
-                raise ValueError('Network.network_is_1d_at_layer(). Unknown layer_id')
-    
-                    
-            layer_type = self.get_network_layer_type(layer_id)
-            
-            if layer_type == 'Dense' or layer_type == 'Flatten':
-                return True
-            if '2D' in layer_type or layer_type == 'Reshape':
-                return False
-            
-            upstream_layer_ids = self.get_upstream_layers(layer_id)
-            
-            return all([self.network_is_1d_at_layer(layer_id) for layer_id in upstream_layer_ids])
-                
-            
-        return True
-
-    
-    def starts_with_2d_layer(self):
-        if self.number_of_layers() == 0:
-            return False
-        
-        return self.network_is_2d_at_layer(0)
-    
-    
-    def network_is_not_2d_at_layer(self, layer_index):
-        return not self.network_is_2d_at_layer(layer_index)
-    
-    
-    def network_is_2d_at_layer(self, layer_id):
-        
-        
-        if self.network_graph.has_node(layer_id) is False:
-            raise ValueError('network.network_is_2d_at_layer(). Unknown layer_id')
-            
-        layer_type = self.get_network_layer_type(layer_id)
-        
-        if '2D' in layer_type or layer_type == 'Reshape':
-            return True
-        if layer_type == 'Dropout':
-            upstream_layer_ids = self.get_upstream_layers(layer_id)        
-            return all([self.network_is_2d_at_layer(layer_id) for layer_id in upstream_layer_ids])
-            
-        return False
-
-    def layer_type_is_not_1d(self, layer_type):
-        
-        return not self.layer_type_is_1d(layer_type)
-    
-    
-    def layer_type_is_1d(self, layer_type):
-        
-        return layer_type in ['Dense']
-    
-    
-    def layer_type_is_not_2d(self, layer_type):
-        
-        return not self.layer_type_is_2d(layer_type)
-    
-    
-    def layer_type_is_2d(self, layer_type):
-        
-        return '2D' in layer_type
     
     
     def train(self, dataset):
@@ -392,16 +263,8 @@ class Network():
         return self.get_network_layer_parameters(index)[parameter]
 
 
-    def print_network_as_json(self, just_the_layers=False):
-        
-        if just_the_layers is True:
-            for layer in self.network_layers:
-                print(layer['layer_type'])
-        else:
-            print(json.dumps(self.network_layers, indent=4))
-
     def print_network_details(self):
-        self.print_network_as_json()
+        print(self.network_graph.node.items())
         print("Network accuracy: %.2f%%" % (self.accuracy * 100))
         
         

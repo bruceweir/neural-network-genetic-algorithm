@@ -186,8 +186,8 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
         
 
     # Output layer.
-    if network.layer_type_is_not_1d(network.get_network_layer_type(network.number_of_layers()-1)):
-        layer = Flatten()(layer)
+    #if network.layer_type_is_not_1d(network.get_network_layer_type(network.number_of_layers()-1)):
+    #    layer = Flatten()(layer)
     
     predictions = Dense(nb_classes, activation='softmax')(layer)
 
