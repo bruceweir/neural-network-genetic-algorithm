@@ -57,7 +57,7 @@ class Optimizer():
         for _ in range(0, population_size):
             # Create a random network.
             network = Network(self.forbidden_layer_types)
-            network.create_random_network(initial_network_length, True)
+            network.create_random_network(initial_network_length)
 
             # Add the network to our population.
             population.append(network)
@@ -182,7 +182,7 @@ class Optimizer():
             
         
         
-        mutated_layer_id = random.choice(range(network.number_of_layers()))
+        mutated_layer_id = random.choice(network.get_all_network_layer_ids())
         mutated_layer_type = network.get_network_layer_type(mutated_layer_id)
         
         print('Mutating network: %s. Index: %d (%s)' % (mutation_type, mutated_layer_id, mutated_layer_type))
@@ -191,8 +191,8 @@ class Optimizer():
             self.mutate(network)
         elif mutation_type == 'RemoveLayer':           
             network.delete_layer(mutated_layer_id)
-        elif mutation_type == 'InsertLayer':
-            network.insert_random_layer(mutated_layer_id)
+        elif mutation_type == 'InsertLayer':           
+            network.insert_random_layer(True, network.get_upstream_layers(mutated_layer_id), network.get_downstream_layers(mutated_layer_id))
 
                 
         #return network
@@ -222,16 +222,51 @@ class Optimizer():
             else:
                 longest_network = mother
                 shortest_network = father               
+            
+            shortest_network_layer_ids = shortest_network.get_all_network_layer_ids()
+            longest_network_layer_ids = longest_network.get_all_network_layer_ids()
+            
+            for i in range(len(shortest_network_layer_ids)):
+                current_shortest_network_layer_id = shortest_network_layer_ids[i]
+                current_longest_network_layer_id = longest_network_layer_ids[i]
+                chosen_layer_parameters = None
+                chosen_layer_upstream_layers = None
+                if random.random() > 0.5:
+                    chosen_network = shortest_network
+                    chosen_network_layer_id = current_shortest_network_layer_id
+                else:
+                    chosen_network = longest_network
+                    chosen_network_layer_id = current_longest_network_layer_id
+                                   
+                chosen_layer_parameters, chosen_layer_upstream_layers = self.choose_parameters_and_upstream_connections_for_layer(chosen_network, chosen_network_layer_id, baby)                
+                baby.add_layer_with_parameters(chosen_layer_parameters, chosen_layer_upstream_layers)
+                    
+                    
+                #########
+            for i in range(len(longest_network_layer_ids) - len(shortest_network_layer_ids)):
                 
-            for i in range(shortest_network.number_of_layers()):
-                    baby.network_layers.append(copy.deepcopy(random.choice([shortest_network.network_layers[i], longest_network.network_layers[i]])))
-            for i in range(longest_network.number_of_layers() - shortest_network.number_of_layers()):
-                    if random.random() > 0.5:
-                        baby.network_layers.append(copy.deepcopy(longest_network.network_layers[i + shortest_network.number_of_layers()]))
+                if random.random() > 0.5:
+                    chosen_layer_parameters, chosen_layer_upstream_layers = self.choose_parameters_and_upstream_connections_for_layer(longest_network, longest_network_layer_ids[i], baby)                
+                    baby.add_layer_with_parameters(chosen_layer_parameters, chosen_layer_parameters)
             
             
             babies.append(baby)
 
         return babies
 
-    
+    def choose_parameters_and_upstream_connections_for_layer(self, parent_network, layer_id, baby_network):
+        chosen_layer_parameters = copy.deepcopy(parent_network.get_network_layer_details_dictionary(layer_id))
+        chosen_layer_upstream_layers = parent_network.get_upstream_layers(layer_id)
+        upstream_layers_which_exist_in_this_network = [x for x in chosen_layer_upstream_layers if baby_network.has_a_layer_with_id(x)]
+                
+        if len(upstream_layers_which_exist_in_this_network) == 0:
+            network_ends = baby_network.get_network_layers_with_no_downstream_connections()
+            if len(network_ends) == 0:
+                chosen_layer_upstream_layers = None
+            else:
+                chosen_layer_upstream_layers = [random.choice(network_ends)]    
+        
+        return chosen_layer_parameters, chosen_layer_upstream_layers
+                       
+                
+        

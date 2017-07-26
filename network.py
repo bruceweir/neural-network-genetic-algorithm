@@ -1,7 +1,6 @@
 """Class that represents the network to be evolved."""
 import random
 import logging
-import json
 from train import train_and_score
 from network_layer_options import *
 #from keras.models import load_model
@@ -43,65 +42,78 @@ class Network():
             if i == 0:
                 allow_dropout = False
 
-            previous_layer_id = self.add_random_layer(allow_dropout, previous_layer_id)
+            previous_layer_id = self.add_random_layer(allow_dropout, [previous_layer_id])
 
 
-    def add_random_layer(self, allow_dropout = True, upstream_layer_id = None):
+    def add_random_layer(self, allow_dropout = True, upstream_layer_ids = None):
 
+        return self.add_layer_with_parameters(self.create_random_layer(allow_dropout), upstream_layer_ids)
+
+
+    def add_layer_with_random_parameters(self, layer_type, upstream_layer_ids = None):
+
+        return self.add_layer_with_parameters(self.create_layer(layer_type), upstream_layer_ids)
+
+    
+    def add_layer_with_parameters(self, parameters, upstream_layer_ids):
         
         new_layer_id = self.get_new_layer_id()
-        self.network_graph.add_node(new_layer_id, self.create_random_layer(allow_dropout))
         
-        if upstream_layer_id is not None:
-            self.connect_layers(upstream_layer_id, new_layer_id)
+        self.network_graph.add_node(new_layer_id, parameters)
+        
+        self.connect_layers(upstream_layer_ids, [new_layer_id])
         
         self.clear_trained_model()
         
         return new_layer_id
 
-    def connect_layers(self, upstream_layer_id, layer_id):
-        
-        if self.network_graph.has_node(upstream_layer_id) is not True or self.network_graph.has_node(layer_id) is not True:
+
+    def connect_layers(self, upstream_layer_ids, layer_ids):
+
+        """ Add an edge between the layers whose ids are listed in the upstream_layer_ids array and each of the layers in the layer_ids list """        
+    
+        if upstream_layer_ids == None or layer_ids == None:
             return
+                
+        for upstream_layer_id in upstream_layer_ids:
+            for layer_id in layer_ids:
+                if self.network_graph.has_node(upstream_layer_id) and self.network_graph.has_node(layer_id):
+                    self.network_graph.add_edge(upstream_layer_id, layer_id)
+
+
+    def disconnect_layers(self, upstream_layer_ids, layer_ids):
+
+        """ Remove edges between the layers whose ids are listed in the upstream_layer_ids array and each of the layers in the layer_ids list """        
+    
+        for upstream_layer_id in upstream_layer_ids:
+            for layer_id in layer_ids:
+                if self.network_graph.has_node(upstream_layer_id) and self.network_graph.has_node(layer_id):
+                    self.network_graph.remove_edge(upstream_layer_id, layer_id)
+
+    def insert_layer_with_random_parameters(self, layer_type, upstream_layer_ids, downstream_layer_ids):
+
+        return self.insert_layer_between_layers(self.create_layer(layer_type), upstream_layer_ids, downstream_layer_ids)
+
+
+    def insert_random_layer(self, allow_dropout, upstream_layer_ids, downstream_layer_ids):
+
+        return self.insert_layer_between_layers(self.create_random_layer(allow_dropout), upstream_layer_ids, downstream_layer_ids)
+
+    
+    def insert_layer_with_parameters(self, parameters, upstream_layer_ids, downstream_layer_ids):
         
-        self.network_graph.add_edge(upstream_layer_id, layer_id)
+        return self.insert_layer_between_layers(parameters, upstream_layer_ids, downstream_layer_ids)
+    
 
-
-    def add_layer_with_random_parameters(self, layer_type, upstream_layer_id = None):
-
-        new_layer_id = self.get_new_layer_id()       
-        self.network_graph.add_node(new_layer_id, self.create_layer(layer_type))
-        
-        if upstream_layer_id is not None:
-            self.connect_layers(upstream_layer_id, new_layer_id)
-            
-        
-        self.clear_trained_model()
-        
-        return new_layer_id
-
-    def insert_layer_with_random_parameters(self, layer_type, upstream_layer_id = None, downstream_node_id= None):
-
-        return self.insert_layer_between_layers(self.create_layer(layer_type), upstream_layer_id, downstream_node_id)
-
-
-    def insert_random_layer(self, allow_dropout=True, upstream_layer_id = None, downstream_node_id= None):
-
-        return self.insert_layer_between_layers(self.create_random_layer(allow_dropout), upstream_layer_id, downstream_node_id)
-
-
-    def insert_layer_between_layers(self, layer, upstream_layer_id, downstream_layer_id):
+    def insert_layer_between_layers(self, layer, upstream_layer_ids, downstream_layer_ids):
         
         new_layer_id = self.get_new_layer_id()
         self.network_graph.add_node(new_layer_id, layer)
         
-        if upstream_layer_id is not None and downstream_layer_id is not None:
-            self.network_graph.remove_edge(upstream_layer_id, downstream_layer_id)           
+        self.disconnect_layers(upstream_layer_ids, downstream_layer_ids)
             
-        if upstream_layer_id is not None:
-            self.connect_layers(upstream_layer_id, new_layer_id);
-        if downstream_layer_id is not None:
-            self.connect_layers(new_layer_id, downstream_layer_id)
+        self.connect_layers(upstream_layer_ids, [new_layer_id]);
+        self.connect_layers([new_layer_id], downstream_layer_ids)
             
         self.clear_trained_model()
         
@@ -116,28 +128,29 @@ class Network():
         upstream_layers = self.get_upstream_layers(layer_id)
         downstream_layers = self.get_downstream_layers(layer_id)
         
+        self.disconnect_layers(upstream_layers, [layer_id])
+        self.disconnect_layers([layer_id], downstream_layers)
+        
         self.network_graph.remove_node(layer_id)
         
-        for up in upstream_layers:
-            for down in downstream_layers:
-                self.connect_layers(up, down)
+        self.connect_layers(upstream_layers, downstream_layers)
                 
         self.clear_trained_model()
 
-    def get_upstream_layers(self, node_id):
+    def get_upstream_layers(self, layer_id):
         
-        if self.network_graph.has_node(node_id) is not True:        
+        if self.network_graph.has_node(layer_id) is not True:        
             return []
         
-        return self.network_graph.reverse().neighbors(node_id)
+        return self.network_graph.reverse().neighbors(layer_id)
 
     
-    def get_downstream_layers(self, node_id):
+    def get_downstream_layers(self, layer_id):
         
-        if self.network_graph.has_node(node_id) is not True:
+        if self.network_graph.has_node(layer_id) is not True:
             return []
         
-        return self.network_graph.neighbors(node_id)
+        return self.network_graph.neighbors(layer_id)
     
     
        
@@ -284,16 +297,38 @@ class Network():
     
     def get_network_layer_details(self, layer_id):
         
-        layer_info = [(layer_info) for node_id, layer_info in self.network_graph.node.items() if node_id == layer_id]
+        layer_info = self.get_network_layer_details_dictionary(layer_id)
         
-        if len(layer_info) == 0:
+        if layer_info == None:
             return None, None
         
-        return layer_info[0]['layer_type'], layer_info[0]['layer_parameters']
+        return layer_info['layer_type'], layer_info['layer_parameters']
  
+    def get_network_layer_details_dictionary(self, layer_id):
+        
+        layer_info = [layer_info for node_id, layer_info in self.network_graph.node.items() if node_id == layer_id]
+        
+        if len(layer_info) == 0:
+            return None
+        
+        return layer_info[0]
     
+        
+    def get_all_network_layer_ids(self):
+        
+        layer_ids = [node_id for node_id, layer_info in self.network_graph.node.items()]
+        return layer_ids
+    
+    def get_network_layers_with_no_downstream_connections(self):
+        
+        return [x for x in self.get_all_network_layer_ids() if len(self.get_downstream_layers(x)) == 0]
+        
     def number_of_layers(self):
         return len(self.network_graph)
+    
+    def has_a_layer_with_id(self, layer_id):
+        
+        return self.network_graph.has_node(layer_id)
     
     
     def save_network_details(self, file_name_prepend):

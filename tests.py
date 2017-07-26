@@ -49,7 +49,7 @@ def test_network_graph():
     first_node_id = network.add_random_layer()
     assert(network.network_graph.number_of_nodes() == 1)
     
-    second_node_id = network.add_random_layer(True, first_node_id)
+    second_node_id = network.add_random_layer(True, [first_node_id])
     assert(network.network_graph.number_of_nodes() == 2)
     
     assert(len(network.get_downstream_layers(first_node_id)) == 1)
@@ -63,8 +63,8 @@ def test_network_graph():
     print('\t Deleting a layer should correctly rearrange the upstream and downstream edges.')
     network = Network()
     first_node_id = network.add_random_layer()
-    second_node_id = network.add_random_layer(True, first_node_id)
-    third_node_id = network.add_random_layer(True, second_node_id)
+    second_node_id = network.add_random_layer(True, [first_node_id])
+    third_node_id = network.add_random_layer(True, [second_node_id])
     
     network.delete_layer(second_node_id)
     assert(len(network.get_downstream_layers(first_node_id)) == 1)
@@ -81,16 +81,16 @@ def test_network_graph():
     first_level_node_2 = network.add_random_layer()
     second_level_node_1 = network.add_random_layer()
     
-    network.connect_layers(first_level_node_1, second_level_node_1)
-    network.connect_layers(first_level_node_2, second_level_node_1)
+    network.connect_layers([first_level_node_1], [second_level_node_1])
+    network.connect_layers([first_level_node_2], [second_level_node_1])
     
     third_level_node_1 = network.add_random_layer()
     third_level_node_2 = network.add_random_layer()
     third_level_node_3 = network.add_random_layer()
     
-    network.connect_layers(second_level_node_1, third_level_node_1)
-    network.connect_layers(second_level_node_1, third_level_node_2)
-    network.connect_layers(second_level_node_1, third_level_node_3)
+    network.connect_layers([second_level_node_1], [third_level_node_1])
+    network.connect_layers([second_level_node_1], [third_level_node_2])
+    network.connect_layers([second_level_node_1], [third_level_node_3])
     
     assert(len(network.get_upstream_layers(second_level_node_1)) == 2)
     assert(network.get_upstream_layers(second_level_node_1)[0] == first_level_node_1)
@@ -129,9 +129,9 @@ def test_network_graph():
     print('Inserting a layer should result in the connection between the upstream and downstream layer being rerouted through the new layer.')
     network = Network()
     first_layer_id = network.add_random_layer()
-    second_layer_id = network.add_random_layer(True, first_layer_id)
+    second_layer_id = network.add_random_layer(True, [first_layer_id])
     
-    inserted_layer_id = network.insert_random_layer(True, first_layer_id, second_layer_id)
+    inserted_layer_id = network.insert_random_layer(True, [first_layer_id], [second_layer_id])
     
     assert(len(network.get_downstream_layers(first_layer_id)) == 1)
     assert(network.get_downstream_layers(first_layer_id)[0] == inserted_layer_id)
@@ -167,7 +167,7 @@ def test_network_graph():
     layer_id = network.add_random_layer()
     assert(network.number_of_layers() == 1)
     
-    network.add_random_layer(True, layer_id)
+    network.add_random_layer(True, [layer_id])
     assert(network.number_of_layers() == 2)
     
     
@@ -230,8 +230,8 @@ def to_do():
     
 print('Running tests....')    
 
-test_network()
-test_network_graph()
+#test_network()
+#test_network_graph()
 test_optimizer()
 #test_train()
 print('...tests complete')
