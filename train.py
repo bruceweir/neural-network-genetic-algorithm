@@ -23,6 +23,8 @@ K.set_image_dim_ordering('tf')
 # Helper: Early stopping.
 early_stopper = EarlyStopping(patience=5)
 
+list_of_trained_layers = []
+
 def get_cifar10():
     """Retrieve the CIFAR dataset and process the data."""
     # Set defaults.
@@ -120,6 +122,8 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
 
     """
     
+    global list_of_trained_layers
+    list_of_trained_layers = [{'layer_id':x, 'compiled_layer':None} for x in network.get_all_network_layer_ids()]
     # Get our network parameters.
     
     inputs = Input(shape=input_shape)
@@ -152,7 +156,13 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
 
 def add_layer(network, layer_id, input_layer):
     
+    global list_of_trained_layers
     """ Starting at the output layer, this should recurse up the network graph, adding Keras layers """
+    print(list_of_trained_layers)
+    
+    if get_compiled_layer_for_id(layer_id) is not None:
+        return get_compiled_layer_for_id(layer_id)
+    
     
     layer = input_layer
     
@@ -187,6 +197,8 @@ def add_layer(network, layer_id, input_layer):
         
     
     previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
+
+    set_compiled_layer_for_id(layer_id, layer)
     
     return layer
     
@@ -252,6 +264,18 @@ def get_compiled_layer_shape_details(layer):
     return previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer
 
 
+def get_compiled_layer_for_id(layer_id):
+    
+    global list_of_trained_layers
+    return [d['compiled_layer'] for d in list_of_trained_layers if d['layer_id'] == layer_id][0]
+ 
+def set_compiled_layer_for_id(layer_id, compiled_layer):   
+    global list_of_trained_layers
+    
+    layer_details = [d for d in list_of_trained_layers if d['layer_id'] == layer_id][0]
+    layer_details['compiled_layer'] = compiled_layer
+
+    
 def get_reshape_size_closest_to_square(number_of_neurons):
     
     dimension1 = math.sqrt(number_of_neurons)

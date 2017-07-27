@@ -11,7 +11,7 @@ def get_dense_layer_options():
 
     return {
         'nb_neurons': [64, 128, 256, 512, 768, 1024],
-        'activation': ['relu', 'elu', 'tanh', 'sigmoid']
+        'activation': ['relu', 'elu', 'tanh', 'sigmoid']       
     }
 
 
