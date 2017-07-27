@@ -176,23 +176,26 @@ class Optimizer():
 
         """
         if network.number_of_layers() > 1:         
-            mutation_type = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayer'])
+            mutation_type = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayerAbove', 'InsertLayerBelow'])
         else:
-            mutation_type = random.choice(['AdjustLayerParameter', 'InsertLayer'])
+            mutation_type = random.choice(['AdjustLayerParameter', 'InsertLayerAbove', 'InsertLayerBelow'])
             
         
         
         mutated_layer_id = random.choice(network.get_all_network_layer_ids())
         mutated_layer_type = network.get_network_layer_type(mutated_layer_id)
         
-        print('Mutating network: %s. Index: %d (%s)' % (mutation_type, mutated_layer_id, mutated_layer_type))
+        print('Mutating network: %s. mutated_layer_id: %d (%s)' % (mutation_type, mutated_layer_id, mutated_layer_type))
         # Mutate one of the params.
         if mutation_type == 'AdjustLayerParameter':
             self.mutate(network)
         elif mutation_type == 'RemoveLayer':           
             network.delete_layer(mutated_layer_id)
-        elif mutation_type == 'InsertLayer':           
-            network.insert_random_layer(True, network.get_upstream_layers(mutated_layer_id), network.get_downstream_layers(mutated_layer_id))
+        elif mutation_type == 'InsertLayerAbove':           
+            network.insert_random_layer(True, network.get_upstream_layers(mutated_layer_id), [mutated_layer_id])
+        elif mutation_type == 'InsertLayerBelow':           
+            network.insert_random_layer(True, [mutated_layer_id], network.get_downstream_layers(mutated_layer_id))
+            
 
                 
         #return network

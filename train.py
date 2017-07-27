@@ -158,7 +158,6 @@ def add_layer(network, layer_id, input_layer):
     
     global list_of_trained_layers
     """ Starting at the output layer, this should recurse up the network graph, adding Keras layers """
-    print(list_of_trained_layers)
     
     if get_compiled_layer_for_id(layer_id) is not None:
         return get_compiled_layer_for_id(layer_id)
@@ -251,11 +250,40 @@ def add_maxpooling2d_layer(layer_parameters, input_layer):
 
 def add_concatenation(input_layers):
     
-    layer = concatenate(input_layers)
-    
+    try:
+        layer = concatenate(input_layers)
+    except ValueError:
+        
+        reshape_size = calculate_best_size_for_concatenated_layers(input_layers)
+        layer = concatenate(input_layers) # should break here
     return layer
     
 
+def calculate_best_size_for_concatenated_layers(layers):
+    
+    """ 
+    Rules for 'best' concatenation. If practical, reshape lower dimension inputs to 
+    match higher dimension inputs (since high dimension inputs probably contain correlations
+    between adjacents data points which we dont want to lose). This means that smaller
+    images should be resized to match the larger image (and zero padded), and 1d data should
+    be converted into a 2d, single channel image and zero padded
+    """
+    max_dimensions = 0
+    max_d_layer = None
+    max_neurons = 0    
+    max_neuron_layer = None
+    
+    for layer in layers:
+        _, number_of_neurons, n_dimensions = get_compiled_layer_shape_details(layer)
+        if n_dimensions > max_dimensions:
+            max_dimensions = n_dimensions
+            max_d_layer = layer
+        if number_of_neurons > max_neurons:
+            max_neurons = number_of_neurons
+            max_neuron_layer = layer
+    
+    
+    
 def get_compiled_layer_shape_details(layer):
     previous_layer_shape = layer._keras_shape
     number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])

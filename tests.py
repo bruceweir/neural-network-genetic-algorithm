@@ -227,6 +227,7 @@ def test_optimizer():
 def to_do():
     print('TODO')
     print('\t1. Add branching network structures')
+    print('\t1\tSort out concatenation of different sized tensors')
     print('\t2. Add OOM capture and recovery during training')
     print('\t3. Add support for multiple input/output layers')    
 print('Running tests....')    
