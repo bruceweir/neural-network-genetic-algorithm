@@ -5,7 +5,7 @@ from optimizer import Optimizer
 from tqdm import tqdm
 import time
 import os
-from IPython.display import SVG
+from IPython.display import SVG, display
 from keras.utils.vis_utils import model_to_dot
 
 parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm. Source: https://github.com/bruceweir/neural-network-genetic-algorithm. Originally forked from: https://github.com/harvitronix/neural-network-genetic-algorithm.',
@@ -215,9 +215,17 @@ class Evolutionary_Neural_Network_Generator():
 
 def draw_model_on_interactive_session(model):
         
-    SVG(model_to_dot(model).create(prog='dot', format='svg'))
+    display(SVG(model_to_dot(model).create(prog='dot', format='svg')))
 
     
 if __name__ == '__main__':
             
     Evolutionary_Neural_Network_Generator = Evolutionary_Neural_Network_Generator(vars(args))
+
+
+#def make_and_draw(networks):
+#    networks = optimizer.evolve(networks)
+#    for n in networks:
+#        model = compile_model(n, 10, (784,), (28, 28, 1))
+#        display(SVG(model_to_dot(model).create(prog='dot', format='svg')))
+#    return networks

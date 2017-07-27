@@ -87,7 +87,7 @@ class Network():
     
         for upstream_layer_id in upstream_layer_ids:
             for layer_id in layer_ids:
-                if self.network_graph.has_node(upstream_layer_id) and self.network_graph.has_node(layer_id):
+                if self.network_graph.has_edge(upstream_layer_id, layer_id):
                     self.network_graph.remove_edge(upstream_layer_id, layer_id)
 
     def insert_layer_with_random_parameters(self, layer_type, upstream_layer_ids, downstream_layer_ids):

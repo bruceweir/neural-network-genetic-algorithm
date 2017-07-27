@@ -129,54 +129,15 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
         layer_type = network.get_network_layer_type(i);
         layer_parameters = network.get_network_layer_parameters(i)
    
-        #if network.layer_type_is_1d(layer_type) and number_of_dimensions_in_previous_layer > 1:
-        #    layer = Flatten()(layer)
-        #    previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
-         
-        #if network.layer_type_is_2d(layer_type) and number_of_dimensions_in_previous_layer < 3: #3 dimensions with n channels
-        #    reshape_size = get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
-        #    layer= Reshape((reshape_size[0], reshape_size[1], 1))(layer)
-        #    previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
  
         if layer_type == 'Dense':
-            try:
-                layer = Dense(layer_parameters['nb_neurons'], 
-                              activation=layer_parameters['activation'])(layer)
-            except:
-                layer = Flatten()(layer)
-                layer = Dense(layer_parameters['nb_neurons'], 
-                              activation=layer_parameters['activation'])(layer)
+            layer = add_dense_layer(layer_parameters, layer)
             
-        elif layer_type == 'Conv2D':
-            
-            
-            try:
-                kernel_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['kernel_size'])
-                layer = Conv2D(layer_parameters['nb_filters'], 
-                                 kernel_size=kernel_size, 
-                                 strides=layer_parameters['strides'], 
-                                 activation=layer_parameters['activation'])(layer)
-            except (ValueError, IndexError):
-                reshape_size = get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
-                layer= Reshape((reshape_size[0], reshape_size[1], 1))(layer)
-                previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
-                kernel_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['kernel_size'])
-                layer = Conv2D(layer_parameters['nb_filters'], 
-                                 kernel_size=kernel_size, 
-                                 strides=layer_parameters['strides'], 
-                                 activation=layer_parameters['activation'])(layer)
-                previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
+        elif layer_type == 'Conv2D':            
+            layer = add_conv2D_layer(layer_parameters, layer)            
                 
         elif layer_type == 'MaxPooling2D':
-            try:
-                pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['pool_size'])            
-                layer = MaxPooling2D(pool_size=pool_size)(layer)
-            except (ValueError, IndexError):
-                reshape_size = get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
-                layer= Reshape((reshape_size[0], reshape_size[1], 1))(layer)
-                previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
-                pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['pool_size'])            
-                layer = MaxPooling2D(pool_size=pool_size)(layer)
+            layer = add_maxpooling2d_layer(layer_parameters, layer)
                 
         elif layer_type == 'Dropout':
             layer = Dropout(layer_parameters['remove_probability'])(layer)
@@ -200,6 +161,53 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
 
     return model
 
+def add_dense_layer(layer_parameters, input_layer):
+    
+    try:
+        layer = Dense(layer_parameters['nb_neurons'], 
+                      activation=layer_parameters['activation'])(input_layer)
+    except:
+        print('add_dense_layer: Flattening input')
+        layer = Flatten()(input_layer)
+        layer = Dense(layer_parameters['nb_neurons'], 
+                  activation=layer_parameters['activation'])(layer)
+    return layer
+
+    
+def add_conv2D_layer(layer_parameters, input_layer):
+    
+    previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(input_layer)
+    
+    try:
+        kernel_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['kernel_size'])
+        layer = Conv2D(layer_parameters['nb_filters'], 
+                         kernel_size=kernel_size, 
+                         strides=layer_parameters['strides'], 
+                         activation=layer_parameters['activation'])(input_layer)
+    except (ValueError, IndexError):
+        print('add_conv2D_layer: Reshaping input')
+        reshape_size = get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
+        layer= Reshape((reshape_size[0], reshape_size[1], 1))(input_layer)       
+        layer = add_conv2D_layer(layer_parameters, layer);
+        
+    return layer
+            
+def add_maxpooling2d_layer(layer_parameters, input_layer):
+    
+    previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(input_layer)
+    
+    try:
+            pool_size = get_checked_2d_kernel_size_for_layer(previous_layer_shape, layer_parameters['pool_size'])            
+            layer = MaxPooling2D(pool_size=pool_size)(input_layer)
+    
+    except (ValueError, IndexError):
+        reshape_size = get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
+        layer= Reshape((reshape_size[0], reshape_size[1], 1))(input_layer)
+        layer = add_maxpooling2d_layer(layer_parameters, layer)
+        
+    return layer
+
+    
 def get_compiled_layer_shape_details(layer):
     previous_layer_shape = layer._keras_shape
     number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
@@ -207,14 +215,6 @@ def get_compiled_layer_shape_details(layer):
     
     return previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer
 
-def create_test_model():
-    model = Sequential()
-
-    model.add(Dense(512, input_shape=(784,)))
-    model.add(Reshape((32, 16, 1)))
-    model.add(Conv2D(64, (5,5), strides=(2,2)))#, padding='same'))
-    print(model.get_layer(index=-1).output_shape)
-    
 
 def get_reshape_size_closest_to_square(number_of_neurons):
     

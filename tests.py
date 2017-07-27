@@ -227,6 +227,7 @@ def test_optimizer():
 def to_do():
     print('TODO')
     print('\t1. Add branching network structures')
+    print('\t2. Add OOM capture and recovery during training')
     
 print('Running tests....')    
 
