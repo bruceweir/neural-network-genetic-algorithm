@@ -228,11 +228,11 @@ def to_do():
     print('TODO')
     print('\t1. Add branching network structures')
     print('\t2. Add OOM capture and recovery during training')
-    
+    print('\t3. Add support for multiple input/output layers')    
 print('Running tests....')    
 
-#test_network()
-#test_network_graph()
+test_network()
+test_network_graph()
 test_optimizer()
 #test_train()
 print('...tests complete')

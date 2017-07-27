@@ -109,10 +109,14 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     """Compile a sequential model.
 
     Args:
-        network_layers (dict): the parameters of the network inbetween the input and output layer
+        network: A network object with a defined network structure
+        nb_classes: The number of classification classes to output
+        input_shape: Shape of the input vector (i.e. for training on MNIST: (784,))
+        input_shape_conv2d: Shape of the input vector if it can be sensibly considered as a 2D image (i.e. for training on greyscale MNIST only: (28,28,1))
+        
 
     Returns:
-        a compiled network.
+        a compiled Keras Model which can be trained.
 
     """
     
@@ -120,36 +124,21 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     
     inputs = Input(shape=input_shape)
     layer = inputs
-    previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
-     # Add each layer.
-    for i in range(network.number_of_layers()):
-        
-        
-        print(previous_layer_shape)
-        layer_type = network.get_network_layer_type(i);
-        layer_parameters = network.get_network_layer_parameters(i)
-   
- 
-        if layer_type == 'Dense':
-            layer = add_dense_layer(layer_parameters, layer)
-            
-        elif layer_type == 'Conv2D':            
-            layer = add_conv2D_layer(layer_parameters, layer)            
-                
-        elif layer_type == 'MaxPooling2D':
-            layer = add_maxpooling2d_layer(layer_parameters, layer)
-                
-        elif layer_type == 'Dropout':
-            layer = Dropout(layer_parameters['remove_probability'])(layer)
-            
-        
-        previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
-        
 
-    # Output layer.
-    #if network.layer_type_is_not_1d(network.get_network_layer_type(network.number_of_layers()-1)):
-    #    layer = Flatten()(layer)
+    first_layer_ids = network.get_network_layers_with_no_upstream_connections()
+    if len(first_layer_ids) != 1:
+        raise ValueError('Currently only single input layers are supported')
     
+    first_layer_id = first_layer_ids[0]
+    
+    final_layer_ids = network.get_network_layers_with_no_downstream_connections()
+    if len(final_layer_ids) != 1:
+        raise ValueError('Currently only single output layers are supported')
+    
+    final_layer_id = final_layer_ids[0]
+    
+    layer = add_layer(network, final_layer_id, layer)
+   
     predictions = Dense(nb_classes, activation='softmax')(layer)
 
     model = Model(inputs=inputs, outputs=predictions, name='Output')
@@ -161,6 +150,38 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
 
     return model
 
+def add_layer(network, layer_id, input_layer):
+    
+    """ Starting at the output layer, this should recurse up the network graph, adding Keras layers """
+    
+    for ids in network.get_upstream_layers(layer_id):
+        input_layer = add_layer(network, ids, input_layer)
+
+
+    layer_type = network.get_network_layer_type(layer_id)
+    layer_parameters = network.get_network_layer_parameters(layer_id)
+
+    print('adding layer %s, %s' % (layer_id, layer_type))
+   
+ 
+    if layer_type == 'Dense':
+        layer = add_dense_layer(layer_parameters, input_layer)
+        
+    elif layer_type == 'Conv2D':            
+        layer = add_conv2D_layer(layer_parameters, input_layer)            
+            
+    elif layer_type == 'MaxPooling2D':
+        layer = add_maxpooling2d_layer(layer_parameters, input_layer)
+            
+    elif layer_type == 'Dropout':
+        layer = Dropout(layer_parameters['remove_probability'])(input_layer)
+        
+    
+    previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
+    
+    return layer
+    
+    
 def add_dense_layer(layer_parameters, input_layer):
     
     try:

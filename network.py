@@ -318,10 +318,17 @@ class Network():
         
         layer_ids = [node_id for node_id, layer_info in self.network_graph.node.items()]
         return layer_ids
+
     
     def get_network_layers_with_no_downstream_connections(self):
         
         return [x for x in self.get_all_network_layer_ids() if len(self.get_downstream_layers(x)) == 0]
+
+
+    def get_network_layers_with_no_upstream_connections(self):
+        
+        return [x for x in self.get_all_network_layer_ids() if len(self.get_upstream_layers(x)) == 0]
+
         
     def number_of_layers(self):
         return len(self.network_graph)
