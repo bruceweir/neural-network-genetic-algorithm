@@ -7,7 +7,7 @@ Based on:
 """
 from keras.datasets import mnist, cifar10
 from keras.models import Model
-from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D, Input
+from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D, Input, concatenate
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 from keras import backend as K
@@ -154,27 +154,36 @@ def add_layer(network, layer_id, input_layer):
     
     """ Starting at the output layer, this should recurse up the network graph, adding Keras layers """
     
+    layer = input_layer
+    
+    layers_input_into_this_level = []
+    
     for ids in network.get_upstream_layers(layer_id):
-        input_layer = add_layer(network, ids, input_layer)
+        layers_input_into_this_level.append(add_layer(network, ids, input_layer))
 
+    
+    if len(layers_input_into_this_level) > 1:
+        layer = add_concatenation(layers_input_into_this_level)       
+    
+    elif len(layers_input_into_this_level) == 1:        
+        layer = layers_input_into_this_level[0]
 
     layer_type = network.get_network_layer_type(layer_id)
     layer_parameters = network.get_network_layer_parameters(layer_id)
 
-    print('adding layer %s, %s' % (layer_id, layer_type))
-   
+    
  
     if layer_type == 'Dense':
-        layer = add_dense_layer(layer_parameters, input_layer)
+        layer = add_dense_layer(layer_parameters, layer)
         
     elif layer_type == 'Conv2D':            
-        layer = add_conv2D_layer(layer_parameters, input_layer)            
+        layer = add_conv2D_layer(layer_parameters, layer)            
             
     elif layer_type == 'MaxPooling2D':
-        layer = add_maxpooling2d_layer(layer_parameters, input_layer)
+        layer = add_maxpooling2d_layer(layer_parameters, layer)
             
     elif layer_type == 'Dropout':
-        layer = Dropout(layer_parameters['remove_probability'])(input_layer)
+        layer = Dropout(layer_parameters['remove_probability'])(layer)
         
     
     previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
@@ -228,7 +237,13 @@ def add_maxpooling2d_layer(layer_parameters, input_layer):
         
     return layer
 
+def add_concatenation(input_layers):
     
+    layer = concatenate(input_layers)
+    
+    return layer
+    
+
 def get_compiled_layer_shape_details(layer):
     previous_layer_shape = layer._keras_shape
     number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
