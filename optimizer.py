@@ -204,9 +204,9 @@ class Optimizer():
             
             if len(layer_options) == 0:
                 self.mutate(network)
-                
-            new_upstream_layer_id = random.choice(layer_options)
-            network.change_upstream_layer(mutated_layer_id, new_upstream_layer_id)
+            else:    
+                new_upstream_layer_id = random.choice(layer_options)
+                network.change_upstream_layer(mutated_layer_id, new_upstream_layer_id)
                 
        
     

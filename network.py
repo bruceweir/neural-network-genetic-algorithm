@@ -88,14 +88,9 @@ class Network():
     def disconnect_layers(self, upstream_layer_ids, layer_ids):
 
         """ Remove edges between the layers whose ids are listed in the upstream_layer_ids array and each of the layers in the layer_ids list """        
-        print('***')
-        print(upstream_layer_ids)
-        print(layer_ids)
+        
         for upstream_layer_id in upstream_layer_ids:
             for layer_id in layer_ids:
-                print(upstream_layer_id)
-                print(layer_id)
-                
                 if self.network_graph.has_edge(upstream_layer_id, layer_id):
                     self.network_graph.remove_edge(upstream_layer_id, layer_id)
         
@@ -133,7 +128,8 @@ class Network():
         
         return len(upstream_layers) == 1 and layer_id in upstream_layers 
     
-        
+    
+    
     def insert_layer_with_random_parameters(self, layer_type, upstream_layer_ids, downstream_layer_ids):
 
         return self.insert_layer_between_layers(self.create_layer(layer_type), upstream_layer_ids, downstream_layer_ids)
