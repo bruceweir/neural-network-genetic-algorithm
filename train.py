@@ -7,7 +7,7 @@ Based on:
 """
 from keras.datasets import mnist, cifar10
 from keras.models import Model
-from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D, Input, concatenate, ZeroPadding1D
+from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D, Input, concatenate, ZeroPadding1D, ZeroPadding2D
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 from keras import backend as K
@@ -272,19 +272,36 @@ def calculate_best_size_for_concatenated_layers(layers):
     Rules for 'best' concatenation. If practical, reshape lower dimension inputs to 
     match higher dimension inputs (since high dimension inputs probably contain correlations
     between adjacents data points which we dont want to lose). This means that smaller
-    images should be resized to match the larger image (and zero padded), and 1d data should
-    be converted into a 2d, single channel image and zero padded
+    image dimensions should be resized to match the larger image dimensions (and zero padded), and 1d data should
+    be converted into a zero padded image
+    
+    Returns a shape (list) consisting of the maximum dimensions of the highest dimension layers
     """
     
     shape_details = [get_compiled_layer_shape_details(layer) for layer in layers]
     dimensions = [shape[0] for shape in shape_details]
-    max_dimensions = max([len(d) for d in dimensions])
-    highest_dimension_layers = [list(filter(None, d)) for d in dimensions if len(d) == max_dimensions]
-    longest_dimensions_except_last = [sum(x[:-1]) for x in highest_dimension_layers]
-    index_of_target_shape = longest_dimensions_except_last.index(max(longest_dimensions_except_last))
-    shape_to_match_to = highest_dimension_layers[index_of_target_shape] 
     
-    return shape_to_match_to
+    for x in range(len(dimensions)):
+        dimensions[x] = list(filter(None, dimensions[x]))
+    
+    max_dimensions = max([len(d) for d in dimensions])
+    highest_dimension_layers = [d for d in dimensions if len(d) == max_dimensions]
+    
+    shape_to_match = []
+    for d in range(max_dimensions-1):
+        edge_lengths = []
+        for shapes in highest_dimension_layers:
+            edge_lengths.append(shapes[d])
+        shape_to_match.append(max(edge_lengths))
+    
+    shape_to_match.append(1)
+    return shape_to_match
+
+#    longest_dimensions_except_last = [sum(x[:-1]) for x in highest_dimension_layers]
+#    index_of_target_shape = longest_dimensions_except_last.index(max(longest_dimensions_except_last))
+#    shape_to_match_to = highest_dimension_layers[index_of_target_shape] 
+    
+#    return shape_to_match_to
 
 def shape_not_compatible(shape, layer):
     
@@ -309,19 +326,27 @@ def conform_layer_to_shape(reshape_size, layer):
     if number_of_dimensions == 1:
         layer = Reshape((number_of_units_in_previous_layer, 1))(layer)
         number_of_units_in_concatenation_dimensions = reduce(lambda x, y: x*y, reshape_size[:-1])
-        print(number_of_units_in_concatenation_dimensions)
-        print(number_of_units_in_previous_layer)
+        #print(number_of_units_in_concatenation_dimensions)
+        #print(number_of_units_in_previous_layer)
         padding_required = number_of_units_in_concatenation_dimensions - number_of_units_in_previous_layer%number_of_units_in_concatenation_dimensions
-        print('padding reqd = %d' % padding_required)
+        #print('padding reqd = %d' % padding_required)
         layer = ZeroPadding1D((0, padding_required))(layer)
         _, padded_layer_size, _  = get_compiled_layer_shape_details(layer)
-        print('padded_layer_size: %d' % padded_layer_size)
+        #print('padded_layer_size: %d' % padded_layer_size)
         
         reshape_to=reshape_size[:-1]
         reshape_to.append(int(padded_layer_size / number_of_units_in_concatenation_dimensions))
         layer = Reshape((reshape_to))(layer)
         
+    if number_of_dimensions == 3:   
+        layer_shape, _, _ = get_compiled_layer_shape_details(layer)
+        layer_shape = list(filter(None, layer_shape))
+        padding_required = []
+        for x in range(len(layer_shape)-1):
+            padding_required.append(reshape_size[x] - layer_shape[x])
     
+        layer = ZeroPadding2D(((0, padding_required[0]), (0, padding_required[1])))(layer)
+        
     
     return layer
     
