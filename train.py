@@ -143,7 +143,13 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     
     layer = add_layer(network, final_layer_id, layer)
    
-    predictions = Dense(nb_classes, activation='softmax')(layer)
+    _, _, number_of_dimensions_in_previous_layer = get_compiled_layer_shape_details(layer)
+    
+    if number_of_dimensions_in_previous_layer > 2:
+        layer = Flatten()(layer)
+        
+    predictions = add_dense_layer({'activation': 'softmax', 'nb_neurons': nb_classes}, layer)
+#    predictions = Dense(nb_classes, activation='softmax')(layer)
 
     model = Model(inputs=inputs, outputs=predictions, name='Output')
     
