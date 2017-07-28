@@ -130,14 +130,14 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     layer = inputs
 
     first_layer_ids = network.get_network_layers_with_no_upstream_connections()
-    #if len(first_layer_ids) != 1:
+    if len(first_layer_ids) != 1:
         # For now, connect the layers - TODO, deal with multiple inputs case
-        #network.connect_layers([first_layer_ids[0]], first_layer_ids[1:])
+        network.connect_layers([first_layer_ids[0]], first_layer_ids[1:])
     
     last_layer_ids = network.get_network_layers_with_no_downstream_connections()
-    #if len(last_layer_ids) != 1:
+    if len(last_layer_ids) != 1:
         # For now, connect the layers - TODO, deal with multiple outputs case        
-        #network.connect_layers(last_layer_ids[1:], [last_layer_ids[0]])
+        network.connect_layers(last_layer_ids[1:], [last_layer_ids[0]])
     
     final_layer_id = last_layer_ids[0]
     
