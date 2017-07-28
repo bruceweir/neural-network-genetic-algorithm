@@ -78,18 +78,62 @@ class Network():
         for upstream_layer_id in upstream_layer_ids:
             for layer_id in layer_ids:
                 if self.network_graph.has_node(upstream_layer_id) and self.network_graph.has_node(layer_id):
-                    self.network_graph.add_edge(upstream_layer_id, layer_id)
+                    if self.network_graph.has_edge(upstream_layer_id, layer_id) == False:
+                        self.network_graph.add_edge(upstream_layer_id, layer_id)
+            
+        self.clear_trained_model()
+        
 
 
     def disconnect_layers(self, upstream_layer_ids, layer_ids):
 
         """ Remove edges between the layers whose ids are listed in the upstream_layer_ids array and each of the layers in the layer_ids list """        
-    
+        print('***')
+        print(upstream_layer_ids)
+        print(layer_ids)
         for upstream_layer_id in upstream_layer_ids:
             for layer_id in layer_ids:
+                print(upstream_layer_id)
+                print(layer_id)
+                
                 if self.network_graph.has_edge(upstream_layer_id, layer_id):
                     self.network_graph.remove_edge(upstream_layer_id, layer_id)
+        
+        self.clear_trained_model()
+        
 
+    def disconnect_layer(self, layer_id):
+        
+        upstream_layers = self.get_upstream_layers(layer_id)
+        downstream_layers = self.get_downstream_layers(layer_id)
+        
+        self.disconnect_layers(upstream_layers, [layer_id])
+        self.disconnect_layers([layer_id], downstream_layers)
+        
+    
+    def change_upstream_layer(self, layer_id, new_upstream_layer_id):
+        
+        old_upstream_layers = self.get_upstream_layers(layer_id)
+        self.disconnect_layers(old_upstream_layers, [layer_id])
+        
+        old_downstream_layers = self.get_downstream_layers(layer_id)
+        
+        for downstream_layer in old_downstream_layers:
+            if self.layer_is_only_upstream_layer(layer_id, downstream_layer):
+                self.connect_layers(old_upstream_layers, [downstream_layer])
+        
+        self.disconnect_layers([layer_id], old_downstream_layers)
+        
+        self.connect_layers([new_upstream_layer_id], [layer_id])
+      
+     
+    def layer_is_only_upstream_layer(self, layer_id, downstream_layer_id):
+        
+        upstream_layers = self.get_upstream_layers(downstream_layer_id)
+        
+        return len(upstream_layers) == 1 and layer_id in upstream_layers 
+    
+        
     def insert_layer_with_random_parameters(self, layer_type, upstream_layer_ids, downstream_layer_ids):
 
         return self.insert_layer_between_layers(self.create_layer(layer_type), upstream_layer_ids, downstream_layer_ids)

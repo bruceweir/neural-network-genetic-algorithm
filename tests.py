@@ -170,8 +170,17 @@ def test_network_graph():
     network.add_random_layer(True, [layer_id])
     assert(network.number_of_layers() == 2)
     
-    
-    
+    print('\t network.change_upstream_layer() should not leave any of its downstream layers without a connection upwards')
+    network = Network()
+    top = network.add_random_layer()
+    middle = network.add_random_layer(True, [top])
+    bottom = network.add_random_layer(True, [middle])
+    network.change_upstream_layer(middle, bottom)
+    assert(len(network.get_upstream_layers(bottom)) == 1)
+    assert(network.get_upstream_layers(bottom)[0] == top)
+    assert(len(network.get_upstream_layers(middle)) == 1)
+    assert(network.get_upstream_layers(middle)[0] == bottom)
+
     
     
     

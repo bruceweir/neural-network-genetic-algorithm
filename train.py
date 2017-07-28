@@ -131,15 +131,15 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
 
     first_layer_ids = network.get_network_layers_with_no_upstream_connections()
     if len(first_layer_ids) != 1:
-        raise ValueError('Currently only single input layers are supported')
+        # For now, connect the layers - TODO, deal with multiple inputs case
+        network.connect_layers([first_layer_ids[0]], first_layer_ids[1:])
     
-    first_layer_id = first_layer_ids[0]
+    last_layer_ids = network.get_network_layers_with_no_downstream_connections()
+    if len(last_layer_ids) != 1:
+        # For now, connect the layers - TODO, deal with multiple outputs case        
+        network.connect_layers(last_layer_ids[1:], [last_layer_ids[0]])
     
-    final_layer_ids = network.get_network_layers_with_no_downstream_connections()
-    if len(final_layer_ids) != 1:
-        raise ValueError('Currently only single output layers are supported')
-    
-    final_layer_id = final_layer_ids[0]
+    final_layer_id = last_layer_ids[0]
     
     layer = add_layer(network, final_layer_id, layer)
    
@@ -321,6 +321,11 @@ def shape_compatible(shape, layer):
         
 def conform_layer_to_shape(reshape_size, layer):
     
+    """ 
+    Reshapes and zero pads layers to make them fit the reshape_size. For 3d layers (images),
+    each dimension in the reshape_size should be >= to the equivalent dimension in the 
+    layer    
+    """
     _, number_of_units_in_previous_layer, number_of_dimensions = get_compiled_layer_shape_details(layer)
     
     if number_of_dimensions == 1:

@@ -176,7 +176,7 @@ class Optimizer():
 
         """
         if network.number_of_layers() > 1:         
-            mutation_type = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayerAbove', 'InsertLayerBelow'])
+            mutation_type = random.choice(['AdjustLayerParameter', 'RemoveLayer', 'InsertLayerAbove', 'InsertLayerBelow', 'ChangeUpstreamLayer'])
         else:
             mutation_type = random.choice(['AdjustLayerParameter', 'InsertLayerAbove', 'InsertLayerBelow'])
             
@@ -188,18 +188,27 @@ class Optimizer():
         print('Mutating network: %s. mutated_layer_id: %d (%s)' % (mutation_type, mutated_layer_id, mutated_layer_type))
         # Mutate one of the params.
         if mutation_type == 'AdjustLayerParameter':
-            self.mutate(network)
+            network.change_random_parameter_for_layer(mutated_layer_id)
+        
         elif mutation_type == 'RemoveLayer':           
             network.delete_layer(mutated_layer_id)
+        
         elif mutation_type == 'InsertLayerAbove':           
             network.insert_random_layer(True, network.get_upstream_layers(mutated_layer_id), [mutated_layer_id])
+        
         elif mutation_type == 'InsertLayerBelow':           
             network.insert_random_layer(True, [mutated_layer_id], network.get_downstream_layers(mutated_layer_id))
+        
+        elif mutation_type == 'ChangeUpstreamLayer':
+            layer_options = [layer_id for layer_id in network.get_all_network_layer_ids() if layer_id != mutated_layer_id and layer_id not in network.get_upstream_layers(mutated_layer_id)]
             
-
+            if len(layer_options) == 0:
+                self.mutate(network)
                 
-        #return network
-
+            new_upstream_layer_id = random.choice(layer_options)
+            network.change_upstream_layer(mutated_layer_id, new_upstream_layer_id)
+                
+       
     
     def breed(self, mother, father):
         """Make two children as parts of their parents.
