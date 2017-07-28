@@ -7,7 +7,7 @@ Based on:
 """
 from keras.datasets import mnist, cifar10
 from keras.models import Model
-from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D, Input, concatenate
+from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D, Input, concatenate, ZeroPadding1D
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 from keras import backend as K
@@ -255,6 +255,13 @@ def add_concatenation(input_layers):
     except ValueError:
         
         reshape_size = calculate_best_size_for_concatenated_layers(input_layers)
+        
+        for x in range(len(input_layers)):          
+            if shape_not_compatible(reshape_size, input_layers[x]):
+                input_layers[x] = conform_layer_to_shape(reshape_size, input_layers[x])
+                print('conformed shape:')
+                print(input_layers[x]._keras_shape)
+        
         layer = concatenate(input_layers) # should break here
     return layer
     
@@ -268,21 +275,55 @@ def calculate_best_size_for_concatenated_layers(layers):
     images should be resized to match the larger image (and zero padded), and 1d data should
     be converted into a 2d, single channel image and zero padded
     """
-    max_dimensions = 0
-    max_d_layer = None
-    max_neurons = 0    
-    max_neuron_layer = None
     
-    for layer in layers:
-        _, number_of_neurons, n_dimensions = get_compiled_layer_shape_details(layer)
-        if n_dimensions > max_dimensions:
-            max_dimensions = n_dimensions
-            max_d_layer = layer
-        if number_of_neurons > max_neurons:
-            max_neurons = number_of_neurons
-            max_neuron_layer = layer
+    shape_details = [get_compiled_layer_shape_details(layer) for layer in layers]
+    dimensions = [shape[0] for shape in shape_details]
+    max_dimensions = max([len(d) for d in dimensions])
+    highest_dimension_layers = [list(filter(None, d)) for d in dimensions if len(d) == max_dimensions]
+    longest_dimensions_except_last = [sum(x[:-1]) for x in highest_dimension_layers]
+    index_of_target_shape = longest_dimensions_except_last.index(max(longest_dimensions_except_last))
+    shape_to_match_to = highest_dimension_layers[index_of_target_shape] 
+    
+    return shape_to_match_to
+
+def shape_not_compatible(shape, layer):
+    
+    return not shape_compatible(shape, layer)
+
+
+def shape_compatible(shape, layer):
     
     
+    layer_shape = list(filter(None, layer._keras_shape))
+
+    print('shape: %s, layer_shape: %s' % (shape, layer_shape))
+    if layer_shape[:-1] == shape[:-1]:
+        return True
+    else:
+        return False
+        
+def conform_layer_to_shape(reshape_size, layer):
+    
+    _, number_of_units_in_previous_layer, number_of_dimensions = get_compiled_layer_shape_details(layer)
+    
+    if number_of_dimensions == 1:
+        layer = Reshape((number_of_units_in_previous_layer, 1))(layer)
+        number_of_units_in_concatenation_dimensions = reduce(lambda x, y: x*y, reshape_size[:-1])
+        print(number_of_units_in_concatenation_dimensions)
+        print(number_of_units_in_previous_layer)
+        padding_required = number_of_units_in_concatenation_dimensions - number_of_units_in_previous_layer%number_of_units_in_concatenation_dimensions
+        print('padding reqd = %d' % padding_required)
+        layer = ZeroPadding1D((0, padding_required))(layer)
+        _, padded_layer_size, _  = get_compiled_layer_shape_details(layer)
+        print('padded_layer_size: %d' % padded_layer_size)
+        
+        reshape_to=reshape_size[:-1]
+        reshape_to.append(int(padded_layer_size / number_of_units_in_concatenation_dimensions))
+        layer = Reshape((reshape_to))(layer)
+        
+    
+    
+    return layer
     
 def get_compiled_layer_shape_details(layer):
     previous_layer_shape = layer._keras_shape
