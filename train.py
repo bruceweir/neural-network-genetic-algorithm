@@ -96,7 +96,7 @@ def train_and_score(network, dataset):
     model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
 
     if network.trained_model is None:
-        network.trained_model = train_model(model, x_test, y_test, batch_size, 10000, x_test, y_test, [early_stopper])
+        network.trained_model = train_model(model, x_train, y_train, batch_size, 10000, x_test, y_test, [early_stopper])
         
                 
     score = network.trained_model.evaluate(x_test, y_test, verbose=0)
