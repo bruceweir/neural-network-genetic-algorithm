@@ -25,6 +25,7 @@ K.set_image_dim_ordering('tf')
 # Helper: Early stopping.
 early_stopper = EarlyStopping(patience=5)
 
+
 list_of_trained_layers = []
 
 def get_cifar10():
