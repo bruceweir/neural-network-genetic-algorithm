@@ -244,7 +244,7 @@ class Network():
 
     def log_network(self):
         """Print out a network."""
-        logging.info(self.network_layers)
+        logging.info(self.print_network_details())
         logging.info("Network accuracy: %.2f%%" % (self.accuracy * 100))
         
     def create_network_layer_options(self):

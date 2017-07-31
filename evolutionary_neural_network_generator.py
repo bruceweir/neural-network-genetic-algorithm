@@ -173,7 +173,7 @@ class Evolutionary_Neural_Network_Generator():
         logging.info('-'*80)
         for network in networks:
             network.log_network()
-            network.print_network_as_json()
+            network.print_network_details()
                 
     def save_networks(self, dataset, networks):
         

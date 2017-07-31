@@ -93,20 +93,26 @@ def train_and_score(network, dataset):
     model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
 
     if network.trained_model is None:
-        model.fit(x_train, y_train,
-                  batch_size=batch_size,
-                  epochs=10000,  # using early stopping, so no real limit
-                  verbose=True,
-                  validation_data=(x_test, y_test),
-                  callbacks=[early_stopper])
-
-        network.trained_model = model
-    
+        network.trained_model = train_model(model, x_test, y_test, batch_size, 10000, x_test, y_test, [early_stopper])
+        
+                
     score = network.trained_model.evaluate(x_test, y_test, verbose=0)
 
     
     return score[1]  # 1 is accuracy. 0 is loss.
 
+def train_model(model, training_data, training_labels, batch_size, epochs, validation_data, validation_labels, callbacks=[]):
+    
+    model.fit(training_data, training_labels,
+                  batch_size=batch_size,
+                  epochs=epochs,  # using early stopping, so no real limit
+                  verbose=True,
+                  validation_data=(validation_data, validation_labels),
+                  callbacks=callbacks)
+    
+    return model
+    
+    
 def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
     """Compile a sequential model.
 

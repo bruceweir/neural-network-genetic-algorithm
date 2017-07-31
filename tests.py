@@ -7,7 +7,7 @@ Created on Mon Jul 10 15:38:41 2017
 
 from network import Network
 from optimizer import Optimizer
-from train import compile_model, get_closest_valid_reshape_for_given_scale
+from train import compile_model, train_model, get_mnist
 
 
 def test_network():
@@ -232,6 +232,20 @@ def test_optimizer():
     optimizer.evolve(pop)
     
     #pop = [network1, network2]
+
+def test_train():
+    print('Testing model training and evaluation over a single epoch (This will download the MNIST dataset the first time it is run. Being behind a proxy might cause this to fail.)')
+    nb_classes, batch_size, input_shape, x_train, \
+            x_test, y_train, y_test, input_shape_conv2d = get_mnist()
+    
+    network = Network()
+    network.create_random_network(2)
+    model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
+    network.trained_model = train_model(model, x_test, y_test, batch_size, 1, x_test, y_test)
+    network.trained_model.evaluate(x_test, y_test, verbose=0)
+    print('Network training and evaluation complete')
+    
+    
     
 def to_do():
     print('TODO')
@@ -242,7 +256,7 @@ print('Running tests....')
 test_network()
 test_network_graph()
 test_optimizer()
-#test_train()
+test_train()
 print('...tests complete')
 
 to_do()
