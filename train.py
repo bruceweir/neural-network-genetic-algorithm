@@ -149,14 +149,12 @@ def compile_model(network, nb_classes, input_shape, input_shape_conv2d):
         layer = Flatten()(layer)
         
     predictions = add_dense_layer({'activation': 'softmax', 'nb_neurons': nb_classes}, layer)
-#    predictions = Dense(nb_classes, activation='softmax')(layer)
 
     model = Model(inputs=inputs, outputs=predictions, name='Output')
     
     model.compile(loss='categorical_crossentropy', optimizer='adam',
                   metrics=['accuracy'])
 
-    #SVG(model_to_dot(model).create(prog='dot', format='svg'))
 
     return model
 
@@ -395,16 +393,6 @@ def get_reshape_size_closest_to_square(number_of_neurons):
     
     return (int(dimension1), int(dimension2))
         
-    
-def get_closest_valid_reshape_for_given_scale(number_of_neurons, reshape_factor):
-    
-    if reshape_factor > number_of_neurons:
-        return (number_of_neurons, 1)
-    
-    while (number_of_neurons/reshape_factor).is_integer() is False and reshape_factor <= number_of_neurons:
-        reshape_factor = reshape_factor+1
-    
-    return(int(number_of_neurons/reshape_factor), reshape_factor)
 
 def get_checked_2d_kernel_size_for_layer(previous_layer_size, requested_kernel_size):
     
