@@ -2,7 +2,7 @@
 """
 Created on Fri Jul 21 13:14:34 2017
 
-@author: brucew
+@author: bruce.weir@bbc.co.uk
 """
 
 from keras.models import Sequential

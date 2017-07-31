@@ -1,4 +1,9 @@
-"""Entry point to evolving the neural network. Start here."""
+"""Entry point to evolving the neural network. Start here.
+
+    Original project:  https://medium.com/@harvitronix/lets-evolve-a-neural-network-with-a-genetic-algorithm-code-included-8809bece164
+    Extended by: bruce.weir@bbc.co.uk
+    
+    """
 import argparse
 import logging
 from optimizer import Optimizer

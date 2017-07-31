@@ -4,6 +4,8 @@ Utility used by the Network class to actually train.
 Based on:
     https://github.com/fchollet/keras/blob/master/examples/mnist_mlp.py
 
+Original project:  https://medium.com/@harvitronix/lets-evolve-a-neural-network-with-a-genetic-algorithm-code-included-8809bece164
+Extended by: bruce.weir@bbc.co.uk
 """
 from keras.datasets import mnist, cifar10
 from keras.models import Model

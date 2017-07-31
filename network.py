@@ -1,4 +1,7 @@
-"""Class that represents the network to be evolved."""
+"""Class that represents the network to be evolved.
+    Original project:  https://medium.com/@harvitronix/lets-evolve-a-neural-network-with-a-genetic-algorithm-code-included-8809bece164
+    Extended by: bruce.weir@bbc.co.uk
+"""
 import random
 import logging
 from train import train_and_score

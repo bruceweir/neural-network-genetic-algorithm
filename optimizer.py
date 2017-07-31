@@ -4,6 +4,8 @@ Class that holds a genetic algorithm for evolving a network.
 Credit:
     A lot of those code was originally inspired by:
     http://lethain.com/genetic-algorithms-cool-name-damn-simple/
+    Original project:  https://medium.com/@harvitronix/lets-evolve-a-neural-network-with-a-genetic-algorithm-code-included-8809bece164
+    Extended by: bruce.weir@bbc.co.uk
 """
 from functools import reduce
 from operator import add

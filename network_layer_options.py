@@ -2,7 +2,7 @@
 """
 Created on Thu Jul 20 21:35:05 2017
 
-@author: brucew
+@author: bruce.weir@bbc.co.uk
 """
 
 def get_dense_layer_options():

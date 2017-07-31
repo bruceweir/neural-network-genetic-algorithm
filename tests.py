@@ -2,7 +2,7 @@
 """
 Created on Mon Jul 10 15:38:41 2017
 
-@author: brucew
+@author: bruce.weir@bbc.co.uk
 """
 
 from network import Network
