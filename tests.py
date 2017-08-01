@@ -260,6 +260,7 @@ def to_do():
     print('\t2. Add support for multiple input/output layers')    
     print('\t3. Add support for non-categorical problems')    
     print('\t4. Is input_shape_conv2D still needed?')    
+    print('\t5. Add check to avoid retraining networks that reoccur. Pickle & Hash?') 
 print('Running tests....')    
 
 test_network()

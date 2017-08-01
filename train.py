@@ -18,6 +18,8 @@ import math
 import sys
 from ast import literal_eval
 import numpy as np
+import hashlib
+import pickle
 
 K.set_image_dim_ordering('tf')
 
@@ -157,8 +159,7 @@ class Train():
     
         Args:
             network: a Network object 
-            dataset (str): Dataset to use for training/evaluating
-    
+            
         """
            
         model = self.compile_model(network, self.nb_classes, self.input_shape, self.input_shape_conv2d)
@@ -167,7 +168,7 @@ class Train():
             network.trained_model = self.train_model(model, self.x_train, self.y_train, self.batch_size, self.max_epochs, self.x_test, self.y_test, [self.early_stopper])
             score = network.trained_model.evaluate(self.x_test, self.y_test, verbose=0)                
             network.accuracy = score[1]
-                
+            print('Network training complete. Test accuracy: %f, Test Loss: %f' % (score[1], score[0]))    
 
     def train_model(self, model, training_data, training_labels, batch_size, epochs, validation_data, validation_labels, callbacks=[]):
         
@@ -470,3 +471,8 @@ class Train():
         return kernel_size
 
 
+    def calculate_hash_for_network(self, network):
+        
+        return hashlib.mp5(pickle.dumps(network)).hexdigest()
+    
+        
