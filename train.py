@@ -42,8 +42,10 @@ class Train():
         else:
             if self.training_data_file == None or self.training_data_file == None:
                 raise ValueError('Both a training data and a test data file needs to be specified.')
+                
                 self.get_dataset_from_file(self.training_data_file, self.test_data_file)
-                self.input_shape_conv2d = kwargs.get('natural_input_shape', None)
+                
+                self.input_shape_conv2d = kwargs.get('natural_input_shape', None)                
                 if self.input_shape_conv2d != None:
                     self.input_shape_conv2d = literal_eval(self.input_shape_conv2d)
     
