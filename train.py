@@ -16,6 +16,7 @@ from keras import backend as K
 from functools import reduce
 import math
 import sys
+from ast import literal_eval
 
 K.set_image_dim_ordering('tf')
 
@@ -27,16 +28,30 @@ class Train():
         self.list_of_trained_layers = []
         self.max_epochs = kwargs.get('max_epochs', sys.maxsize )
         self.dataset = kwargs.get('dataset', None)
+        self.training_data_file = kwargs.get('training_data', None)
+        self.test_data_file = kwargs.get('test_data', None)
         
-        
+        if self.dataset == None and self.training_data_file == None:
+            raise ValueError('You need to specify either a dataset or training/test files to use.')
+            
+            
         if self.dataset == 'cifar10':
             self.get_cifar10()
         elif self.dataset == 'mnist':
             self.get_mnist()
         else:
-            self.get_dataset_from_file(self.dataset)
+            if self.training_data_file == None or self.training_data_file == None:
+                raise ValueError('Both a training data and a test data file needs to be specified.')
+                self.get_dataset_from_file(self.training_data_file, self.test_data_file)
+                self.input_shape_conv2d = kwargs.get('natural_input_shape', None)
+                if self.input_shape_conv2d != None:
+                    self.input_shape_conv2d = literal_eval(self.input_shape_conv2d)
     
-    
+        self.input_shape_conv2d = kwargs.get('natural_input_shape', None)
+        if self.input_shape_conv2d != None:
+            self.input_shape_conv2d = literal_eval(self.input_shape_conv2d)
+            print(self.input_shape_conv2d)
+ 
     def get_cifar10(self):
         """Retrieve the CIFAR dataset and process the data."""
         # Set defaults.
@@ -82,19 +97,14 @@ class Train():
     
         
 
-    def get_dataset_from_file(self, file_name):
+    def get_dataset_from_file(self, training_file_name, test_file_name):
         
         """ 
-        Load the dataset from 2 numpy array save files. The first should be called 'train_[file_name]'
-        and the second should be called 'test_[file_name]'. The first contains your training data,
-        the second contains your test data. The final column of each saved numpy array is the target
+        Load the dataset from 2 numpy array save files. 'training_file_name' contains your training data,
+        'test_file_name' contains your test data. The final column of each saved numpy array is the target
         output (which could be numpy array). The other columns are the input vector.   
-        
-        Example:
-            train_nothotdog.npy
-            test_nothotdog.npy
             
-        If the input has a natural shape (as an image for example), then set the -natural_input_shape
+        If the input has a natural shape (as an image for example), then set the --natural_input_shape
         value when starting the application.
         Example: If the input samples each form a 60x40x3 channel image, then the numpy array should
         be 7201 columns wide (the final column is the target output). The first 60 columns are the top

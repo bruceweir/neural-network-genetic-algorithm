@@ -18,8 +18,17 @@ from keras.utils.vis_utils import model_to_dot
 parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm. Source: https://github.com/bruceweir/neural-network-genetic-algorithm. Originally forked from: https://github.com/harvitronix/neural-network-genetic-algorithm.',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-d', '--dataset', 
-                    help='The name of the dataset to use, either "mnist" or "cifar10"',
-                    default='mnist')
+                    help='The name of a premade dataset to use for practise, either "mnist" or "cifar10"',
+                    default=None)
+parser.add_argument('--training_data',
+                    help='The name of a saved numpy array containing the training data. The final column is the expected output values, the other columns are the input vector',
+                    default=None)
+parser.add_argument('--test_data',
+                    help='The name of a saved numpy array containing the test data. The final column is the expected output values, the other columns are the input vector',
+                    default=None)
+parser.add_argument('--natural_input_shape',
+                   help='For use when specifying your own training and test date files. The natural shape of the input data. For example, a 60x40x3 channel image would have a shape of (60, 40, 3))',
+                   type=str)
 parser.add_argument('-g', '--generations', 
                     help='The number of breeding generations to run for.',
                     type=int,
