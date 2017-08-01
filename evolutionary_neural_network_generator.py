@@ -66,6 +66,10 @@ parser.add_argument('--max_epochs',
                     help='The trainer uses early stopping on the validation loss, but this setting will explicitly set the maximum number of training epochs to perform.',
                     type=int,
                     default=10000)
+parser.add_argument('--batch_size',
+                    help="If specifying your own training and test files, use this as the initial batch size for training.",
+                    type=int,
+                    default=64)
 
 args = parser.parse_args()
 
@@ -100,7 +104,10 @@ class Evolutionary_Neural_Network_Generator():
         
         
         self.generations = kwargs['generations']
-        self.dataset = kwargs['dataset']    
+        self.dataset = kwargs['dataset']   
+        if self.dataset == None:
+            self.dataset = ''
+        
         self.population_size = kwargs['population_size']
         self.initial_network_length = kwargs['initial_network_length']       
         
@@ -164,7 +171,9 @@ class Evolutionary_Neural_Network_Generator():
             self.train_networks(self.networks)
     
             average_accuracy, highest_accuracy, lowest_accuracy, highest_scoring_network = self.get_accuracy_stats(self.networks)       
-    
+            
+            print('************', self.dataset)
+            
             highest_scoring_network.save_network_details(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy)))
             
             logging.info("Generation average: %.2f%%" % (average_accuracy * 100))

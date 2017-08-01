@@ -258,7 +258,7 @@ def to_do():
     print('TODO')
     print('\t1. Add OOM capture and recovery during training')
     print('\t2. Add support for multiple input/output layers')    
-    print('\t3. Add support for CSV training/test data files')    
+    print('\t3. Add support for non-categorical problems')    
 print('Running tests....')    
 
 test_network()

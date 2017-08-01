@@ -33,8 +33,6 @@ class Optimizer():
         self.retain = kwargs.get('retain', 0.4)
         self.forbidden_layer_types = kwargs.get('forbidden_layer_types', [])
         self.elitist = kwargs.get('elitist', False)
-        #self.population_size = kwargs['population']
-        #self.initial_network_length = kwargs['initial_network_length']
         
         
 
