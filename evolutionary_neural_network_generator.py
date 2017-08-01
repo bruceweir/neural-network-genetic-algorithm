@@ -12,6 +12,7 @@ import time
 import os
 from IPython.display import SVG, display
 from keras.utils.vis_utils import model_to_dot
+from train import train_and_score
 
 parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm. Source: https://github.com/bruceweir/neural-network-genetic-algorithm. Originally forked from: https://github.com/harvitronix/neural-network-genetic-algorithm.',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -27,7 +28,7 @@ parser.add_argument('-p', '--population_size',
                     type=int,
                     default=10)
 parser.add_argument('-f', '--forbidden_layer_types',
-                    help='An array of one or more layer types that should NOT be added to the networks. Options are Dense, Conv2D, MaxPooling2D',
+                    help='One or more layer types that should NOT be added to the networks. Options are Dense, Conv2D, MaxPooling2D. Example: -f Conv2D MaxPooling2D',
                     nargs='+',
                     choices=['Dense', 'Conv2D', 'MaxPooling2D'],
                     default=[])
@@ -103,7 +104,7 @@ class Evolutionary_Neural_Network_Generator():
         """
         pbar = tqdm(total=len(networks))
         for network in networks:
-            network.train(dataset)
+            train_and_score(network, dataset)
             pbar.update(1)
         pbar.close()
 
@@ -228,9 +229,3 @@ if __name__ == '__main__':
     Evolutionary_Neural_Network_Generator = Evolutionary_Neural_Network_Generator(vars(args))
 
 
-#def make_and_draw(networks):
-#    networks = optimizer.evolve(networks)
-#    for n in networks:
-#        model = compile_model(n, 10, (784,), (28, 28, 1))
-#        display(SVG(model_to_dot(model).create(prog='dot', format='svg')))
-#    return networks

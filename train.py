@@ -13,9 +13,6 @@ from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D,
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 from keras import backend as K
-from IPython.display import SVG
-from keras.utils.vis_utils import model_to_dot
-import sys
 from functools import reduce
 import math
 
@@ -68,20 +65,37 @@ def get_mnist():
     x_train /= 255
     x_test /= 255
 
-    #x_train_conv2d = x_train.reshape(60000, 28, 28, 1)
-    #x_test_conv2d = x_test.reshape(10000, 28, 28, 1)
-    # convert class vectors to binary class matrices
     y_train = to_categorical(y_train, nb_classes)
     y_test = to_categorical(y_test, nb_classes)
 
     return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test, input_shape_conv2d)
 
+def get_dataset_from_file(file_name):
+    
+    """ 
+    Load the dataset from 2 numpy array save files. The first should be called 'train_[file_name]'
+    and the second should be called 'test_[file_name]'. The first contains your training data,
+    the second contains your test data. The final column of each saved numpy array is the target
+    output (which could be numpy array). The other columns are the input vector.   
+    
+    Example:
+        train_nothotdog.npy
+        test_nothotdog.npy
+        
+    If the input has a natural shape (as an image for example), then set the -natural_input_shape
+    value when starting the application.
+    Example: If the input samples each form a 60x40x3 channel image, then the numpy array should
+    be 7201 columns wide (the final column is the target output). The first 60 columns are the top
+    row of the image and first 2400 columns are the first image channel.
+    The -natural_input_shape should be '(60, 40, 3)'
+        
+    """
 
 def train_and_score(network, dataset):
-    """Train the model, return test loss.
+    """Train the model, store the accuracy in network.accuracy.
 
     Args:
-        network (dict): the parameters of the network
+        network: a Network object 
         dataset (str): Dataset to use for training/evaluating
 
     """
@@ -91,18 +105,17 @@ def train_and_score(network, dataset):
     elif dataset == 'mnist':
         nb_classes, batch_size, input_shape, x_train, \
             x_test, y_train, y_test, input_shape_conv2d = get_mnist()
+    else:
+        get_dataset_from_file(dataset)
 
 
     model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
 
     if network.trained_model is None:
-        network.trained_model = train_model(model, x_train, y_train, batch_size, 10000, x_test, y_test, [early_stopper])
-        
+        network.trained_model = train_model(model, x_train, y_train, batch_size, 2, x_test, y_test, [early_stopper])
+        score = network.trained_model.evaluate(x_test, y_test, verbose=0)                
+        network.accuracy = score[1]
                 
-    score = network.trained_model.evaluate(x_test, y_test, verbose=0)
-
-    
-    return score[1]  # 1 is accuracy. 0 is loss.
 
 def train_model(model, training_data, training_labels, batch_size, epochs, validation_data, validation_labels, callbacks=[]):
     

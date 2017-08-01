@@ -4,7 +4,7 @@
 """
 import random
 import logging
-from train import train_and_score
+
 from network_layer_options import *
 #from keras.models import load_model
 from keras.utils import plot_model
@@ -233,18 +233,8 @@ class Network():
                 layer_parameters[key] = random.choice(self.nn_network_layer_options[layer_type][key])
 
         return {'layer_type': layer_type, 'layer_parameters': layer_parameters}
+        
     
-    
-    def train(self, dataset):
-        """Train the network and record the accuracy.
-
-        Args:
-            dataset (str): Name of dataset to use.
-
-        """
-        if self.trained_model == None:
-            self.accuracy = train_and_score(self, dataset)
-
     def log_network(self):
         """Print out a network."""
         logging.info(self.print_network_details())
