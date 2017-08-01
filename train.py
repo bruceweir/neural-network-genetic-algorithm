@@ -15,6 +15,7 @@ from keras.callbacks import EarlyStopping
 from keras import backend as K
 from functools import reduce
 import math
+import sys
 
 K.set_image_dim_ordering('tf')
 
@@ -24,6 +25,7 @@ class Train():
         
         self.early_stopper = EarlyStopping(patience=5)
         self.list_of_trained_layers = []
+        self.max_epochs = kwargs.get('max_epochs', sys.maxsize )
 
     def get_cifar10(self):
         """Retrieve the CIFAR dataset and process the data."""
@@ -112,7 +114,7 @@ class Train():
         model = self.compile_model(network, nb_classes, input_shape, input_shape_conv2d)
     
         if network.trained_model is None:
-            network.trained_model = self.train_model(model, x_train, y_train, batch_size, 2, x_test, y_test, [self.early_stopper])
+            network.trained_model = self.train_model(model, x_train, y_train, batch_size, self.max_epochs, x_test, y_test, [self.early_stopper])
             score = network.trained_model.evaluate(x_test, y_test, verbose=0)                
             network.accuracy = score[1]
                 

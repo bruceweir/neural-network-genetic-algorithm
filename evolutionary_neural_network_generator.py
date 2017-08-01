@@ -53,6 +53,11 @@ parser.add_argument('--elitist',
                     help='Do not mutate the best candidate after every generation',
                     action='store_true')
 
+parser.add_argument('--max_epochs', 
+                    help='The trainer uses early stopping on the validation loss, but this setting will explicitly set the maximum number of training epochs to perform.',
+                    type=int,
+                    default=10000)
+
 args = parser.parse_args()
 
 print(vars(args))
