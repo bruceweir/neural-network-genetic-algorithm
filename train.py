@@ -47,11 +47,7 @@ class Train():
                 if self.input_shape_conv2d != None:
                     self.input_shape_conv2d = literal_eval(self.input_shape_conv2d)
     
-        self.input_shape_conv2d = kwargs.get('natural_input_shape', None)
-        if self.input_shape_conv2d != None:
-            self.input_shape_conv2d = literal_eval(self.input_shape_conv2d)
-            print(self.input_shape_conv2d)
- 
+    
     def get_cifar10(self):
         """Retrieve the CIFAR dataset and process the data."""
         # Set defaults.

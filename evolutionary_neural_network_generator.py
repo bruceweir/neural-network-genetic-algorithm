@@ -27,7 +27,7 @@ parser.add_argument('--test_data',
                     help='The name of a saved numpy array containing the test data. The final column is the expected output values, the other columns are the input vector',
                     default=None)
 parser.add_argument('--natural_input_shape',
-                   help='For use when specifying your own training and test date files. The natural shape of the input data. For example, a 60x40x3 channel image would have a shape of (60, 40, 3))',
+                   help='For use when specifying your own training and test date files. The natural shape of the input data. For example, a 60x40x3 channel image would have a shape of "(60, 40, 3)"',
                    type=str)
 parser.add_argument('-g', '--generations', 
                     help='The number of breeding generations to run for.',
