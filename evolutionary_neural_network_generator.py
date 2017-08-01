@@ -90,9 +90,8 @@ class Evolutionary_Neural_Network_Generator():
         
         
         
-        self.dataset = kwargs['dataset']
         self.generations = kwargs['generations']
-        
+        self.dataset = kwargs['dataset']    
         self.population_size = kwargs['population_size']
         self.initial_network_length = kwargs['initial_network_length']       
         
@@ -102,16 +101,16 @@ class Evolutionary_Neural_Network_Generator():
         
         self.run_experiment()
     
-    def train_networks(self, networks, dataset):
+    def train_networks(self, networks):
         """Train each network.
     
         Args:
             networks (list): Current population of networks
-            dataset (str): Dataset to use for training/evaluating
+            
         """
         pbar = tqdm(total=len(networks))
         for network in networks:
-            self.train.train_and_score(network, dataset)
+            self.train.train_and_score(network)
             pbar.update(1)
         pbar.close()
 
@@ -153,7 +152,7 @@ class Evolutionary_Neural_Network_Generator():
             logging.info("***Doing generation %d of %d***" %
                          (i + 1, self.generations))
     
-            self.train_networks(self.networks, self.dataset)
+            self.train_networks(self.networks)
     
             average_accuracy, highest_accuracy, lowest_accuracy, highest_scoring_network = self.get_accuracy_stats(self.networks)       
     

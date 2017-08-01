@@ -26,51 +26,61 @@ class Train():
         self.early_stopper = EarlyStopping(patience=5)
         self.list_of_trained_layers = []
         self.max_epochs = kwargs.get('max_epochs', sys.maxsize )
-
+        self.dataset = kwargs.get('dataset', None)
+        
+        
+        if self.dataset == 'cifar10':
+            self.get_cifar10()
+        elif self.dataset == 'mnist':
+            self.get_mnist()
+        else:
+            self.get_dataset_from_file(self.dataset)
+    
+    
     def get_cifar10(self):
         """Retrieve the CIFAR dataset and process the data."""
         # Set defaults.
-        nb_classes = 10
-        batch_size = 64
-        input_shape = (3072,)
-        input_shape_conv2d = (32, 32, 3)
+        self.nb_classes = 10
+        self.batch_size = 64
+        self.input_shape = (3072,)
+        self.input_shape_conv2d = (32, 32, 3)
         # Get the data.
-        (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-        x_train = x_train.reshape(50000, 3072)
-        x_test = x_test.reshape(10000, 3072)
-        x_train = x_train.astype('float32')
-        x_test = x_test.astype('float32')
-        x_train /= 255
-        x_test /= 255
+        (self.x_train, self.y_train), (self.x_test, self.y_test) = cifar10.load_data()
+        self.x_train = self.x_train.reshape(50000, 3072)
+        self.x_test = self.x_test.reshape(10000, 3072)
+        self.x_train = self.x_train.astype('float32')
+        self.x_test = self.x_test.astype('float32')
+        self.x_train /= 255
+        self.x_test /= 255
     
         # convert class vectors to binary class matrices
-        y_train = to_categorical(y_train, nb_classes)
-        y_test = to_categorical(y_test, nb_classes)
+        self.y_train = to_categorical(self.y_train, self.nb_classes)
+        self.y_test = to_categorical(self.y_test, self.nb_classes)
     
-        return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test, input_shape_conv2d)
+        
 
     def get_mnist(self):
         """Retrieve the MNIST dataset and process the data."""
         # Set defaults.
-        nb_classes = 10
-        batch_size = 128
-        input_shape = (784,)
+        self.nb_classes = 10
+        self.batch_size = 128
+        self.input_shape = (784,)
         # tensorflow-style ordering (Height, Width, Channels)
-        input_shape_conv2d = (28, 28, 1)
+        self.input_shape_conv2d = (28, 28, 1)
     
         # Get the data.
-        (x_train, y_train), (x_test, y_test) = mnist.load_data()
-        x_train = x_train.reshape(60000, 784)
-        x_test = x_test.reshape(10000, 784)
-        x_train = x_train.astype('float32')
-        x_test = x_test.astype('float32')
-        x_train /= 255
-        x_test /= 255
+        (self.x_train, self.y_train), (self.x_test, self.y_test) = mnist.load_data()
+        self.x_train = self.x_train.reshape(60000, 784)
+        self.x_test = self.x_test.reshape(10000, 784)
+        self.x_train = self.x_train.astype('float32')
+        self.x_test = self.x_test.astype('float32')
+        self.x_train /= 255
+        self.x_test /= 255
     
-        y_train = to_categorical(y_train, nb_classes)
-        y_test = to_categorical(y_test, nb_classes)
+        self.y_train = to_categorical(self.y_train, self.nb_classes)
+        self.y_test = to_categorical(self.y_test, self.nb_classes)
     
-        return (nb_classes, batch_size, input_shape, x_train, x_test, y_train, y_test, input_shape_conv2d)
+        
 
     def get_dataset_from_file(self, file_name):
         
@@ -93,7 +103,7 @@ class Train():
             
         """
 
-    def train_and_score(self, network, dataset):
+    def train_and_score(self, network):
         """Train the model, store the accuracy in network.accuracy.
     
         Args:
@@ -101,21 +111,12 @@ class Train():
             dataset (str): Dataset to use for training/evaluating
     
         """
-        if dataset == 'cifar10':
-            nb_classes, batch_size, input_shape, x_train, \
-                x_test, y_train, y_test, input_shape_conv2d = self.get_cifar10()
-        elif dataset == 'mnist':
-            nb_classes, batch_size, input_shape, x_train, \
-                x_test, y_train, y_test, input_shape_conv2d = self.get_mnist()
-        else:
-            self.get_dataset_from_file(dataset)
-    
-    
-        model = self.compile_model(network, nb_classes, input_shape, input_shape_conv2d)
+           
+        model = self.compile_model(network, self.nb_classes, self.input_shape, self.input_shape_conv2d)
     
         if network.trained_model is None:
-            network.trained_model = self.train_model(model, x_train, y_train, batch_size, self.max_epochs, x_test, y_test, [self.early_stopper])
-            score = network.trained_model.evaluate(x_test, y_test, verbose=0)                
+            network.trained_model = self.train_model(model, self.x_train, self.y_train, self.batch_size, self.max_epochs, self.x_test, self.y_test, [self.early_stopper])
+            score = network.trained_model.evaluate(self.x_test, self.y_test, verbose=0)                
             network.accuracy = score[1]
                 
 

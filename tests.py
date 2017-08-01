@@ -239,14 +239,12 @@ def test_optimizer():
 def test_train():
     print('Testing model training and evaluation over a single epoch (This will download the MNIST dataset the first time it is run. Being behind a proxy might cause this to fail.)')
     train = Train()
-    nb_classes, batch_size, input_shape, x_train, \
-            x_test, y_train, y_test, input_shape_conv2d = train.get_mnist()
-    
+    train.get_mnist()
     network = Network()
     network.create_random_network(2)
-    model = train.compile_model(network, nb_classes, input_shape, input_shape_conv2d)
-    network.trained_model = train.train_model(model, x_test, y_test, batch_size, 1, x_test, y_test)
-    network.trained_model.evaluate(x_test, y_test, verbose=0)
+    model = train.compile_model(network, train.nb_classes, train.input_shape, train.input_shape_conv2d)
+    network.trained_model = train.train_model(model, train.x_test, train.y_test, train.batch_size, 1, train.x_test, train.y_test)
+    network.trained_model.evaluate(train.x_test, train.y_test, verbose=0)
     print('Network training and evaluation complete')
     
     
