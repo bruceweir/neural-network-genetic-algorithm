@@ -7,12 +7,13 @@
 import argparse
 import logging
 from optimizer import Optimizer
+from train import Train
 from tqdm import tqdm
 import time
 import os
 from IPython.display import SVG, display
 from keras.utils.vis_utils import model_to_dot
-from train import train_and_score
+
 
 parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm. Source: https://github.com/bruceweir/neural-network-genetic-algorithm. Originally forked from: https://github.com/harvitronix/neural-network-genetic-algorithm.',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -92,6 +93,7 @@ class Evolutionary_Neural_Network_Generator():
         
         self.optimizer = Optimizer(**kwargs)
         self.networks = self.optimizer.create_population(self.population_size, self.initial_network_length)        
+        self.train = Train(**kwargs)
         
         self.run_experiment()
     
@@ -104,7 +106,7 @@ class Evolutionary_Neural_Network_Generator():
         """
         pbar = tqdm(total=len(networks))
         for network in networks:
-            train_and_score(network, dataset)
+            self.train.train_and_score(network, dataset)
             pbar.update(1)
         pbar.close()
 

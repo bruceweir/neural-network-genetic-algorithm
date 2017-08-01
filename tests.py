@@ -7,10 +7,11 @@ Created on Mon Jul 10 15:38:41 2017
 
 from network import Network
 from optimizer import Optimizer
-from train import compile_model, train_model, get_mnist
+from train import Train
 
 
 def test_network():
+    train = Train()
     
     print('network.add_layer_with_random_parameters("layer_type") should add a network layer of the requested layer_type.')
     
@@ -30,7 +31,7 @@ def test_network():
         network = Network()
         network.create_random_network(20)
         print('Compiling auto_checked network...%d'% i)
-        compile_model(network, 10, (784,), (28, 28,1))
+        train.compile_model(network, 10, (784,), (28, 28,1))
         print('...done compiling.')
         
     
@@ -187,6 +188,8 @@ def test_network_graph():
 
 def test_optimizer():
     
+    train = Train()
+    
     print('optimizer.mutate(network) returns a network object that has either had a layer added, removed or altered. The returned network should compile')
     network = Network()
     network.create_random_network(3)
@@ -196,7 +199,7 @@ def test_optimizer():
     for i in range(10):
         print('Testing compilation of mutated network: %d' % i)
         optimizer.mutate(network)
-        model = compile_model(network, 10, (784, ), (28, 28, 1))
+        model = train.compile_model(network, 10, (784, ), (28, 28, 1))
         del model
         print('...done compiling')
 
@@ -209,8 +212,8 @@ def test_optimizer():
     print('Original mother\n%s' % mother.print_network_details())
     children = optimizer.breed(mother, father)
     print('Compiling children of first generation...')
-    compile_model(children[0], 10, (784, ), (28, 28, 1))
-    compile_model(children[1], 10, (784, ), (28, 28, 1))
+    train.compile_model(children[0], 10, (784, ), (28, 28, 1))
+    train.compile_model(children[1], 10, (784, ), (28, 28, 1))
     print('...compilation done')
     print('Testing 10 breeding generations')
     for i in range(10):
@@ -219,8 +222,8 @@ def test_optimizer():
         father.create_random_network(10)
         children = optimizer.breed(mother, father)
         print('Compiling children of generation %d...' % i)
-        compile_model(children[0], 10, (784, ), (28, 28, 1))
-        compile_model(children[1], 10, (784, ), (28, 28, 1))
+        train.compile_model(children[0], 10, (784, ), (28, 28, 1))
+        train.compile_model(children[1], 10, (784, ), (28, 28, 1))
         print('...compilation done')
     
     print ('optimizer.create_population(count, initial_length) creates and returns an array containing count networks or length initial_length (unless the network checker adds layers)')
@@ -235,13 +238,14 @@ def test_optimizer():
 
 def test_train():
     print('Testing model training and evaluation over a single epoch (This will download the MNIST dataset the first time it is run. Being behind a proxy might cause this to fail.)')
+    train = Train()
     nb_classes, batch_size, input_shape, x_train, \
-            x_test, y_train, y_test, input_shape_conv2d = get_mnist()
+            x_test, y_train, y_test, input_shape_conv2d = train.get_mnist()
     
     network = Network()
     network.create_random_network(2)
-    model = compile_model(network, nb_classes, input_shape, input_shape_conv2d)
-    network.trained_model = train_model(model, x_test, y_test, batch_size, 1, x_test, y_test)
+    model = train.compile_model(network, nb_classes, input_shape, input_shape_conv2d)
+    network.trained_model = train.train_model(model, x_test, y_test, batch_size, 1, x_test, y_test)
     network.trained_model.evaluate(x_test, y_test, verbose=0)
     print('Network training and evaluation complete')
     
@@ -249,8 +253,9 @@ def test_train():
     
 def to_do():
     print('TODO')
-    print('\t2. Add OOM capture and recovery during training')
-    print('\t3. Add support for multiple input/output layers')    
+    print('\t1. Add OOM capture and recovery during training')
+    print('\t2. Add support for multiple input/output layers')    
+    print('\t3. Add support for CSV training/test data files')    
 print('Running tests....')    
 
 test_network()
