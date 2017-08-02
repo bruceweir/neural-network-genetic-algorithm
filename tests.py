@@ -32,8 +32,11 @@ def test_network():
     for i in range(10):
         network = Network()
         network.create_random_network(20)
-        print('Compiling auto_checked network...%d'% i)
-        train.compile_model(network, 10, (784,), (28, 28,1))
+        network.print_network_details()
+        print('Compiling auto_checked network single channel image...%d'% i)
+        train.compile_model(network, 10, (784,), (28, 28, 1))
+        print('Compiling auto_checked network 3 channel image...%d'% i)
+        train.compile_model(network, 10, (3072,), (32, 32, 3))
         print('...done compiling.')
         
     

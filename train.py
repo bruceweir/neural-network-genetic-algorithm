@@ -445,6 +445,7 @@ class Train():
         
         return [d['compiled_layer'] for d in self.list_of_trained_layers if d['layer_id'] == layer_id][0]
      
+        
     def set_compiled_layer_for_id(self, layer_id, compiled_layer):   
         
         layer_details = [d for d in self.list_of_trained_layers if d['layer_id'] == layer_id][0]
@@ -452,8 +453,13 @@ class Train():
     
         
     def get_reshape_size_closest_to_square(self, number_of_neurons, number_of_channels):
-        
+                
+        if type(number_of_neurons) != int:
+            if not number_of_neurons.is_integer():
+                raise ValueError('get_reshape_size_closest_to_square(number_of_neurons, number_of_channels). number_of_neurons should be an integer')
+ 
         dimension1 = math.sqrt(number_of_neurons / number_of_channels)
+        
         dimension2 = number_of_neurons / (dimension1 * number_of_channels)
         
         dimension1 = float(math.ceil(dimension1))
@@ -462,8 +468,14 @@ class Train():
             dimension1 -= 1
             dimension2 = number_of_neurons / dimension1
             
+        closest_shape = (int(dimension1), int(dimension2), number_of_channels)
         
-        return (int(dimension1), int(dimension2), number_of_channels)
+        total_size_of_closest_shape = reduce(lambda x, y: x*y,  [x for x in closest_shape])
+        
+        if total_size_of_closest_shape != number_of_neurons:
+            return self.get_reshape_size_closest_to_square(number_of_neurons, 1)
+        else:
+            return (int(dimension1), int(dimension2), number_of_channels)
         
 
     def get_checked_2d_kernel_size_for_layer(self, previous_layer_size, requested_kernel_size):
