@@ -27,6 +27,9 @@ parser.add_argument('--training_data',
 parser.add_argument('--test_data',
                     help='The name of a saved numpy array containing the test data. The final column is the expected output values, the other columns are the input vector',
                     default=None)
+parser.add_argument('--initial_network_population_file',
+                    help='A pickled network population list to use as the starting population (this file gets output during a run, so by adding it back in you can resume your experiment). Note that the trained model is not included in this file, so any network is retrained.',
+                    default=None)
 parser.add_argument('--natural_input_shape',
                    help='For use when specifying your own training and test date files. The natural shape of the input data. For example, a 60x40x3 channel image would have a shape of "(60, 40, 3)"',
                    type=str)
@@ -113,56 +116,44 @@ class Evolutionary_Neural_Network_Generator():
         self.initial_network_length = kwargs['initial_network_length']       
         
         self.optimizer = Optimizer(**kwargs)
-        self.networks = self.optimizer.create_population(self.population_size, self.initial_network_length)        
+        
+        if(kwargs['initial_network_population_file']) == None:
+            self.networks = self.optimizer.create_population(self.population_size, self.initial_network_length)        
+        else:
+            with open(kwargs['initial_network_population_file'], 'rb') as network_population_file:
+                self.networks = pickle.load(network_population_file)
+                self.population_size = len(self.networks)
+            
+            
         self.train = Train(**kwargs)
         
         self.run_experiment()
     
-    def train_networks(self, networks):
-        """Train each network.
     
-        Args:
-            networks (list): Current population of networks
-            
-        """
-        pbar = tqdm(total=len(networks))
-        for network in networks:
-            self.train.train_and_score(network)
-            pbar.update(1)
-        pbar.close()
-
-    def get_accuracy_stats(self, networks):
-        """Get the average accuracy for a group of networks.
-    
-        Args:
-            networks (list): List of networks
-    
-        Returns:
-            float: The average accuracy of a population of networks.
-    
-        """
-        total_accuracy = 0
-        highest_accuracy = 0
-        lowest_accuracy = 1
-        highest_scoring_network = None
+    def run_experiment(self):
+        """Evolve a network.
         
-        for network in networks:
-            total_accuracy += network.accuracy
-            if network.accuracy > highest_accuracy:
-                highest_accuracy = network.accuracy
-                highest_scoring_network = network
-            if network.accuracy < lowest_accuracy:
-                lowest_accuracy = network.accuracy
-    
-        return total_accuracy / len(networks), highest_accuracy, lowest_accuracy, highest_scoring_network
+        dataset: The name of the data set to run on, currently either 'mnist' or 'cifar10'
+        generations: The number of breeding generations to run over
+        population: The breeding population at each step
+        forbidden_layer_types:  An array of layer types that should NOT be used, options
+                                currently are: 'Dense', 'Conv2D', 'MaxPooling2D'
+        """
+        
+        logging.info("Running experiment with: %s" % vars(args))
 
+        logging.info("***Evolving %d generations with population %d***" %
+                     (self.generations, self.population_size))
+    
+        print('Saving results and log file to: ' + self.save_directory)    
+        
+        self.run_evolutionary_generations()
+    
+    
     def run_evolutionary_generations(self):
         """Run the evolutionary algorithm over the number of generations sent to
         the constructor.
         """
-        #optimizer = Optimizer(forbidden_layer_types)
-        #networks = optimizer.create_population(population)
-        
         
         # Evolve the generation.
         for i in range(self.generations):
@@ -194,7 +185,48 @@ class Evolutionary_Neural_Network_Generator():
     
         self.save_trained_network_models(self.dataset, self.networks[:5])
         
-    #logging.shutdown()
+    #logging.shutdown()     
+        
+    def train_networks(self, networks):
+        """Train each network.
+    
+        Args:
+            networks (list): Current population of networks
+            
+        """
+        pbar = tqdm(total=len(networks))
+        for network in networks:
+            self.train.train_and_score(network)
+            pbar.update(1)
+        pbar.close()
+
+
+    def get_accuracy_stats(self, networks):
+        """Get the average accuracy for a group of networks.
+    
+        Args:
+            networks (list): List of networks
+    
+        Returns:
+            float: The average accuracy of a population of networks.
+    
+        """
+        total_accuracy = 0
+        highest_accuracy = 0
+        lowest_accuracy = 1
+        highest_scoring_network = None
+        
+        for network in networks:
+            total_accuracy += network.accuracy
+            if network.accuracy > highest_accuracy:
+                highest_accuracy = network.accuracy
+                highest_scoring_network = network
+            if network.accuracy < lowest_accuracy:
+                lowest_accuracy = network.accuracy
+    
+        return total_accuracy / len(networks), highest_accuracy, lowest_accuracy, highest_scoring_network
+
+    
     
     def print_networks(self, networks):
         """Print a list of networks.
@@ -227,28 +259,13 @@ class Evolutionary_Neural_Network_Generator():
     
     def save_network_objects(self, population_list):
         
-        with open('latest_network_population.pkl', 'wb') as output:
+        save_file_name = 'latest_network_population.pkl'
+        save_file_name = os.path.join(self.save_directory, save_file_name) 
+        
+        with open(save_file_name, 'wb') as output:
             pickle.dump(population_list, output, pickle.HIGHEST_PROTOCOL)
 
 
-    def run_experiment(self):
-        """Evolve a network.
-        
-        dataset: The name of the data set to run on, currently either 'mnist' or 'cifar10'
-        generations: The number of breeding generations to run over
-        population: The breeding population at each step
-        forbidden_layer_types:  An array of layer types that should NOT be used, options
-                                currently are: 'Dense', 'Conv2D', 'MaxPooling2D'
-        """
-        
-        logging.info("Running experiment with: %s" % vars(args))
-
-        logging.info("***Evolving %d generations with population %d***" %
-                     (self.generations, self.population_size))
-    
-        print('Saving results and log file to: ' + self.save_directory)    
-        
-        self.run_evolutionary_generations()
 
 
 def draw_model_on_interactive_session(model):
