@@ -270,7 +270,7 @@ class Evolutionary_Neural_Network_Generator():
 
 def draw_model_on_interactive_session(model):
         
-    display(SVG(model_to_dot(model).create(prog='dot', format='svg')))
+    display(SVG(model_to_dot(model, show_shapes=True).create(prog='dot', format='svg')))
 
     
 if __name__ == '__main__':

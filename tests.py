@@ -247,7 +247,7 @@ def test_train():
     train.get_mnist()
     network = Network()
     network.create_random_network(2)
-    model = train.compile_model(network, train.nb_classes, train.input_shape, train.input_shape_conv2d)
+    model = train.compile_model(network, train.nb_classes, train.input_shape, train.natural_input_shape)
     network.trained_model = train.train_model(model, train.x_test, train.y_test, train.batch_size, 1, train.x_test, train.y_test)
     network.trained_model.evaluate(train.x_test, train.y_test, verbose=0)
     print('Network training and evaluation complete')
@@ -259,9 +259,11 @@ def to_do():
     print('\t1. Add OOM capture and recovery during training')
     print('\t2. Add support for multiple input/output layers')    
     print('\t3. Add support for non-categorical problems')    
-    print('\t4. Is input_shape_conv2D still needed?')    
+    
     print('\t5. Add check to avoid retraining networks that reoccur. Pickle & Hash?') 
-    print('\t6. Save the final output Network objects so that they can be used to restart the application') 
+    print('\t6. Add more layer types')
+    
+    
     
 print('Running tests....')    
 

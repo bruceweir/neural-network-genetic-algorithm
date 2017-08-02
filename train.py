@@ -48,9 +48,9 @@ class Train():
             
             self.get_dataset_from_file(self.training_data_file, self.test_data_file)
             
-            self.input_shape_conv2d = kwargs.get('natural_input_shape', None)                
-            if self.input_shape_conv2d != None:
-                self.input_shape_conv2d = literal_eval(self.input_shape_conv2d)
+            self.natural_input_shape = kwargs.get('natural_input_shape', None)                
+            if self.natural_input_shape != None:
+                self.natural_input_shape = literal_eval(self.natural_input_shape)
 
     
     def get_cifar10(self):
@@ -59,7 +59,7 @@ class Train():
         self.nb_classes = 10
         self.batch_size = 64
         self.input_shape = (3072,)
-        self.input_shape_conv2d = (32, 32, 3)
+        self.natural_input_shape = (32, 32, 3)
         # Get the data.
         (self.x_train, self.y_train), (self.x_test, self.y_test) = cifar10.load_data()
         self.x_train = self.x_train.reshape(50000, 3072)
@@ -82,7 +82,7 @@ class Train():
         self.batch_size = 128
         self.input_shape = (784,)
         # tensorflow-style ordering (Height, Width, Channels)
-        self.input_shape_conv2d = (28, 28, 1)
+        self.natural_input_shape = (28, 28, 1)
     
         # Get the data.
         (self.x_train, self.y_train), (self.x_test, self.y_test) = mnist.load_data()
@@ -162,7 +162,7 @@ class Train():
             
         """
            
-        model = self.compile_model(network, self.nb_classes, self.input_shape, self.input_shape_conv2d)
+        model = self.compile_model(network, self.nb_classes, self.input_shape, self.natural_input_shape)
     
         if network.trained_model is None:
             network.trained_model = self.train_model(model, self.x_train, self.y_train, self.batch_size, self.max_epochs, self.x_test, self.y_test, [self.early_stopper])
@@ -182,14 +182,14 @@ class Train():
         return model
     
     
-    def compile_model(self, network, nb_classes, input_shape, input_shape_conv2d):
+    def compile_model(self, network, nb_classes, input_shape, natural_input_shape):
         """Compile a sequential model.
     
         Args:
             network: A network object with a defined network structure
             nb_classes: The number of classification classes to output
             input_shape: Shape of the input vector (i.e. for training on MNIST: (784,))
-            input_shape_conv2d: Shape of the input vector if it can be sensibly considered as a 2D image (i.e. for training on greyscale MNIST only: (28,28,1))
+            natural_input_shape: Shape of the input vector if it can be sensibly considered as a 2D image (i.e. for training on greyscale MNIST only: (28,28,1))
             
     
         Returns:
@@ -215,7 +215,7 @@ class Train():
         
         final_layer_id = last_layer_ids[0]
         
-        layer = self.add_layer(network, final_layer_id, layer)
+        layer = self.add_layer(network, final_layer_id, layer, natural_input_shape)
        
         _, _, number_of_dimensions_in_previous_layer = self.get_compiled_layer_shape_details(layer)
         
@@ -232,7 +232,8 @@ class Train():
     
         return model
 
-    def add_layer(self, network, layer_id, input_layer):
+
+    def add_layer(self, network, layer_id, input_layer, natural_input_shape):
         
         """ Starting at the output layer, this should recurse up the network graph, adding Keras layers """
         
@@ -245,7 +246,7 @@ class Train():
         layers_input_into_this_level = []
         
         for ids in network.get_upstream_layers(layer_id):
-            layers_input_into_this_level.append(self.add_layer(network, ids, input_layer))
+            layers_input_into_this_level.append(self.add_layer(network, ids, input_layer, natural_input_shape))
     
         
         if len(layers_input_into_this_level) > 1:
@@ -263,10 +264,10 @@ class Train():
             layer = self.add_dense_layer(layer_parameters, layer)
             
         elif layer_type == 'Conv2D':            
-            layer = self.add_conv2D_layer(layer_parameters, layer)            
+            layer = self.add_conv2D_layer(layer_parameters, layer, natural_input_shape)            
                 
         elif layer_type == 'MaxPooling2D':
-            layer = self.add_maxpooling2d_layer(layer_parameters, layer)
+            layer = self.add_maxpooling2d_layer(layer_parameters, layer, natural_input_shape)
                 
         elif layer_type == 'Dropout':
             layer = self.add_dropout_layer(layer_parameters, layer)
@@ -292,7 +293,7 @@ class Train():
         return layer
 
     
-    def add_conv2D_layer(self, layer_parameters, input_layer):
+    def add_conv2D_layer(self, layer_parameters, input_layer, natural_input_shape):
         
         previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = self.get_compiled_layer_shape_details(input_layer)
         
@@ -304,13 +305,14 @@ class Train():
                              activation=layer_parameters['activation'])(input_layer)
         except (ValueError, IndexError):
             print('add_conv2D_layer: Reshaping input')
-            reshape_size = self.get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
-            layer= Reshape((reshape_size[0], reshape_size[1], 1))(input_layer)       
-            layer = self.add_conv2D_layer(layer_parameters, layer);
+            reshape_size = self.get_reshape_size_closest_to_square(number_of_units_in_previous_layer, natural_input_shape[-1])
+            layer= Reshape(reshape_size)(input_layer)       
+            layer = self.add_conv2D_layer(layer_parameters, layer, natural_input_shape);
             
         return layer
+
             
-    def add_maxpooling2d_layer(self, layer_parameters, input_layer):
+    def add_maxpooling2d_layer(self, layer_parameters, input_layer, natural_input_shape):
         
         previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = self.get_compiled_layer_shape_details(input_layer)
         
@@ -319,11 +321,12 @@ class Train():
                 layer = MaxPooling2D(pool_size=pool_size)(input_layer)
         
         except (ValueError, IndexError):
-            reshape_size = self.get_reshape_size_closest_to_square(number_of_units_in_previous_layer)
-            layer= Reshape((reshape_size[0], reshape_size[1], 1))(input_layer)
-            layer = self.add_maxpooling2d_layer(layer_parameters, layer)
+            reshape_size = self.get_reshape_size_closest_to_square(number_of_units_in_previous_layer, natural_input_shape[-1])
+            layer= Reshape(reshape_size)(input_layer)
+            layer = self.add_maxpooling2d_layer(layer_parameters, layer, natural_input_shape)
             
         return layer
+
 
     def add_dropout_layer(self, layer_parameters, input_layer):
         
@@ -448,10 +451,10 @@ class Train():
         layer_details['compiled_layer'] = compiled_layer
     
         
-    def get_reshape_size_closest_to_square(self, number_of_neurons):
+    def get_reshape_size_closest_to_square(self, number_of_neurons, number_of_channels):
         
-        dimension1 = math.sqrt(number_of_neurons)
-        dimension2 = number_of_neurons / dimension1
+        dimension1 = math.sqrt(number_of_neurons / number_of_channels)
+        dimension2 = number_of_neurons / (dimension1 * number_of_channels)
         
         dimension1 = float(math.ceil(dimension1))
         
@@ -460,7 +463,7 @@ class Train():
             dimension2 = number_of_neurons / dimension1
             
         
-        return (int(dimension1), int(dimension2))
+        return (int(dimension1), int(dimension2), number_of_channels)
         
 
     def get_checked_2d_kernel_size_for_layer(self, previous_layer_size, requested_kernel_size):
