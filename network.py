@@ -371,26 +371,37 @@ class Network():
         return self.network_graph.has_node(layer_id)
     
     
-    def save_network_details(self, file_name_prepend):
+    def save_trained_model(self, file_name_prepend):
         
         self.save_model(file_name_prepend + ".h5")
         self.save_model_image(file_name_prepend + ".png")
 
         
     def save_model(self, fileName):
+
         if self.trained_model is not None and len(fileName) is not 0:
             print('Saving model to %s' % fileName)
             logging.info('Saving model to %s' % fileName)            
             self.trained_model.save(fileName)
             
     def save_model_image(self, fileName):
+
         if self.trained_model is not None and len(fileName) is not 0:
             plot_model(self.trained_model, to_file=fileName, show_shapes=True)
     
         
     def clear_trained_model(self):
+        
         if self.trained_model is not None:
             del self.trained_model
             self.trained_model = None
+
+        
+    def __getstate__(self):
+        
+        pickleable_network_state = {k: v for (k, v) in self.__dict__.items() if k != 'trained_model'}
+        pickleable_network_state['trained_model'] = None
+        return pickleable_network_state
+    
 
     

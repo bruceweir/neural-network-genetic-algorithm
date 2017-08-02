@@ -261,6 +261,8 @@ def to_do():
     print('\t3. Add support for non-categorical problems')    
     print('\t4. Is input_shape_conv2D still needed?')    
     print('\t5. Add check to avoid retraining networks that reoccur. Pickle & Hash?') 
+    print('\t6. Save the final output Network objects so that they can be used to restart the application') 
+    
 print('Running tests....')    
 
 test_network()

@@ -13,6 +13,7 @@ import time
 import os
 from IPython.display import SVG, display
 from keras.utils.vis_utils import model_to_dot
+import pickle
 
 
 parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm. Source: https://github.com/bruceweir/neural-network-genetic-algorithm. Originally forked from: https://github.com/harvitronix/neural-network-genetic-algorithm.',
@@ -174,7 +175,7 @@ class Evolutionary_Neural_Network_Generator():
             
             print('************', self.dataset)
             
-            highest_scoring_network.save_network_details(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy)))
+            highest_scoring_network.save_trained_model(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy)))
             
             logging.info("Generation average: %.2f%%" % (average_accuracy * 100))
             logging.info("Generation best: %.2f%%" % (highest_accuracy * 100))
@@ -184,12 +185,14 @@ class Evolutionary_Neural_Network_Generator():
             # Evolve, except on the last iteration.
             if i != self.generations - 1:
                 self.networks = self.optimizer.evolve(self.networks)
+            
+            self.save_network_objects(self.networks)
     
         self.networks = sorted(self.networks, key=lambda x: x.accuracy, reverse=True)
     
         self.print_networks(self.networks[:5])
     
-        self.save_networks(self.dataset, self.networks[:5])
+        self.save_trained_network_models(self.dataset, self.networks[:5])
         
     #logging.shutdown()
     
@@ -205,7 +208,7 @@ class Evolutionary_Neural_Network_Generator():
             network.log_network()
             network.print_network_details()
                 
-    def save_networks(self, dataset, networks):
+    def save_trained_network_models(self, dataset, networks):
         
         """Save the trained models and a image of the networks.
     
@@ -219,8 +222,13 @@ class Evolutionary_Neural_Network_Generator():
             save_file_name = dataset + '-model_%d-' % i
             save_file_name = save_file_name + '_acc%.4f' % networks[0].accuracy
             save_file_name = os.path.join(self.save_directory, save_file_name)       
-            networks[i].save_network_details(save_file_name)
-      
+            networks[i].save_trained_model(save_file_name)
+
+    
+    def save_network_objects(self, population_list):
+        
+        with open('latest_network_population.pkl', 'wb') as output:
+            pickle.dump(population_list, output, pickle.HIGHEST_PROTOCOL)
 
 
     def run_experiment(self):

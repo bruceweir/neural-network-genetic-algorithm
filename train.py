@@ -473,6 +473,6 @@ class Train():
 
     def calculate_hash_for_network(self, network):
         
-        return hashlib.mp5(pickle.dumps(network)).hexdigest()
+        return hashlib.md5(pickle.dumps(network)).hexdigest()
     
         
