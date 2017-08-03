@@ -33,6 +33,7 @@ class Optimizer():
         self.retain = kwargs.get('retain', 0.4)
         self.forbidden_layer_types = kwargs.get('forbidden_layer_types', [])
         self.elitist = kwargs.get('elitist', False)
+        self.is_classification = kwargs.get('is_classification', False)
         
         
 
@@ -64,10 +65,12 @@ class Optimizer():
 
         return population
 
-    @staticmethod
-    def fitness(network):
-        """Return the accuracy, which is our fitness function."""
-        return network.accuracy
+    def fitness(self, network):
+        """Return the fitness appropriate to the problem."""
+        if self.is_classification:
+            return network.accuracy
+        else:
+            return network.loss
 
     def grade(self, population):
         """Find average fitness for a population.
@@ -97,8 +100,13 @@ class Optimizer():
         # Get scores for each network.
         graded = [(self.fitness(network), network) for network in population]
 
-        # Sort on the scores.
-        graded = [x[1] for x in sorted(graded, key=lambda x: x[0], reverse=True)]
+        # Sort on the fitness.
+        reverse = False
+        
+        if self.is_classification:
+            reverse = True
+            
+        graded = [x[1] for x in sorted(graded, key=lambda x: x[0], reverse=reverse)]
 
         # Get the number we want to keep for the next gen (with a minimum of 2).
         retain_length = max([int(len(graded)*self.retain), 2])

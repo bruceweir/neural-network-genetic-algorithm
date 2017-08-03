@@ -14,6 +14,7 @@ import os
 from IPython.display import SVG, display
 from keras.utils.vis_utils import model_to_dot
 import pickle
+import sys
 
 
 parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm. Source: https://github.com/bruceweir/neural-network-genetic-algorithm. Originally forked from: https://github.com/harvitronix/neural-network-genetic-algorithm.',
@@ -75,6 +76,11 @@ parser.add_argument('--batch_size',
                     type=int,
                     default=64)
 
+parser.add_argument('--is_classification',
+                    help='Train a classification model (when using your own dataset. MNIST and CIFAR10 examples are always treated as classification problems)',
+                    action='store_true',
+                    default=False)
+
 args = parser.parse_args()
 
 print(vars(args))
@@ -108,7 +114,9 @@ class Evolutionary_Neural_Network_Generator():
         
         
         self.generations = kwargs.get('generations', 20)
-        self.dataset = kwargs.get('dataset', '')   
+        self.dataset = kwargs.get('dataset', 'result')   
+        if self.dataset is None:
+            self.dataset = 'result'
         
         self.population_size = kwargs.get('population_size', 10)
         self.initial_network_length = kwargs.get('initial_network_length', 1)       
@@ -122,7 +130,8 @@ class Evolutionary_Neural_Network_Generator():
                 self.networks = pickle.load(network_population_file)
                 self.population_size = len(self.networks)
             
-            
+        self.is_classification = kwargs.get('is_classification', False)
+        
         self.train = Train(kwargs)
         
         self.run_experiment()
@@ -160,24 +169,34 @@ class Evolutionary_Neural_Network_Generator():
     
             self.train_networks(self.networks)
     
-            average_accuracy, highest_accuracy, lowest_accuracy, highest_scoring_network = self.get_accuracy_stats(self.networks)       
-            
-            print('************', self.dataset)
-            
-            highest_scoring_network.save_trained_model(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy)))
-            
-            logging.info("Generation average: %.2f%%" % (average_accuracy * 100))
-            logging.info("Generation best: %.2f%%" % (highest_accuracy * 100))
-            logging.info("Generation worst: %.2f%%" % (lowest_accuracy * 100))
-            logging.info('-'*80)
-    
+            if self.is_classification:
+                average_accuracy, highest_accuracy, lowest_accuracy, highest_scoring_network = self.get_accuracy_stats(self.networks)       
+                
+                highest_scoring_network.save_trained_model(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy)))
+                
+                logging.info("Generation average: %.2f%%" % (average_accuracy * 100))
+                logging.info("Generation best: %.2f%%" % (highest_accuracy * 100))
+                logging.info("Generation worst: %.2f%%" % (lowest_accuracy * 100))
+                logging.info('-'*80)
+            else:
+                average_loss, highest_loss, lowest_loss, best_scoring_network = self.get_loss_stats(self.networks)       
+                
+                best_scoring_network.save_trained_model(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_loss%f" % (i, lowest_loss)))
+                
+                logging.info("Generation average: %.2f%%" % (average_loss * 100))
+                logging.info("Generation best: %.2f%%" % (highest_loss * 100))
+                logging.info("Generation worst: %.2f%%" % (lowest_loss * 100))
+                logging.info('-'*80)
             # Evolve, except on the last iteration.
             if i != self.generations - 1:
                 self.networks = self.optimizer.evolve(self.networks)
             
             self.save_network_objects(self.networks)
     
-        self.networks = sorted(self.networks, key=lambda x: x.accuracy, reverse=True)
+        if self.is_classification:
+            self.networks = sorted(self.networks, key=lambda x: x.accuracy, reverse=True)
+        else:
+            self.networks = sorted(self.networks, key=lambda x: x.loss, reverse=False)
     
         self.print_networks(self.networks[:5])
     
@@ -212,19 +231,43 @@ class Evolutionary_Neural_Network_Generator():
         total_accuracy = 0
         highest_accuracy = 0
         lowest_accuracy = 1
-        highest_scoring_network = None
+        best_scoring_network = None
         
         for network in networks:
             total_accuracy += network.accuracy
             if network.accuracy > highest_accuracy:
                 highest_accuracy = network.accuracy
-                highest_scoring_network = network
+                best_scoring_network = network
             if network.accuracy < lowest_accuracy:
                 lowest_accuracy = network.accuracy
     
-        return total_accuracy / len(networks), highest_accuracy, lowest_accuracy, highest_scoring_network
+        return total_accuracy / len(networks), highest_accuracy, lowest_accuracy, best_scoring_network
 
+    def get_loss_stats(self, networks):
+        """Get the average accuracy for a group of networks.
     
+        Args:
+            networks (list): List of networks
+    
+        Returns:
+            float: The average accuracy of a population of networks.
+    
+        """
+        total_loss = 0
+        highest_loss = 0
+        lowest_loss = 1e99
+        best_scoring_network = None
+        
+        for network in networks:
+            total_loss += network.loss
+            if network.loss < lowest_loss:
+                lowest_loss = network.loss
+                best_scoring_network = network
+            if network.loss > highest_loss:
+                highest_loss = network.loss
+    
+        return total_loss / len(networks), highest_loss, lowest_loss, best_scoring_network
+
     
     def print_networks(self, networks):
         """Print a list of networks.
@@ -250,7 +293,7 @@ class Evolutionary_Neural_Network_Generator():
         """
         for i in range(len(networks)):
             save_file_name = dataset + '-model_%d-' % i
-            save_file_name = save_file_name + '_acc%.4f' % networks[0].accuracy
+            save_file_name = save_file_name + '_acc%.4f_loss%.4f' % (networks[i].accuracy, networks[i].loss)
             save_file_name = os.path.join(self.save_directory, save_file_name)       
             networks[i].save_trained_model(save_file_name)
 

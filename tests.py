@@ -34,9 +34,9 @@ def test_network():
         network.create_random_network(20)
         network.print_network_details()
         print('Compiling auto_checked network single channel image...%d'% i)
-        train.compile_model(network, 10, (784,), (28, 28, 1))
+        train.compile_model(network, (10,), (784,), (28, 28, 1))
         print('Compiling auto_checked network 3 channel image...%d'% i)
-        train.compile_model(network, 10, (3072,), (32, 32, 3))
+        train.compile_model(network, (10,), (3072,), (32, 32, 3))
         print('...done compiling.')
         
     
@@ -214,7 +214,7 @@ def test_optimizer():
     for i in range(10):
         print('Testing compilation of mutated network: %d' % i)
         optimizer.mutate(network)
-        model = train.compile_model(network, 10, (784, ), (28, 28, 1))
+        model = train.compile_model(network, (10,), (784, ), (28, 28, 1))
         del model
         print('...done compiling')
 
@@ -227,8 +227,8 @@ def test_optimizer():
     print('Original mother\n%s' % mother.print_network_details())
     children = optimizer.breed(mother, father)
     print('Compiling children of first generation...')
-    train.compile_model(children[0], 10, (784, ), (28, 28, 1))
-    train.compile_model(children[1], 10, (784, ), (28, 28, 1))
+    train.compile_model(children[0], (10,), (784, ), (28, 28, 1))
+    train.compile_model(children[1], (10,), (784, ), (28, 28, 1))
     print('...compilation done')
     print('Testing 10 breeding generations')
     for i in range(10):
@@ -237,8 +237,8 @@ def test_optimizer():
         father.create_random_network(10)
         children = optimizer.breed(mother, father)
         print('Compiling children of generation %d...' % i)
-        train.compile_model(children[0], 10, (784, ), (28, 28, 1))
-        train.compile_model(children[1], 10, (784, ), (28, 28, 1))
+        train.compile_model(children[0], (10,), (784, ), (28, 28, 1))
+        train.compile_model(children[1], (10,), (784, ), (28, 28, 1))
         print('...compilation done')
     
     print ('optimizer.create_population(count, initial_length) creates and returns an array containing count networks or length initial_length (unless the network checker adds layers)')
@@ -259,7 +259,7 @@ def test_train():
     train.get_mnist()
     network = Network()
     network.create_random_network(2)
-    model = train.compile_model(network, train.nb_classes, train.input_shape, train.natural_input_shape)
+    model = train.compile_model(network, train.output_shape, train.input_shape, train.natural_input_shape)
     network.trained_model = train.train_model(model, train.x_test, train.y_test, train.batch_size, 1, train.x_test, train.y_test)
     network.trained_model.evaluate(train.x_test, train.y_test, verbose=0)
     print('Network training and evaluation complete')
@@ -271,6 +271,7 @@ def to_do():
     print('\t1. Add OOM capture and recovery during training')
     print('\t2. Add support for multiple input/output layers')    
     print('\t3. Add support for non-categorical problems')    
+    print('\t3. Sort out rational reshaping according to --natural_input_shape setting')    
     
     print('\t5. Add check to avoid retraining networks that reoccur. Pickle & Hash?') 
     print('\t6. Add more layer types')

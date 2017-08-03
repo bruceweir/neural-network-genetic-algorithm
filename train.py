@@ -34,7 +34,7 @@ class Train():
         self.training_data_file = kwargs.get('training_data', None)
         self.test_data_file = kwargs.get('test_data', None)
         self.batch_size = kwargs.get('batch_size', 64)
-        
+        self.is_classification = kwargs.get('is_classification', True)
         
         if self.dataset == None and self.training_data_file == None:
             raise ValueError("""You need to specify either a dataset or training/test files to use.\n
@@ -52,11 +52,16 @@ Perhaps you should be launching the application from the command line? Example: 
             self.natural_input_shape = kwargs.get('natural_input_shape', None)                
             if self.natural_input_shape != None:
                 self.natural_input_shape = literal_eval(self.natural_input_shape)
+            else:
+                self.natural_input_shape = self.input_shape
+
+        print('Classification problem? ', self.is_classification)
 
     
     def get_cifar10(self):
         """Retrieve the CIFAR dataset and process the data."""
         # Set defaults.
+        self.is_classification = True
         self.nb_classes = 10
         self.batch_size = 64
         self.input_shape = (3072,)
@@ -74,11 +79,13 @@ Perhaps you should be launching the application from the command line? Example: 
         self.y_train = to_categorical(self.y_train, self.nb_classes)
         self.y_test = to_categorical(self.y_test, self.nb_classes)
     
+        self.output_shape = (self.nb_classes,)
         
 
     def get_mnist(self):
         """Retrieve the MNIST dataset and process the data."""
         # Set defaults.
+        self.is_classification = True
         self.nb_classes = 10
         self.batch_size = 128
         self.input_shape = (784,)
@@ -97,6 +104,7 @@ Perhaps you should be launching the application from the command line? Example: 
         self.y_train = to_categorical(self.y_train, self.nb_classes)
         self.y_test = to_categorical(self.y_test, self.nb_classes)
     
+        self.output_shape = (self.nb_classes,)
         
 
     def get_dataset_from_file(self, training_file_name, test_file_name):
@@ -105,7 +113,7 @@ Perhaps you should be launching the application from the command line? Example: 
         """ 
         Load the dataset from 2 numpy array save files. 'training_file_name' contains your training data,
         'test_file_name' contains your test data. The final column of each saved numpy array is the target
-        output (which could be numpy array). The other columns are the input vector.   
+        output (which could contain numpy arrays). The other columns are the input vector.   
         
         Example: training data for an XOR gate
         
@@ -129,15 +137,15 @@ Perhaps you should be launching the application from the command line? Example: 
         self.x_train = training_data[:, range(training_data.shape[1]-1)]
         self.x_train = self.x_train.astype('float32')
         
-        self.y_train = training_data[:, training_data.shape[1]-1]
- 
+        
         print('Loaded %d input training vectors, each of length: %d' % (self.x_train.shape[0], self.x_train.shape[1]))
-        self.nb_classes = len(np.unique(self.y_train))
+        
         self.input_shape = (self.x_train.shape[1], )       
         print('Setting input_shape to: %s' % (self.input_shape,))
         
-        print('Found %d classes' % self.nb_classes)
-        
+        self.y_train = training_data[:, training_data.shape[1]-1]
+ 
+        print('Loading test data: %s' % test_file_name)        
         test_data = np.load(test_file_name)
         
         self.x_test = test_data[:, range(test_data.shape[1]-1)]
@@ -147,12 +155,23 @@ Perhaps you should be launching the application from the command line? Example: 
 
         print('Loaded %d input test vectors, each of length: %d' % (self.x_test.shape[0], self.x_test.shape[1]))
 
-        print('Converting output values to categorical one-hot vectors')
+        if self.is_classification:
+            self.nb_classes = len(np.unique(self.y_train))
+        
+            print('Found %d classes' % self.nb_classes)        
+            print('Converting output values to categorical one-hot vectors')
 
-        self.y_train = to_categorical(self.y_train, self.nb_classes)
-        self.y_test = to_categorical(self.y_test, self.nb_classes)
+            self.y_train = to_categorical(self.y_train, self.nb_classes)
+            self.y_test = to_categorical(self.y_test, self.nb_classes)
+ 
+        self.output_shape = list(np.array(self.y_train[0]).shape)
         
+        self.y_train = np.array([a.reshape(self.output_shape) for a in self.y_train])
+        self.y_test = np.array([a.reshape(self.output_shape) for a in self.y_test])
         
+        print('Output data shape set to: ', self.output_shape)
+        print('Output data training vector shape: ', self.y_train.shape)
+        print('Output data test vector shape: ', self.y_test.shape)
         
         
     def train_and_score(self, network):
@@ -163,11 +182,12 @@ Perhaps you should be launching the application from the command line? Example: 
             
         """
            
-        model = self.compile_model(network, self.nb_classes, self.input_shape, self.natural_input_shape)
+        model = self.compile_model(network, self.output_shape, self.input_shape, self.natural_input_shape)
     
         if network.trained_model is None:
             network.trained_model = self.train_model(model, self.x_train, self.y_train, self.batch_size, self.max_epochs, self.x_test, self.y_test, [self.early_stopper])
             score = network.trained_model.evaluate(self.x_test, self.y_test, verbose=0)                
+            network.loss = score[0]
             network.accuracy = score[1]
             print('Network training complete. Test accuracy: %f, Test Loss: %f' % (score[1], score[0]))    
 
@@ -183,7 +203,7 @@ Perhaps you should be launching the application from the command line? Example: 
         return model
     
     
-    def compile_model(self, network, nb_classes, input_shape, natural_input_shape):
+    def compile_model(self, network, output_shape, input_shape, natural_input_shape):
         """Compile a sequential model.
     
         Args:
@@ -205,12 +225,12 @@ Perhaps you should be launching the application from the command line? Example: 
         layer = inputs
     
         first_layer_ids = network.get_network_layers_with_no_upstream_connections()
-        if len(first_layer_ids) != 1:
+        if len(first_layer_ids) > 1:
             # For now, connect the layers - TODO, deal with multiple inputs case
             network.connect_layers([first_layer_ids[0]], first_layer_ids[1:])
         
         last_layer_ids = network.get_network_layers_with_no_downstream_connections()
-        if len(last_layer_ids) != 1:
+        if len(last_layer_ids) > 1:
             # For now, connect the layers - TODO, deal with multiple outputs case        
             network.connect_layers(last_layer_ids[1:], [last_layer_ids[0]])
         
@@ -220,16 +240,28 @@ Perhaps you should be launching the application from the command line? Example: 
        
         _, _, number_of_dimensions_in_previous_layer = self.get_compiled_layer_shape_details(layer)
         
-        if number_of_dimensions_in_previous_layer > 2:
-            layer = Flatten()(layer)
-            
-        predictions = self.add_dense_layer({'activation': 'softmax', 'nb_neurons': nb_classes}, layer)
-    
-        model = Model(inputs=inputs, outputs=predictions, name='Output')
         
-        model.compile(loss='categorical_crossentropy', optimizer='adam',
-                      metrics=['accuracy'])
+        if self.is_classification:
+        
+            if number_of_dimensions_in_previous_layer > 2:
+                layer = Flatten()(layer)
+        
+            output = self.add_dense_layer({'activation': 'softmax', 'nb_neurons': output_shape[0]}, layer)
     
+            model = Model(inputs=inputs, outputs=output, name='Output')
+        
+            model.compile(loss='categorical_crossentropy', optimizer='adam',
+                          metrics=['accuracy'])
+        else:
+            if number_of_dimensions_in_previous_layer > 2:
+                layer = Flatten()(layer)
+        
+            layer = self.add_dense_layer({'activation': 'linear', 'nb_neurons': self.calculate_number_of_neurons_in_shape(output_shape)}, layer)
+            output = Reshape(output_shape)(layer)
+            model = Model(inputs=inputs, outputs=output, name='Output')
+        
+            model.compile(loss='mse', optimizer='adam',
+                          metrics=['accuracy'])
     
         return model
 
@@ -491,4 +523,7 @@ Perhaps you should be launching the application from the command line? Example: 
         
         return hashlib.md5(pickle.dumps(network)).hexdigest()
     
+    def calculate_number_of_neurons_in_shape(self, shape):
+        
+        return reduce(lambda x, y: x*y,  [x for x in shape if x is not None])
         

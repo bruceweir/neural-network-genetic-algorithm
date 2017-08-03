@@ -20,6 +20,7 @@ class Network():
 
         """
         self.accuracy = 0.0
+        self.loss = 1e99
         self.nn_network_layer_options = self.create_network_layer_options()
         
         self.trained_model = None
@@ -74,7 +75,7 @@ class Network():
     
         if upstream_layer_ids == None or layer_ids == None:
             return
-        
+                    
         if type(upstream_layer_ids) is int:
             upstream_layer_ids = [upstream_layer_ids]
         
@@ -89,7 +90,6 @@ class Network():
             
         self.clear_trained_model()
         
-
 
     def disconnect_layers(self, upstream_layer_ids, layer_ids):
 
