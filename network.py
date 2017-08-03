@@ -74,6 +74,12 @@ class Network():
     
         if upstream_layer_ids == None or layer_ids == None:
             return
+        
+        if type(upstream_layer_ids) is int:
+            upstream_layer_ids = [upstream_layer_ids]
+        
+        if type(layer_ids) is int:
+            layer_ids = [layer_ids]
                 
         for upstream_layer_id in upstream_layer_ids:
             for layer_id in layer_ids:
@@ -88,6 +94,15 @@ class Network():
     def disconnect_layers(self, upstream_layer_ids, layer_ids):
 
         """ Remove edges between the layers whose ids are listed in the upstream_layer_ids array and each of the layers in the layer_ids list """        
+        if upstream_layer_ids == None or layer_ids == None:
+            return
+        
+        if type(upstream_layer_ids) is int:
+            upstream_layer_ids = [upstream_layer_ids]
+        
+        if type(layer_ids) is int:
+            layer_ids = [layer_ids]
+        
         
         for upstream_layer_id in upstream_layer_ids:
             for layer_id in layer_ids:
