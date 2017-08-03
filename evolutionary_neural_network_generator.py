@@ -107,15 +107,13 @@ class Evolutionary_Neural_Network_Generator():
         
         
         
-        self.generations = kwargs['generations']
-        self.dataset = kwargs['dataset']   
-        if self.dataset == None:
-            self.dataset = ''
+        self.generations = kwargs.get('generations', 20)
+        self.dataset = kwargs.get('dataset', '')   
         
-        self.population_size = kwargs['population_size']
-        self.initial_network_length = kwargs['initial_network_length']       
+        self.population_size = kwargs.get('population_size', 10)
+        self.initial_network_length = kwargs.get('initial_network_length', 1)       
         
-        self.optimizer = Optimizer(**kwargs)
+        self.optimizer = Optimizer(kwargs)
         
         if(kwargs['initial_network_population_file']) == None:
             self.networks = self.optimizer.create_population(self.population_size, self.initial_network_length)        
@@ -125,7 +123,7 @@ class Evolutionary_Neural_Network_Generator():
                 self.population_size = len(self.networks)
             
             
-        self.train = Train(**kwargs)
+        self.train = Train(kwargs)
         
         self.run_experiment()
     
@@ -276,5 +274,5 @@ def draw_model_on_interactive_session(model):
 if __name__ == '__main__':
             
     Evolutionary_Neural_Network_Generator = Evolutionary_Neural_Network_Generator(vars(args))
-
+ 
 

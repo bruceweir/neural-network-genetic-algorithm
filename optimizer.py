@@ -16,7 +16,7 @@ import copy
 class Optimizer():
     """Class that implements genetic algorithm for MLP optimization."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, kwargs):
         """Create an optimizer.
 
         Args:
@@ -254,12 +254,11 @@ class Optimizer():
                 baby.add_layer_with_parameters(chosen_layer_parameters, chosen_layer_upstream_layers)
                     
                     
-                #########
             for i in range(len(longest_network_layer_ids) - len(shortest_network_layer_ids)):
                 
                 if random.random() > 0.5:
                     chosen_layer_parameters, chosen_layer_upstream_layers = self.choose_parameters_and_upstream_connections_for_layer(longest_network, longest_network_layer_ids[i], baby)                
-                    baby.add_layer_with_parameters(chosen_layer_parameters, chosen_layer_parameters)
+                    baby.add_layer_with_parameters(chosen_layer_parameters, chosen_layer_upstream_layers)
             
             
             babies.append(baby)
@@ -269,9 +268,9 @@ class Optimizer():
     def choose_parameters_and_upstream_connections_for_layer(self, parent_network, layer_id, baby_network):
         chosen_layer_parameters = copy.deepcopy(parent_network.get_network_layer_details_dictionary(layer_id))
         chosen_layer_upstream_layers = parent_network.get_upstream_layers(layer_id)
-        upstream_layers_which_exist_in_this_network = [x for x in chosen_layer_upstream_layers if baby_network.has_a_layer_with_id(x)]
+        upstream_layers_which_exist_in_the_baby_network = [x for x in chosen_layer_upstream_layers if baby_network.has_a_layer_with_id(x)]
                 
-        if len(upstream_layers_which_exist_in_this_network) == 0:
+        if len(upstream_layers_which_exist_in_the_baby_network) == 0:
             network_ends = baby_network.get_network_layers_with_no_downstream_connections()
             if len(network_ends) == 0:
                 chosen_layer_upstream_layers = None

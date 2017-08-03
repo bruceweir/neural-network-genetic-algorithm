@@ -25,7 +25,7 @@ K.set_image_dim_ordering('tf')
 
 class Train():
 # Helper: Early stopping.
-    def __init__(self, **kwargs):
+    def __init__(self, kwargs):
         
         self.early_stopper = EarlyStopping(patience=5)
         self.list_of_trained_layers = []
@@ -37,7 +37,8 @@ class Train():
         
         
         if self.dataset == None and self.training_data_file == None:
-            raise ValueError('You need to specify either a dataset or training/test files to use.')
+            raise ValueError("""You need to specify either a dataset or training/test files to use.\n
+Perhaps you should be launching the application from the command line? Example: python evolutionary_neural_network_generator.py -d mnist -p 10 -g 20""")
             
             
         if self.dataset == 'cifar10':

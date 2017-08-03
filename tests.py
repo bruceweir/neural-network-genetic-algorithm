@@ -12,7 +12,7 @@ from train import Train
 
 def test_network():
     args = {'dataset':'mnist'}    
-    train = Train(**args)
+    train = Train(args)
     
     
     print('network.add_layer_with_random_parameters("layer_type") should add a network layer of the requested layer_type.')
@@ -135,9 +135,9 @@ def test_network_graph():
     print('Inserting a layer should result in the connection between the upstream and downstream layer being rerouted through the new layer.')
     network = Network()
     first_layer_id = network.add_random_layer()
-    second_layer_id = network.add_random_layer([first_layer_id])
+    second_layer_id = network.add_random_layer(first_layer_id)
     
-    inserted_layer_id = network.insert_random_layer([first_layer_id], [second_layer_id])
+    inserted_layer_id = network.insert_random_layer(first_layer_id, second_layer_id)
     
     assert(len(network.get_downstream_layers(first_layer_id)) == 1)
     assert(network.get_downstream_layers(first_layer_id)[0] == inserted_layer_id)
@@ -173,20 +173,29 @@ def test_network_graph():
     layer_id = network.add_random_layer()
     assert(network.number_of_layers() == 1)
     
-    network.add_random_layer([layer_id])
+    network.add_random_layer(layer_id)
     assert(network.number_of_layers() == 2)
     
     print('\t network.change_upstream_layer() should not leave any of its downstream layers without a connection upwards')
     network = Network()
     top = network.add_random_layer()
-    middle = network.add_random_layer([top])
-    bottom = network.add_random_layer([middle])
+    middle = network.add_random_layer(top)
+    bottom = network.add_random_layer(middle)
     network.change_upstream_layer(middle, bottom)
     assert(len(network.get_upstream_layers(bottom)) == 1)
     assert(network.get_upstream_layers(bottom)[0] == top)
     assert(len(network.get_upstream_layers(middle)) == 1)
     assert(network.get_upstream_layers(middle)[0] == bottom)
 
+    print('\t If the second argument to the network.add_*layer() methods is an array of ints, each node in the graph with that id should become connected.' )
+    network = Network()
+    first_layer_id = network.add_layer_with_random_parameters('Dense')
+    second_layer_id = network.add_layer_with_random_parameters('Dense')
+    third_layer_id = network.add_layer_with_random_parameters('Conv2D', [first_layer_id, second_layer_id])
+    assert(len(network.get_upstream_layers(third_layer_id)) == 2)
+    assert(network.get_upstream_layers(third_layer_id)[0] == first_layer_id)
+    assert(network.get_upstream_layers(third_layer_id)[1] == second_layer_id)
+    
     
     
     
@@ -194,14 +203,14 @@ def test_network_graph():
 def test_optimizer():
     
     args = {'dataset':'mnist'}    
-    train = Train(**args)
+    train = Train(args)
     
     print('optimizer.mutate(network) returns a network object that has either had a layer added, removed or altered. The returned network should compile')
     network = Network()
     network.create_random_network(3)
     
     args={'mutate_chance':0.2, 'random_select':0.1, 'retain':0.4, 'forbidden_layer_types':[], 'population':10, 'initial_network_length':1}
-    optimizer = Optimizer(**args)
+    optimizer = Optimizer(args)
     for i in range(10):
         print('Testing compilation of mutated network: %d' % i)
         optimizer.mutate(network)
@@ -245,7 +254,7 @@ def test_optimizer():
 def test_train():
     print('Testing model training and evaluation over a single epoch (This will download the MNIST dataset the first time it is run. Being behind a proxy might cause this to fail.)')
     args = {'dataset':'mnist'}    
-    train = Train(**args)
+    train = Train(args)
     
     train.get_mnist()
     network = Network()
