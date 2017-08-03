@@ -55,7 +55,7 @@ def test_network_graph():
     first_node_id = network.add_random_layer()
     assert(network.network_graph.number_of_nodes() == 1)
     
-    second_node_id = network.add_random_layer(True, [first_node_id])
+    second_node_id = network.add_random_layer([first_node_id])
     assert(network.network_graph.number_of_nodes() == 2)
     
     assert(len(network.get_downstream_layers(first_node_id)) == 1)
@@ -69,8 +69,8 @@ def test_network_graph():
     print('\t Deleting a layer should correctly rearrange the upstream and downstream edges.')
     network = Network()
     first_node_id = network.add_random_layer()
-    second_node_id = network.add_random_layer(True, [first_node_id])
-    third_node_id = network.add_random_layer(True, [second_node_id])
+    second_node_id = network.add_random_layer([first_node_id])
+    third_node_id = network.add_random_layer([second_node_id])
     
     network.delete_layer(second_node_id)
     assert(len(network.get_downstream_layers(first_node_id)) == 1)
@@ -135,9 +135,9 @@ def test_network_graph():
     print('Inserting a layer should result in the connection between the upstream and downstream layer being rerouted through the new layer.')
     network = Network()
     first_layer_id = network.add_random_layer()
-    second_layer_id = network.add_random_layer(True, [first_layer_id])
+    second_layer_id = network.add_random_layer([first_layer_id])
     
-    inserted_layer_id = network.insert_random_layer(True, [first_layer_id], [second_layer_id])
+    inserted_layer_id = network.insert_random_layer([first_layer_id], [second_layer_id])
     
     assert(len(network.get_downstream_layers(first_layer_id)) == 1)
     assert(network.get_downstream_layers(first_layer_id)[0] == inserted_layer_id)
@@ -173,14 +173,14 @@ def test_network_graph():
     layer_id = network.add_random_layer()
     assert(network.number_of_layers() == 1)
     
-    network.add_random_layer(True, [layer_id])
+    network.add_random_layer([layer_id])
     assert(network.number_of_layers() == 2)
     
     print('\t network.change_upstream_layer() should not leave any of its downstream layers without a connection upwards')
     network = Network()
     top = network.add_random_layer()
-    middle = network.add_random_layer(True, [top])
-    bottom = network.add_random_layer(True, [middle])
+    middle = network.add_random_layer([top])
+    bottom = network.add_random_layer([middle])
     network.change_upstream_layer(middle, bottom)
     assert(len(network.get_upstream_layers(bottom)) == 1)
     assert(network.get_upstream_layers(bottom)[0] == top)

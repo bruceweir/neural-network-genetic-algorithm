@@ -194,10 +194,10 @@ class Optimizer():
             network.delete_layer(mutated_layer_id)
         
         elif mutation_type == 'InsertLayerAbove':           
-            network.insert_random_layer(True, network.get_upstream_layers(mutated_layer_id), [mutated_layer_id])
+            network.insert_random_layer(network.get_upstream_layers(mutated_layer_id), [mutated_layer_id])
         
         elif mutation_type == 'InsertLayerBelow':           
-            network.insert_random_layer(True, [mutated_layer_id], network.get_downstream_layers(mutated_layer_id))
+            network.insert_random_layer([mutated_layer_id], network.get_downstream_layers(mutated_layer_id))
         
         elif mutation_type == 'ChangeUpstreamLayer':
             layer_options = [layer_id for layer_id in network.get_all_network_layer_ids() if layer_id != mutated_layer_id and layer_id not in network.get_upstream_layers(mutated_layer_id)]

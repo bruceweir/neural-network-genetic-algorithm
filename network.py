@@ -41,16 +41,13 @@ class Network():
         previous_layer_id = None
 
         for i in range(number_of_layers):
-            allow_dropout = True
-            if i == 0:
-                allow_dropout = False
-
-            previous_layer_id = self.add_random_layer(allow_dropout, [previous_layer_id])
+            
+            previous_layer_id = self.add_random_layer([previous_layer_id])
 
 
-    def add_random_layer(self, allow_dropout = True, upstream_layer_ids = None):
+    def add_random_layer(self, upstream_layer_ids = None):
 
-        return self.add_layer_with_parameters(self.create_random_layer(allow_dropout), upstream_layer_ids)
+        return self.add_layer_with_parameters(self.create_random_layer(), upstream_layer_ids)
 
 
     def add_layer_with_random_parameters(self, layer_type, upstream_layer_ids = None):
@@ -138,9 +135,9 @@ class Network():
         return self.insert_layer_between_layers(self.create_layer(layer_type), upstream_layer_ids, downstream_layer_ids)
 
 
-    def insert_random_layer(self, allow_dropout, upstream_layer_ids, downstream_layer_ids):
+    def insert_random_layer(self, upstream_layer_ids, downstream_layer_ids):
 
-        return self.insert_layer_between_layers(self.create_random_layer(allow_dropout), upstream_layer_ids, downstream_layer_ids)
+        return self.insert_layer_between_layers(self.create_random_layer(), upstream_layer_ids, downstream_layer_ids)
 
     
     def insert_layer_with_parameters(self, parameters, upstream_layer_ids, downstream_layer_ids):
@@ -211,13 +208,10 @@ class Network():
         self.clear_trained_model()
 
 
-    def create_random_layer(self, allow_dropout=False):
+    def create_random_layer(self):
 
         # [:] creates a new list, rather than copying by reference
         layers_not_to_select = self.forbidden_layer_types[:]
-
-        if allow_dropout == False:
-            layers_not_to_select.append('Dropout')
 
         layer_type = random.choice([choice for choice in self.nn_network_layer_options['LayerTypes'] if choice not in layers_not_to_select])
 
@@ -247,7 +241,6 @@ class Network():
                 'Dense': get_dense_layer_options(),
                 'Conv2D': get_conv2d_layer_options(),
                 'Dropout': get_dropout_layer_options(),  
-                'Reshape': get_reshape_layer_options(),
                 'MaxPooling2D': get_maxpooling2d_layer_options()
         }
         

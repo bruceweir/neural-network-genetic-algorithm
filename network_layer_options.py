@@ -15,15 +15,6 @@ def get_dense_layer_options():
     }
 
 
-def get_reshape_layer_options():
-
-    """Returns the optional parameters and values for a Reshape layer """
-
-    return {
-        'first_dimension_scale': [1, 2, 4, 8, 16, 32]
-    }
-
-
 def get_conv2d_layer_options():
 
     """Returns the optional parameters and values for a 2D convolution layer """
