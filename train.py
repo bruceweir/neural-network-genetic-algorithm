@@ -18,8 +18,7 @@ import math
 import sys
 from ast import literal_eval
 import numpy as np
-import hashlib
-import pickle
+
 
 K.set_image_dim_ordering('tf')
 
@@ -189,7 +188,8 @@ Perhaps you should be launching the application from the command line? Example: 
             score = network.trained_model.evaluate(self.x_test, self.y_test, verbose=0)                
             network.loss = score[0]
             network.accuracy = score[1]
-            print('Network training complete. Test accuracy: %f, Test Loss: %f' % (score[1], score[0]))    
+            
+        print('Network training complete. Test accuracy: %f, Test Loss: %f' % (network.accuracy, network.loss))    
 
     def train_model(self, model, training_data, training_labels, batch_size, epochs, validation_data, validation_labels, callbacks=[]):
         
@@ -519,9 +519,6 @@ Perhaps you should be launching the application from the command line? Example: 
         return kernel_size
 
 
-    def calculate_hash_for_network(self, network):
-        
-        return hashlib.md5(pickle.dumps(network)).hexdigest()
     
     def calculate_number_of_neurons_in_shape(self, shape):
         

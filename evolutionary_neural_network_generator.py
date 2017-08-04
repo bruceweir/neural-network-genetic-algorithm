@@ -14,7 +14,6 @@ import os
 from IPython.display import SVG, display
 from keras.utils.vis_utils import model_to_dot
 import pickle
-import sys
 
 
 parser = argparse.ArgumentParser(description='Generate neural networks via a Genetic Algorithm. Source: https://github.com/bruceweir/neural-network-genetic-algorithm. Originally forked from: https://github.com/harvitronix/neural-network-genetic-algorithm.',
@@ -130,9 +129,12 @@ class Evolutionary_Neural_Network_Generator():
                 self.networks = pickle.load(network_population_file)
                 self.population_size = len(self.networks)
             
-        self.is_classification = kwargs.get('is_classification', False)
         
+        #is_classification is dependent upon whether using mnist or cifar10 example data is being used
+        #Train does the check. This bit could do with some refactoring
         self.train = Train(kwargs)
+        self.is_classification = self.train.is_classification
+        self.optimizer.is_classification = self.train.is_classification
         
         self.run_experiment()
     

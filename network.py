@@ -9,6 +9,9 @@ from network_layer_options import *
 #from keras.models import load_model
 from keras.utils import plot_model
 import networkx as nx
+import json
+import hashlib
+
 #from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D
 
 class Network():
@@ -318,7 +321,8 @@ class Network():
 
 
     def print_network_details(self):
-        print(self.network_graph.node.items())
+        print(self.network_graph.node)
+        print(self.network_graph.edge)
         print("Network accuracy: %.2f%%" % (self.accuracy * 100))
         
         
@@ -412,4 +416,7 @@ class Network():
         return pickleable_network_state
     
 
-    
+    def get_hash_for_network(self):
+        
+        network_description = json.dumps(self.network_graph.node) + json.dumps(self.network_graph.edge)
+        return hashlib.md5(network_description.encode()).hexdigest()

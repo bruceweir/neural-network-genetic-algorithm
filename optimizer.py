@@ -34,6 +34,7 @@ class Optimizer():
         self.forbidden_layer_types = kwargs.get('forbidden_layer_types', [])
         self.elitist = kwargs.get('elitist', False)
         self.is_classification = kwargs.get('is_classification', False)
+        self.completed_architectures = []
         
         
 
@@ -58,8 +59,13 @@ class Optimizer():
         for _ in range(0, population_size):
             # Create a random network.
             network = Network(self.forbidden_layer_types)
+            
             network.create_random_network(initial_network_length)
+            
+            while self.network_architecture_seen_before(network):
+                self.mutate(network)
 
+            self.record_the_trained_network_architectures([network])
             # Add the network to our population.
             population.append(network)
 
@@ -99,7 +105,9 @@ class Optimizer():
         """
         # Get scores for each network.
         graded = [(self.fitness(network), network) for network in population]
-
+        
+        self.record_the_trained_network_architectures(population)
+            
         # Sort on the fitness.
         reverse = False
         
@@ -138,7 +146,8 @@ class Optimizer():
             
         for individual in parents[first_parent_to_mutate:]:
             if self.mutate_chance > random.random():
-                self.mutate(individual)
+                while self.network_architecture_seen_before(individual):
+                    self.mutate(individual)
             
         print('mutations complete')
         # Now find out how many spots we have left to fill.
@@ -216,7 +225,7 @@ class Optimizer():
                 new_upstream_layer_id = random.choice(layer_options)
                 network.change_upstream_layer(mutated_layer_id, new_upstream_layer_id)
                 
-       
+        
     
     def breed(self, mother, father):
         """Make two children as parts of their parents.
@@ -268,11 +277,14 @@ class Optimizer():
                     chosen_layer_parameters, chosen_layer_upstream_layers = self.choose_parameters_and_upstream_connections_for_layer(longest_network, longest_network_layer_ids[i], baby)                
                     baby.add_layer_with_parameters(chosen_layer_parameters, chosen_layer_upstream_layers)
             
+            while self.network_architecture_seen_before(baby):
+                print('architecture seen before, mutating network')
+                self.mutate(baby)
             
             babies.append(baby)
 
         return babies
-
+    
     def choose_parameters_and_upstream_connections_for_layer(self, parent_network, layer_id, baby_network):
         chosen_layer_parameters = copy.deepcopy(parent_network.get_network_layer_details_dictionary(layer_id))
         chosen_layer_upstream_layers = parent_network.get_upstream_layers(layer_id)
@@ -287,5 +299,16 @@ class Optimizer():
         
         return chosen_layer_parameters, chosen_layer_upstream_layers
                        
-                
+          
+    def record_the_trained_network_architectures(self, population):      
+        
+        for network in population:
+            self.completed_architectures.append(network.get_hash_for_network())
+
+    
+    def network_architecture_seen_before(self, network):
+        
+        network_hash = network.get_hash_for_network()
+        
+        return network_hash in self.completed_architectures
         
