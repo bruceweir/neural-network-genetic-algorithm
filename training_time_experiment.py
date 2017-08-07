@@ -24,7 +24,7 @@ for network_size in range(1, 5):
 
     for x in range(10):
     
-        log_file_name = 'training_layers_%d_%d' % (network_size, x) + '.log'
+        log_file_name = 'results/training_times/training_layers_%d_%d' % (network_size, x) + '.log'
     
         csv_logger = CSVLogger(log_file_name)
         
