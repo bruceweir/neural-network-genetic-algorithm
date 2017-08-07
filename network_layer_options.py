@@ -43,10 +43,18 @@ def get_maxpooling2d_layer_options():
     return {
         'pool_size': [(2, 2), (4, 4), (6, 6)]
     }
+  
+    
+def get_activity_regularization_layer_options():
+    
+    return { 
+        'l1': [0.001, 0.005, 0.01, 0.05],
+        'l2': [0.001, 0.005, 0.01, 0.05]
+    }
 
 
 def get_layer_types_for_random_selection():
 
     """ Returns the layer names that can be used when choosing a layer type to add """
 
-    return ['Dense', 'Conv2D', 'MaxPooling2D', 'Dropout']
+    return ['Dense', 'Conv2D', 'MaxPooling2D', 'Dropout', 'ActivityRegularization']

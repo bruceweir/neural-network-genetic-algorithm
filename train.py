@@ -9,7 +9,8 @@ Extended by: bruce.weir@bbc.co.uk
 """
 from keras.datasets import mnist, cifar10
 from keras.models import Model
-from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D, Input, concatenate, ZeroPadding1D, ZeroPadding2D
+from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, ActivityRegularization
+from keras.layers import MaxPooling2D, Input, concatenate, ZeroPadding1D, ZeroPadding2D
 from keras.utils.np_utils import to_categorical
 from keras.callbacks import EarlyStopping
 from keras import backend as K
@@ -318,7 +319,11 @@ Perhaps you should be launching the application from the command line? Example: 
                 
         elif layer_type == 'Dropout':
             layer = self.add_dropout_layer(layer_parameters, layer)
-            
+        
+        elif layer_type == 'ActivityRegularization':
+            layer = self.add_activity_regularization_layer(layer_parameters, layer)
+        else:
+            raise ValueError('add_layer(), unknown layer type: ' + layer_type)
         
         previous_layer_shape, number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer = self.get_compiled_layer_shape_details(layer)
     
@@ -379,7 +384,14 @@ Perhaps you should be launching the application from the command line? Example: 
         
         layer = Dropout(layer_parameters['remove_probability'])(input_layer)
         return layer
+       
+    def add_activity_regularization_layer(self, layer_parameters, input_layer):
         
+        l1 = layer_parameters.get('l1', 0.0)
+        l2 = layer_parameters.get('l2', 0.0)
+        layer= ActivityRegularization(l1, l2)(input_layer)
+        return layer
+    
     
     def add_concatenation(self, input_layers):
         

@@ -259,7 +259,8 @@ class Network():
                 'Dense': get_dense_layer_options(),
                 'Conv2D': get_conv2d_layer_options(),
                 'Dropout': get_dropout_layer_options(),  
-                'MaxPooling2D': get_maxpooling2d_layer_options()
+                'MaxPooling2D': get_maxpooling2d_layer_options(),
+                'ActivityRegularization': get_activity_regularization_layer_options()
         }
         
         return nn_network_layer_options
@@ -309,6 +310,9 @@ class Network():
             
         elif layer_type == 'MaxPooling2D':
             option_function = get_maxpooling2d_layer_options
+        
+        elif layer_type == 'ActivityRegularization':
+            option_function = get_activity_regularization_layer_options
             
         else:
             raise NameError('Error: unknown layer_type: %s' % layer_type)

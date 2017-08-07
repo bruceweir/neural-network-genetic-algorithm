@@ -269,8 +269,7 @@ def test_train():
 def to_do():
     print('TODO')
     print('\t1. Add OOM capture and recovery during training')
-    print('\t2. Add support for multiple input/output layers')    
-    print('\t3. Sort out rational reshaping according to --natural_input_shape setting')        
+    print('\t2. Add support for multiple input/output layers')        
     print('\t6. Add more layer types')
     
     
