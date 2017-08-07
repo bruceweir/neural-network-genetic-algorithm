@@ -271,7 +271,6 @@ def to_do():
     print('\t1. Add OOM capture and recovery during training')
     print('\t2. Add support for multiple input/output layers')    
     print('\t3. Sort out rational reshaping according to --natural_input_shape setting')        
-    print('\t5. Add check to avoid retraining networks that reoccur. Pickle & Hash?') 
     print('\t6. Add more layer types')
     
     
