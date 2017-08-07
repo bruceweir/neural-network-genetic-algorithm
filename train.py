@@ -51,8 +51,13 @@ Perhaps you should be launching the application from the command line? Example: 
             self.natural_input_shape = kwargs.get('natural_input_shape', None)                
             if self.natural_input_shape != None:
                 self.natural_input_shape = literal_eval(self.natural_input_shape)
+                if(len(self.natural_input_shape) > 1):
+                    self.natural_aspect_ratio = self.natural_input_shape[0] / self.natural_input_shape[1]
+                else:
+                    self.natural_aspect_ratio = 1.0
             else:
                 self.natural_input_shape = self.input_shape
+                self.natural_aspect_ratio = 1.0
 
         print('Classification problem? ', self.is_classification)
 
@@ -65,6 +70,8 @@ Perhaps you should be launching the application from the command line? Example: 
         self.batch_size = 64
         self.input_shape = (3072,)
         self.natural_input_shape = (32, 32, 3)
+        self.natural_aspect_ratio = self.natural_input_shape[0] / self.natural_input_shape[1]
+
         # Get the data.
         (self.x_train, self.y_train), (self.x_test, self.y_test) = cifar10.load_data()
         self.x_train = self.x_train.reshape(50000, 3072)
@@ -90,6 +97,7 @@ Perhaps you should be launching the application from the command line? Example: 
         self.input_shape = (784,)
         # tensorflow-style ordering (Height, Width, Channels)
         self.natural_input_shape = (28, 28, 1)
+        self.natural_aspect_ratio = self.natural_input_shape[0] / self.natural_input_shape[1]
     
         # Get the data.
         (self.x_train, self.y_train), (self.x_test, self.y_test) = mnist.load_data()
@@ -201,7 +209,7 @@ Perhaps you should be launching the application from the command line? Example: 
                       callbacks=callbacks)
         
         return model
-    
+    #ResourceExhaustedError
     
     def compile_model(self, network, output_shape, input_shape, natural_input_shape):
         """Compile a sequential model.
@@ -338,7 +346,7 @@ Perhaps you should be launching the application from the command line? Example: 
                              activation=layer_parameters['activation'])(input_layer)
         except (ValueError, IndexError):
             print('add_conv2D_layer: Reshaping input')
-            reshape_size = self.get_reshape_size_closest_to_square(number_of_units_in_previous_layer, natural_input_shape[-1])
+            reshape_size = self.get_reshape_size_closest_to_aspect_ratio(number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer, self.natural_aspect_ratio)
             layer= Reshape(reshape_size)(input_layer)       
             layer = self.add_conv2D_layer(layer_parameters, layer, natural_input_shape);
             
@@ -354,7 +362,7 @@ Perhaps you should be launching the application from the command line? Example: 
                 layer = MaxPooling2D(pool_size=pool_size)(input_layer)
         
         except (ValueError, IndexError):
-            reshape_size = self.get_reshape_size_closest_to_square(number_of_units_in_previous_layer, natural_input_shape[-1])
+            reshape_size = self.get_reshape_size_closest_to_aspect_ratio(number_of_units_in_previous_layer, number_of_dimensions_in_previous_layer, self.natural_aspect_ratio)
             layer= Reshape(reshape_size)(input_layer)
             layer = self.add_maxpooling2d_layer(layer_parameters, layer, natural_input_shape)
             
@@ -487,28 +495,46 @@ Perhaps you should be launching the application from the command line? Example: 
         
     def get_reshape_size_closest_to_square(self, number_of_neurons, number_of_channels):
                 
+        return self.get_reshape_size_closest_to_aspect_ratio(number_of_neurons, number_of_channels, 1.0)
+        
+    
+    def get_reshape_size_closest_to_aspect_ratio(self, number_of_neurons, number_of_channels, aspect_ratio):
+        
         if type(number_of_neurons) != int:
             if not number_of_neurons.is_integer():
-                raise ValueError('get_reshape_size_closest_to_square(number_of_neurons, number_of_channels). number_of_neurons should be an integer')
+                raise ValueError('get_reshape_size_closest_to_aspect_ratio(number_of_neurons, number_of_channels, aspect_ratio). number_of_neurons should be an integer')
  
-        dimension1 = math.sqrt(number_of_neurons / number_of_channels)
+       
+        aspect_ratio = float(aspect_ratio)
         
-        dimension2 = number_of_neurons / (dimension1 * number_of_channels)
+        neurons_per_channel = number_of_neurons / number_of_channels
         
-        dimension1 = float(math.ceil(dimension1))
+        if not neurons_per_channel.is_integer():
+            raise ValueError('get_reshape_size_closest_to_aspect_ratio: Non-integer number of neurons per channel')
+ 
         
-        while dimension2.is_integer() is False:
-            dimension1 -= 1
-            dimension2 = number_of_neurons / dimension1
+        initial_dimension1 = int(math.sqrt(neurons_per_channel / aspect_ratio))
+               
+        step = 0
+        while True:
             
-        closest_shape = (int(dimension1), int(dimension2), number_of_channels)
+            dimension1 = int(initial_dimension1 + step)            
+            dimension2 = int(neurons_per_channel / dimension1)
+            
+            if self.calculate_number_of_neurons_in_shape((dimension1, dimension2, number_of_channels)) == number_of_neurons:
+                return ((dimension1, dimension2, number_of_channels))
+            
+            dimension1 = int(initial_dimension1 - step)    
+            
+            if dimension1 == 0:
+                return((1, neurons_per_channel, number_of_channels))
+            
+            dimension2 = int(neurons_per_channel / dimension1)
         
-        total_size_of_closest_shape = reduce(lambda x, y: x*y,  [x for x in closest_shape])
-        
-        if total_size_of_closest_shape != number_of_neurons:
-            return self.get_reshape_size_closest_to_square(number_of_neurons, 1)
-        else:
-            return (int(dimension1), int(dimension2), number_of_channels)
+            if self.calculate_number_of_neurons_in_shape((dimension1, dimension2, number_of_channels)) == number_of_neurons:
+                return ((dimension1, dimension2, number_of_channels))
+            
+            step = step + 1
         
 
     def get_checked_2d_kernel_size_for_layer(self, previous_layer_size, requested_kernel_size):
