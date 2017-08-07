@@ -192,10 +192,16 @@ Perhaps you should be launching the application from the command line? Example: 
         model = self.compile_model(network, self.output_shape, self.input_shape, self.natural_input_shape)
     
         if network.trained_model is None:
-            network.trained_model = self.train_model(model, self.x_train, self.y_train, self.batch_size, self.max_epochs, self.x_test, self.y_test, [self.early_stopper])
-            score = network.trained_model.evaluate(self.x_test, self.y_test, verbose=0)                
-            network.loss = score[0]
-            network.accuracy = score[1]
+            try:               
+                network.trained_model = self.train_model(model, self.x_train, self.y_train, self.batch_size, self.max_epochs, self.x_test, self.y_test, [self.early_stopper])
+                score = network.trained_model.evaluate(self.x_test, self.y_test, verbose=0)                
+                network.loss = score[0]
+                network.accuracy = score[1]
+            
+            except Exception as e:
+                print(e)
+                network.loss = math.inf
+                network.accuracy = 0
             
         print('Network training complete. Test accuracy: %f, Test Loss: %f' % (network.accuracy, network.loss))    
 
