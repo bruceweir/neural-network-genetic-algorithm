@@ -7,7 +7,7 @@ Created on Mon Aug  7 09:53:39 2017
 
 import keras
 from keras.callbacks import CSVLogger
-from keras.datasets import mnist
+from keras.datasets import cifar10
 from keras.utils.np_utils import to_categorical
 import sys
 import random
@@ -17,8 +17,19 @@ import numpy as np
 from train import Train
 from network import Network
 
+import os
 
-train = Train({'dataset':'mnist'})
+file_path = "./results/training_times/"
+directory = os.path.dirname(file_path)
+
+try:
+    os.stat(directory)
+except:
+    os.mkdir(directory)       
+
+
+
+train = Train({'dataset':'cifar10'})
 
 for network_size in range(1, 5):
 
