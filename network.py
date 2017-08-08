@@ -6,16 +6,32 @@ import random
 import logging
 
 from network_layer_options import *
-#from keras.models import load_model
+
 from keras.utils import plot_model
 import networkx as nx
 import json
 import hashlib
 
-#from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, MaxPooling2D
-
 class Network():
     """Represent a network and let us operate on it.
+    The purpose of this class is to represent a branching neural network structure. In this
+    application, it will have been created at random, or as a result of 'breeding' two parent
+    network structures.
+    The description of the network is contained within a NetworkX Directed Graph object (network_graph),
+    where each Node in the graph contains a single neural network layer description 
+    (as a dictionary of parameters and values) and each edge shows where the result of each layer goes. 
+    A node can have multiple input and output edges, and can form a branching structure.
+    
+    
+    An instance of this class can be compiled into a Keras Model and trained by using an instance of 
+    the Train class (in train.py). 
+    Example:
+        
+        network = Network()
+        network.create_random_network()
+        
+        train = Train({'dataset':'mnist'})
+        train.train_and_score(network) 
     """
 
     def __init__(self, forbidden_layer_types=[]):

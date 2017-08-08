@@ -42,9 +42,9 @@ parser.add_argument('-p', '--population_size',
                     type=int,
                     default=10)
 parser.add_argument('-f', '--forbidden_layer_types',
-                    help='One or more layer types that should NOT be added to the networks. Options are Dense, Conv2D, MaxPooling2D. Example: -f Conv2D MaxPooling2D',
+                    help='One or more layer types that should NOT be added to the networks. Options are Dense, Conv2D, MaxPooling2D, ActivityRegularization, Dropout. Example: -f Conv2D MaxPooling2D',
                     nargs='+',
-                    choices=['Dense', 'Conv2D', 'MaxPooling2D'],
+                    choices=['Dense', 'Conv2D', 'MaxPooling2D', 'ActivityRegularization', 'Dropout'],
                     default=[])
 parser.add_argument('--mutate_chance',
                     help='The probability [0->1] that a particular network will undergo a random mutation during the breeding phase',
@@ -65,7 +65,6 @@ parser.add_argument('--initial_network_length',
 parser.add_argument('--elitist',
                     help='Do not mutate the best candidate after every generation',
                     action='store_true')
-
 parser.add_argument('--max_epochs', 
                     help='The trainer uses early stopping on the validation loss, but this setting will explicitly set the maximum number of training epochs to perform.',
                     type=int,
@@ -74,7 +73,6 @@ parser.add_argument('--batch_size',
                     help="If specifying your own training and test files, use this as the initial batch size for training.",
                     type=int,
                     default=64)
-
 parser.add_argument('--is_classification',
                     help='Train a classification model (when using your own dataset. MNIST and CIFAR10 examples are always treated as classification problems)',
                     action='store_true',
@@ -141,12 +139,6 @@ class Evolutionary_Neural_Network_Generator():
     
     def run_experiment(self):
         """Evolve a network.
-        
-        dataset: The name of the data set to run on, currently either 'mnist' or 'cifar10'
-        generations: The number of breeding generations to run over
-        population: The breeding population at each step
-        forbidden_layer_types:  An array of layer types that should NOT be used, options
-                                currently are: 'Dense', 'Conv2D', 'MaxPooling2D'
         """
         
         logging.info("Running experiment with: %s" % vars(args))

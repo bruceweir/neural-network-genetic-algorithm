@@ -8,7 +8,8 @@ Created on Mon Jul 10 15:38:41 2017
 from network import Network
 from optimizer import Optimizer
 from train import Train
-
+from network_compiler import Network_Compiler
+import numpy as np
 
 def test_network():
     args = {'dataset':'mnist'}    
@@ -28,15 +29,17 @@ def test_network():
     network = Network()
     network.create_random_network()
     assert(network.number_of_layers() == 3)
+
+    network_compiler = Network_Compiler()
     
     for i in range(10):
         network = Network()
         network.create_random_network(20)
         network.print_network_details()
         print('Compiling auto_checked network single channel image...%d'% i)
-        train.compile_model(network, (10,), (784,), (28, 28, 1))
+        network_compiler.compile_model(network, (10,), (784,), (28, 28, 1), True)
         print('Compiling auto_checked network 3 channel image...%d'% i)
-        train.compile_model(network, (10,), (3072,), (32, 32, 3))
+        network_compiler.compile_model(network, (10,), (3072,), (32, 32, 3), True)
         print('...done compiling.')
         
     
@@ -211,10 +214,12 @@ def test_optimizer():
     
     args={'mutate_chance':0.2, 'random_select':0.1, 'retain':0.4, 'forbidden_layer_types':[], 'population':10, 'initial_network_length':1}
     optimizer = Optimizer(args)
+    network_compiler = Network_Compiler()
+    
     for i in range(10):
         print('Testing compilation of mutated network: %d' % i)
         optimizer.mutate(network)
-        model = train.compile_model(network, (10,), (784, ), (28, 28, 1))
+        model = network_compiler.compile_model(network, (10,), (784, ), (28, 28, 1), True)
         del model
         print('...done compiling')
 
@@ -227,8 +232,8 @@ def test_optimizer():
     print('Original mother\n%s' % mother.print_network_details())
     children = optimizer.breed(mother, father)
     print('Compiling children of first generation...')
-    train.compile_model(children[0], (10,), (784, ), (28, 28, 1))
-    train.compile_model(children[1], (10,), (784, ), (28, 28, 1))
+    network_compiler.compile_model(children[0], (10,), (784, ), (28, 28, 1), True)
+    network_compiler.compile_model(children[1], (10,), (784, ), (28, 28, 1), True)
     print('...compilation done')
     print('Testing 10 breeding generations')
     for i in range(10):
@@ -237,8 +242,8 @@ def test_optimizer():
         father.create_random_network(10)
         children = optimizer.breed(mother, father)
         print('Compiling children of generation %d...' % i)
-        train.compile_model(children[0], (10,), (784, ), (28, 28, 1))
-        train.compile_model(children[1], (10,), (784, ), (28, 28, 1))
+        network_compiler.compile_model(children[0], (10,), (784, ), (28, 28, 1), True)
+        network_compiler.compile_model(children[1], (10,), (784, ), (28, 28, 1), True)
         print('...compilation done')
     
     print ('optimizer.create_population(count, initial_length) creates and returns an array containing count networks or length initial_length (unless the network checker adds layers)')
@@ -255,15 +260,38 @@ def test_train():
     print('Testing model training and evaluation over a single epoch (This will download the MNIST dataset the first time it is run. Being behind a proxy might cause this to fail.)')
     args = {'dataset':'mnist'}    
     train = Train(args)
+    network_compiler = Network_Compiler()
     
     train.get_mnist()
     network = Network()
     network.create_random_network(2)
-    model = train.compile_model(network, train.output_shape, train.input_shape, train.natural_input_shape)
+    model = network_compiler.compile_model(network, train.output_shape, train.input_shape, train.natural_input_shape, True)
     network.trained_model = train.train_model(model, train.x_test, train.y_test, train.batch_size, 1, train.x_test, train.y_test)
     network.trained_model.evaluate(train.x_test, train.y_test, verbose=0)
     print('Network training and evaluation complete')
     
+    print('Testing network compilation and training for a non-classification problem (an XOR gate)')
+
+    xor = np.array([[0, 0, np.array([0], dtype=object)], 
+                    [0, 1, np.array([1], dtype=object)], 
+                    [1, 0, np.array([1], dtype=object)], 
+                    [1, 1, np.array([0], dtype=object)]], dtype=object)
+    
+    np.save('xor_train.npy', xor)
+    np.save('xor_test.npy', xor)
+    
+    train = Train({'training_data':'xor_train.npy', 
+                   'test_data':'xor_test.npy', 
+                   'is_classification':False, 
+                   'max_epochs':1000})
+    
+    network = Network()
+    layer_parameters = {'layer_parameters': {'activation': 'relu', 'nb_neurons': 8},
+                        'layer_type': 'Dense'}
+    
+    network.add_layer_with_parameters(layer_parameters, [])
+    
+    train.train_and_score(network)
     
     
 def to_do():
