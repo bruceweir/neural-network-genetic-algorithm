@@ -122,8 +122,11 @@ Perhaps you should be launching the application from the command line? Example: 
         
         Example: training data for an XOR gate
         
-        [[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0]]
-        
+        xor = np.array([[0, 0, np.array([0], dtype=object)], 
+                    [0, 1, np.array([1], dtype=object)], 
+                    [1, 0, np.array([1], dtype=object)], 
+                    [1, 1, np.array([0], dtype=object)]], dtype=object)
+    
         If the input has a natural shape (as an image for example), then set the --natural_input_shape
         value when starting the application.
         Example: If the input samples each form a 60x40x3 channel image, then the numpy array should
@@ -170,7 +173,6 @@ Perhaps you should be launching the application from the command line? Example: 
             self.y_test = to_categorical(self.y_test, self.nb_classes)
  
         self.output_shape = list(np.array(self.y_train[0]).shape)
-        
         
         self.y_train = np.array([a.reshape(self.output_shape) for a in self.y_train])
         self.y_test = np.array([a.reshape(self.output_shape) for a in self.y_test])
