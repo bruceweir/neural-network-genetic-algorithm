@@ -117,15 +117,16 @@ Perhaps you should be launching the application from the command line? Example: 
         
         """ 
         Load the dataset from 2 numpy array save files. 'training_file_name' contains your training data,
-        'test_file_name' contains your test data. The final column of each saved numpy array is the target
-        output (which could contain numpy arrays). The other columns are the input vector.   
+        'test_file_name' contains your test data. The first column of each saved numpy array is a numpy array
+        consisting of the input tensor, the second column is another numpy array consisting of the target output tensor.
         
         Example: training data for an XOR gate
         
-        xor = np.array([[0, 0, np.array([0], dtype=object)], 
-                    [0, 1, np.array([1], dtype=object)], 
-                    [1, 0, np.array([1], dtype=object)], 
-                    [1, 1, np.array([0], dtype=object)]], dtype=object)
+        xor = np.array([[np.array([0, 0], dtype=object), np.array([0], dtype=object)], 
+                    [np.array([0, 1], dtype=object), np.array([1], dtype=object)], 
+                    [np.array([1, 0], dtype=object), np.array([1], dtype=object)], 
+                    [np.array([1, 1], dtype=object), np.array([0], dtype=object)]], dtype=object)
+
     
         If the input has a natural shape (as an image for example), then set the --natural_input_shape
         value when starting the application.
@@ -142,25 +143,29 @@ Perhaps you should be launching the application from the command line? Example: 
         
         training_data = np.load(training_file_name)
         
-        self.x_train = training_data[:, range(training_data.shape[1]-1)]
-        self.x_train = self.x_train.astype('float32')
+        self.x_train = training_data[:, 0]
+        self.x_train = np.array([x.astype('float32') for x in self.x_train], dtype='object')
         
         
         print('Loaded %d input training vectors, each of length: %d' % (self.x_train.shape[0], self.x_train.shape[1]))
         
-        self.input_shape = (self.x_train.shape[1], )       
+        self.input_shape = self.x_train.shape[1:]
+        self.natural_input_shape = self.input_shape
+        
         print('Setting input_shape to: %s' % (self.input_shape,))
         
-        self.y_train = training_data[:, training_data.shape[1]-1]
+        self.y_train = training_data[:, 1]
+        self.y_train = np.array([y.astype('float32') for y in self.y_train], dtype='object')
  
         print('Loading test data: %s' % test_file_name)        
         test_data = np.load(test_file_name)
         
-        self.x_test = test_data[:, range(test_data.shape[1]-1)]
-        self.x_test = self.x_test.astype('float32')
+        self.x_test = test_data[:, 0]
+        self.x_test = np.array([x.astype('float32') for x in self.x_test], dtype='object')
         
-        self.y_test = test_data[:, test_data.shape[1]-1]
-
+        self.y_test = test_data[:, 1]
+        self.y_test = np.array([y.astype('float32') for y in self.y_test], dtype='object')
+ 
         print('Loaded %d input test vectors, each of length: %d' % (self.x_test.shape[0], self.x_test.shape[1]))
 
         if self.is_classification:
@@ -172,13 +177,9 @@ Perhaps you should be launching the application from the command line? Example: 
             self.y_train = to_categorical(self.y_train, self.nb_classes)
             self.y_test = to_categorical(self.y_test, self.nb_classes)
  
-        self.output_shape = list(np.array(self.y_train[0]).shape)
-        
-        self.y_train = np.array([a.reshape(self.output_shape) for a in self.y_train])
-        self.y_test = np.array([a.reshape(self.output_shape) for a in self.y_test])
+        self.output_shape = tuple(np.array(self.y_train[0]).shape)
         
         print('Output data shape set to: ', self.output_shape)
-        print('Output data training vector shape: ', self.y_train.shape)
         print('Output data test vector shape: ', self.y_test.shape)
         
         

@@ -272,11 +272,11 @@ def test_train():
     
     print('Testing network compilation and training for a non-classification problem (an XOR gate)')
 
-    xor = np.array([[0, 0, np.array([0], dtype=object)], 
-                    [0, 1, np.array([1], dtype=object)], 
-                    [1, 0, np.array([1], dtype=object)], 
-                    [1, 1, np.array([0], dtype=object)]], dtype=object)
-    
+    xor = np.array([[np.array([0, 0], dtype=object), np.array([0], dtype=object)], 
+                    [np.array([0, 1], dtype=object), np.array([1], dtype=object)], 
+                    [np.array([1, 0], dtype=object), np.array([1], dtype=object)], 
+                    [np.array([1, 1], dtype=object), np.array([0], dtype=object)]], dtype=object)
+
     np.save('xor_train.npy', xor)
     np.save('xor_test.npy', xor)
     
@@ -293,13 +293,55 @@ def test_train():
     
     train.train_and_score(network)
     
+    print('Displaying prediction for xor network')
+    example_input = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=object)
+    print('Input\n{0}'.format(example_input))
+    
+    print('Output\n{0}'.format(network.trained_model.predict(example_input)))
+
+    print('Testing network compilation and training for 2D, single channel, image data')
+    print('Note shape is (3, 3, 1). 3x3x1 channel')
+
+    diamond = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0],], dtype=object).reshape((3, 3, 1))
+    cross = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1],], dtype=object).reshape((3, 3, 1))
+    square = np.array([[1, 1, 1], [1, 0, 1], [1, 1, 1],], dtype=object).reshape((3, 3, 1))
+
+    training_data = np.array([[diamond, np.array([0], dtype=object)],
+                              [cross, np.array([1], dtype=object)],
+                              [square, np.array([2], dtype=object)]])
+    
+    np.save('2d1chan_train.npy', training_data)
+    np.save('2d1chan_test.npy', training_data)
+    
+    train = Train({'training_data':'2d1chan_train.npy', 
+                   'test_data':'2d1chan_test.npy', 
+                   'is_classification':True, 
+                   'max_epochs':1000})
+    
+    network = Network()
+    layer_parameters = {'layer_parameters': {'activation': 'relu', 'nb_neurons': 9},
+                        'layer_type': 'Dense'}
+    
+    network.add_layer_with_parameters(layer_parameters, [])
+    
+    train.train_and_score(network)
+
+    print('Displaying prediction for shape classification network')
+    
+    example_input = np.array([diamond, cross, square], dtype=object)
+    print('Input\n{0}'.format(example_input))
+    
+    print('Output \n{0}'.format(network.trained_model.predict(example_input)))
+
+    
     
 def to_do():
     print('TODO')
-    print('\t1. Add OOM capture and recovery during training')
+    print('\t1. Test OOM capture and recovery during training')
     print('\t2. Add support for multiple input/output layers')        
     print('\t6. Add more layer types')
-    
+    print('\t7. Add example test for multi dimension input to multi dimension output')  
+    print('\t8. Remove natural shape argument, as it can now be determined implicitly from the input data')
     
     
 print('Running tests....')    
