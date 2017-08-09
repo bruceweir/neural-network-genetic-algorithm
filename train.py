@@ -45,18 +45,11 @@ Perhaps you should be launching the application from the command line? Example: 
         else:
             
             self.get_dataset_from_file(self.training_data_file, self.test_data_file)
-            
-            self.natural_input_shape = kwargs.get('natural_input_shape', None)                
-            if self.natural_input_shape != None:
-                self.natural_input_shape = literal_eval(self.natural_input_shape)
-                if(len(self.natural_input_shape) > 1):
-                    self.natural_aspect_ratio = self.natural_input_shape[0] / self.natural_input_shape[1]
-                else:
-                    self.natural_aspect_ratio = 1.0
+            if(len(self.natural_input_shape) > 1):
+                self.natural_aspect_ratio = self.natural_input_shape[0] / self.natural_input_shape[1]
             else:
-                self.natural_input_shape = self.input_shape
                 self.natural_aspect_ratio = 1.0
-
+        
         print('Classification problem? ', self.is_classification)
 
     
@@ -122,18 +115,21 @@ Perhaps you should be launching the application from the command line? Example: 
         
         Example: training data for an XOR gate
         
-        xor = np.array([[np.array([0, 0], dtype=object), np.array([0], dtype=object)], 
-                    [np.array([0, 1], dtype=object), np.array([1], dtype=object)], 
-                    [np.array([1, 0], dtype=object), np.array([1], dtype=object)], 
-                    [np.array([1, 1], dtype=object), np.array([0], dtype=object)]], dtype=object)
+        xor_training_data = np.array([[np.array([0, 0], dtype=object), np.array([0], dtype=object)], 
+                                      [np.array([0, 1], dtype=object), np.array([1], dtype=object)], 
+                                      [np.array([1, 0], dtype=object), np.array([1], dtype=object)], 
+                                      [np.array([1, 1], dtype=object), np.array([0], dtype=object)]], dtype=object)
 
     
-        If the input has a natural shape (as an image for example), then set the --natural_input_shape
-        value when starting the application.
-        Example: If the input samples each form a 60x40x3 channel image, then the numpy array should
-        be 7201 columns wide (the final column is the target output). The first 60 columns are the top
-        row of the image and first 2400 columns are the first image channel.
-        The --natural_input_shape should be "(60, 40, 3)"
+        Example: Convert a 3x3 1 channel image of cross into a 3x3 1 channel image of a tick,
+        and vice-versa
+        
+        cross = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=object).reshape((3, 3, 1))
+        tick = np.array([[0, 0.1, .8], [0.6, .2, .6], [0, 0.8, .1]], dtype=object).reshape((3, 3, 1))
+    
+        training_data = np.array([[cross, tick],
+                                  [tick, cross]])
+    
             
         """
         if training_file_name == None or test_file_name == None:
@@ -212,7 +208,7 @@ Perhaps you should be launching the application from the command line? Example: 
             model.fit(training_data, training_labels,
                           batch_size=batch_size,
                           epochs=epochs,  # using early stopping, so no real limit
-                          verbose=True,
+                          verbose=False,
                           validation_data=(validation_data, validation_labels),
                           callbacks=callbacks)
         except Exception as e:

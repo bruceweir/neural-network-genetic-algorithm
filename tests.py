@@ -299,7 +299,7 @@ def test_train():
     
     print('Output\n{0}'.format(network.trained_model.predict(example_input)))
 
-    print('Testing network compilation and training for 2D, single channel, image data')
+    print('Testing network compilation and training for 2D, single channel, image data classification')
     print('Note shape is (3, 3, 1). 3x3x1 channel')
 
     diamond = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0],], dtype=object).reshape((3, 3, 1))
@@ -333,14 +333,38 @@ def test_train():
     
     print('Output \n{0}'.format(network.trained_model.predict(example_input)))
 
+    print('Testing network compilation and training for 2D, single channel, image data to transformed 2D single channel imge data')
     
+    cross = np.array([[1, 0, 1], [0, 1, 0], [1, 0, 1]], dtype=object).reshape((3, 3, 1))
+    tick = np.array([[0, 0.1, .8], [0.6, .2, .6], [0, 0.8, .1]], dtype=object).reshape((3, 3, 1))
+    
+    training_data = np.array([[cross, tick],
+                              [tick, cross]])
+    
+    
+    np.save('2d2d_train.npy', training_data)
+    np.save('2d2d_test.npy', training_data)
+    
+    train = Train({'training_data':'2d2d_train.npy', 
+                   'test_data':'2d2d_test.npy', 
+                   'is_classification':False, 
+                   'max_epochs':1000})
+    
+    network = Network()
+    layer_parameters = {'layer_parameters': {'activation': 'relu', 'nb_neurons': 9},
+                        'layer_type': 'Dense'}
+    
+    network.add_layer_with_parameters(layer_parameters, [])
+    
+    train.train_and_score(network)
+
+    network.trained_model.predict(np.array([cross, tick], dtype=object))
     
 def to_do():
     print('TODO')
     print('\t1. Test OOM capture and recovery during training')
     print('\t2. Add support for multiple input/output layers')        
-    print('\t6. Add more layer types')
-    print('\t7. Add example test for multi dimension input to multi dimension output')  
+    print('\t6. Add more layer types')    
     print('\t8. Remove natural shape argument, as it can now be determined implicitly from the input data')
     
     
