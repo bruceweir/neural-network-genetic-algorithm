@@ -13,7 +13,7 @@ import numpy as np
 
 def test_network():
     args = {'dataset':'mnist'}    
-    train = Train(args)
+   # train = Train(args)
     
     
     print('network.add_layer_with_random_parameters("layer_type") should add a network layer of the requested layer_type.')
@@ -206,7 +206,6 @@ def test_network_graph():
 def test_optimizer():
     
     args = {'dataset':'mnist'}    
-    train = Train(args)
     
     print('optimizer.mutate(network) returns a network object that has either had a layer added, removed or altered. The returned network should compile')
     network = Network()

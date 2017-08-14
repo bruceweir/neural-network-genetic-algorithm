@@ -30,9 +30,6 @@ parser.add_argument('--test_data',
 parser.add_argument('--initial_network_population_file',
                     help='A pickled network population list to use as the starting population (this file gets output during a run, so by adding it back in you can resume your experiment). Note that the trained model is not included in this file, so any network is retrained.',
                     default=None)
-parser.add_argument('--natural_input_shape',
-                   help='For use when specifying your own training and test date files. The natural shape of the input data. For example, a 60x40x3 channel image would have a shape of "(60, 40, 3)"',
-                   type=str)
 parser.add_argument('-g', '--generations', 
                     help='The number of breeding generations to run for.',
                     type=int,
@@ -166,7 +163,8 @@ class Evolutionary_Neural_Network_Generator():
             if self.is_classification:
                 average_accuracy, highest_accuracy, lowest_accuracy, highest_scoring_network = self.get_accuracy_stats(self.networks)       
                 
-                highest_scoring_network.save_trained_model(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy)))
+                if highest_scoring_network is not None:
+                    highest_scoring_network.save_trained_model(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_acc%f" % (i, highest_accuracy)))
                 
                 logging.info("Generation average: %.2f%%" % (average_accuracy * 100))
                 logging.info("Generation best: %.2f%%" % (highest_accuracy * 100))
@@ -174,8 +172,8 @@ class Evolutionary_Neural_Network_Generator():
                 logging.info('-'*80)
             else:
                 average_loss, highest_loss, lowest_loss, best_scoring_network = self.get_loss_stats(self.networks)       
-                
-                best_scoring_network.save_trained_model(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_loss%f" % (i, lowest_loss)))
+                if best_scoring_network is not None:
+                    best_scoring_network.save_trained_model(os.path.join(self.save_directory, self.dataset + "_best_network_at_iteration_%d_loss%f" % (i, lowest_loss)))
                 
                 logging.info("Generation average: %.2f%%" % (average_loss * 100))
                 logging.info("Generation best: %.2f%%" % (highest_loss * 100))

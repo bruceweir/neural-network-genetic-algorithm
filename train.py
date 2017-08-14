@@ -42,14 +42,9 @@ Perhaps you should be launching the application from the command line? Example: 
             self.get_cifar10()
         elif self.dataset == 'mnist':
             self.get_mnist()
-        else:
-            
+        else:        
             self.get_dataset_from_file(self.training_data_file, self.test_data_file)
-            if(len(self.natural_input_shape) > 1):
-                self.natural_aspect_ratio = self.natural_input_shape[0] / self.natural_input_shape[1]
-            else:
-                self.natural_aspect_ratio = 1.0
-        
+            
         print('Classification problem? ', self.is_classification)
 
     
@@ -148,7 +143,14 @@ Perhaps you should be launching the application from the command line? Example: 
         self.input_shape = self.x_train.shape[1:]
         self.natural_input_shape = self.input_shape
         
+        if(len(self.natural_input_shape) >= 3):
+            self.natural_aspect_ratio = self.natural_input_shape[-3] / self.natural_input_shape[-2]
+        else:
+            self.natural_aspect_ratio = 1.0
+        
+        
         print('Setting input_shape to: %s' % (self.input_shape,))
+        print('Input data aspect ratio: %f' % self.natural_aspect_ratio)
         
         self.y_train = training_data[:, 1]
         self.y_train = np.array([y.astype('float32') for y in self.y_train], dtype='object')
@@ -177,6 +179,7 @@ Perhaps you should be launching the application from the command line? Example: 
         
         print('Output data shape set to: ', self.output_shape)
         print('Output data test vector shape: ', self.y_test.shape)
+        
         
         
     def train_and_score(self, network):
@@ -208,7 +211,7 @@ Perhaps you should be launching the application from the command line? Example: 
             model.fit(training_data, training_labels,
                           batch_size=batch_size,
                           epochs=epochs,  # using early stopping, so no real limit
-                          verbose=False,
+                          verbose=True,
                           validation_data=(validation_data, validation_labels),
                           callbacks=callbacks)
         except Exception as e:
