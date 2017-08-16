@@ -22,7 +22,7 @@ K.set_image_dim_ordering('tf')
 
 class Train():
 # Helper: Early stopping.
-    def __init__(self, kwargs):
+    def __init__(self, kwargs={}):
         
         self.early_stopper = EarlyStopping(patience=5)
         #self.list_of_trained_layers = []
@@ -32,6 +32,7 @@ class Train():
         self.test_data_file = kwargs.get('test_data', None)
         self.batch_size = kwargs.get('batch_size', 64)
         self.is_classification = kwargs.get('is_classification', True)
+        self.network_compiler = Network_Compiler(kwargs)
         
         if self.dataset == None and self.training_data_file == None:
             raise ValueError("""You need to specify either a dataset or training/test files to use.\n
@@ -189,9 +190,8 @@ Perhaps you should be launching the application from the command line? Example: 
             network: a Network object 
             
         """
-        network_compiler = Network_Compiler()
         
-        model = network_compiler.compile_model(network, self.output_shape, self.input_shape, self.natural_input_shape, self.is_classification)
+        model = self.network_compiler.compile_model(network, self.output_shape, self.input_shape, self.natural_input_shape, self.is_classification)
     
         if network.trained_model is None:
             network.trained_model = self.train_model(model, self.x_train, self.y_train, self.batch_size, self.max_epochs, self.x_test, self.y_test, [self.early_stopper])

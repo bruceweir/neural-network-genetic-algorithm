@@ -8,6 +8,7 @@ Created on Tue Aug  8 12:41:05 2017
 from keras.models import Model
 from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, ActivityRegularization
 from keras.layers import MaxPooling2D, Input, concatenate, ZeroPadding1D, ZeroPadding2D
+from keras.layers import BatchNormalization
 import math
 from functools import reduce
 
@@ -16,8 +17,12 @@ class Network_Compiler():
     
     """A class containing the functionality to create a Keras model from a 
     Network object """
-    def __init__(self):
+    def __init__(self, kwargs={}):
         self.list_of_trained_layers = []
+        self.batch_normalise = kwargs.get('batch_normalisation', False)
+        
+        if self.batch_normalise is True:
+            print('Inserting Batch Normalisation layers')
         
     
     def compile_model(self, network, output_shape, input_shape, natural_input_shape, is_classification):
@@ -131,6 +136,9 @@ class Network_Compiler():
     
         self.set_compiled_layer_for_id(layer_id, layer)
         
+        if self.batch_normalise is True:
+            layer = BatchNormalization()(layer)
+            
         return layer
     
     

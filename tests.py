@@ -12,9 +12,6 @@ from network_compiler import Network_Compiler
 import numpy as np
 
 def test_network():
-    args = {'dataset':'mnist'}    
-   # train = Train(args)
-    
     
     print('network.add_layer_with_random_parameters("layer_type") should add a network layer of the requested layer_type.')
     
@@ -254,7 +251,66 @@ def test_optimizer():
     optimizer.evolve(pop)
     
     #pop = [network1, network2]
+def test_compilation():
+    
+    print('Testing network compilation')
+    network = Network()
+    network.add_layer_with_random_parameters('Dense')
+    
+    network_compiler = Network_Compiler()
+    model = network_compiler.compile_model(network, (10,), (784,), (28, 28, 1), True)
+    print('This keras classification model should have three layers, an input layer, a single fully connected hidden layer and a softmax output layer with 10 neurons')
+    assert(len(model.layers) == 3)
+    assert(model.layers[0].__class__.__name__ is 'InputLayer')
+    assert(model.layers[1].__class__.__name__ is 'Dense')
+    assert(model.layers[2].__class__.__name__ is 'Dense')
+    assert(model.layers[2].activation.__name__ is 'softmax')
 
+    model = network_compiler.compile_model(network, (14, 14, 1), (784,), (28, 28, 1), False)
+    print("""This keras model should have four layers, an input layer, 
+          a fully connected hidden layer, a Dense layer with the number of neurons in the output_shape
+          and a final Reshape layer to match the output_shape""")
+    assert(len(model.layers) == 4)
+    assert(model.layers[0].__class__.__name__ is 'InputLayer')
+    assert(model.layers[1].__class__.__name__ is 'Dense')
+    assert(model.layers[2].units == 14 * 14 * 1)    
+    assert(model.layers[3].__class__.__name__ is 'Reshape')
+    assert(model.layers[3].output_shape == (None, 14, 14, 1))
+    
+    print('Testing batch normalisation layer insertion')
+    network_compiler = Network_Compiler({'batch_normalisation':True})
+    model = network_compiler.compile_model(network, (10,), (784,), (28, 28, 1), True)
+    
+    print("""This keras model should have four layers, an input layer, 
+          a dense layer, a batch normalisation layer and finally an output dense softmax layer """)
+    assert(len(model.layers) == 4)
+    assert(model.layers[0].__class__.__name__ is 'InputLayer')
+    assert(model.layers[1].__class__.__name__ is 'Dense')
+    assert(model.layers[2].__class__.__name__ is 'BatchNormalization')
+    assert(model.layers[3].__class__.__name__ is 'Dense')
+
+    network = Network()
+    network_compiler = Network_Compiler({'batch_normalisation':True})   
+    network.add_layer_with_random_parameters('Dense')
+    network.add_layer_with_random_parameters('Dense', [0])
+    model = network_compiler.compile_model(network, (10,), (784,), (28, 28, 1), True)
+    
+    print("""This keras model should have six layers, an input layer, 
+          a dense layer, a batch normalisation layer, another dense layer, another
+          batch normalisation layer and finally an output dense softmax layer """)
+    assert(len(model.layers) == 6)
+    assert(model.layers[0].__class__.__name__ is 'InputLayer')
+    assert(model.layers[1].__class__.__name__ is 'Dense')
+    assert(model.layers[2].__class__.__name__ is 'BatchNormalization')
+    assert(model.layers[3].__class__.__name__ is 'Dense')
+    assert(model.layers[4].__class__.__name__ is 'BatchNormalization')
+    assert(model.layers[5].__class__.__name__ is 'Dense')
+
+        
+
+    
+    
+    
 def test_train():
     print('Testing model training and evaluation over a single epoch (This will download the MNIST dataset the first time it is run. Being behind a proxy might cause this to fail.)')
     args = {'dataset':'mnist'}    
@@ -364,7 +420,6 @@ def to_do():
     print('\t1. Test OOM capture and recovery during training')
     print('\t2. Add support for multiple input/output layers')        
     print('\t6. Add more layer types')    
-    print('\t8. Remove natural shape argument, as it can now be determined implicitly from the input data')
     
     
 print('Running tests....')    
@@ -372,6 +427,7 @@ print('Running tests....')
 test_network()
 test_network_graph()
 test_optimizer()
+test_compilation()
 test_train()
 print('...tests complete')
 

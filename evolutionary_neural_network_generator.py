@@ -70,8 +70,12 @@ parser.add_argument('--batch_size',
                     help="If specifying your own training and test files, use this as the initial batch size for training.",
                     type=int,
                     default=64)
+parser.add_argument('--batch_normalisation',
+                    help="If this flag is used, a batch normalisation layer is added between every layer in the network before it is trained. This can improve training time in deep networks",
+                    action='store_true',
+                    default=False)
 parser.add_argument('--is_classification',
-                    help='Train a classification model (when using your own dataset. MNIST and CIFAR10 examples are always treated as classification problems)',
+                    help='Train a classification model (when using your own dataset). MNIST and CIFAR10 examples are always treated as classification problems.',
                     action='store_true',
                     default=False)
 
@@ -285,7 +289,7 @@ class Evolutionary_Neural_Network_Generator():
         """
         for i in range(len(networks)):
             save_file_name = dataset + '-model_%d-' % i
-            save_file_name = save_file_name + '_acc%.4f_loss%.4f' % (networks[i].accuracy, networks[i].loss)
+            save_file_name = save_file_name + '_acc_%.4f_loss_%.4f' % (networks[i].accuracy, networks[i].loss)
             save_file_name = os.path.join(self.save_directory, save_file_name)       
             networks[i].save_trained_model(save_file_name)
 
