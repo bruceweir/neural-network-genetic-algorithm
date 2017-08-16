@@ -10,7 +10,7 @@ def get_dense_layer_options():
     """Returns the optional parameters and values for a Dense (Fully connected) layer """
 
     return {
-        'nb_neurons': [64, 128, 256, 512, 768, 1024],
+        'nb_neurons': [64, 128, 256, 512, 768, 1024, 2048, 4096],
         'activation': ['relu', 'elu', 'tanh', 'sigmoid']       
     }
 
