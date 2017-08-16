@@ -23,7 +23,7 @@ class Network():
     A node can have multiple input and output edges, and can form a branching structure.
     
     
-    An instance of this class can be compiled into a Keras Model and trained by using an instance of 
+    An instance of this class can be trained on a dataset by using an instance of 
     the Train class (in train.py). 
     Example:
         
