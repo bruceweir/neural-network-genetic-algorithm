@@ -15,6 +15,11 @@ To run the genetic algorithm:
 
 Options are viewable via the -h switch
 
+Example usage for running breeding MNIST classifiers using a population of 10 networks over 20 generations:
+(Note that if you don't already have MNIST installed it will be downloaded for you, which might not work if
+ you are behind a proxy)
+
+```python3 evolutionary_neural_network_generator.py -p 10 -g 20 -d mnist```
 
 To Run the Unit Tests:
 
@@ -23,5 +28,6 @@ To Run the Unit Tests:
 You can set your network parameter choices by editing network_layer_options.py.
 
 You can choose whether to use the MNIST or CIFAR10 datasets. Simply set `-dataset` switch to either `mnist` or `cifar10`. 
-You can also use your own datasets by using the --training_data and --test_data switches and following the instructions in the get_dataset_from_file() method in train.py.
+You can also use your own datasets by using the --training_data and --test_data switches and following the data formatting instructions in the get_dataset_from_file() method in train.py,
+or the examples in the test_train() function in tests.py
 
