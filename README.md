@@ -15,7 +15,7 @@ To run the genetic algorithm:
 
 Options are viewable via the -h switch
 
-Example usage for running breeding MNIST classifiers using a population of 10 networks over 20 generations:
+Example usage for breeding MNIST classifiers using a population of 10 networks over 20 generations:
 (Note that if you don't already have MNIST installed it will be downloaded for you, which might not work if
  you are behind a proxy)
 
