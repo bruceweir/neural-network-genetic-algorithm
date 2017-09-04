@@ -90,7 +90,10 @@ class Network():
 
     def connect_layers(self, upstream_layer_ids, layer_ids):
 
-        """ Add an edge between the layers whose ids are listed in the upstream_layer_ids array and each of the layers in the layer_ids list """        
+        """ Add a unique edge between the layers whose ids are listed in the
+        upstream_layer_ids array and each of the layers in the layer_ids list,
+        unless doing so would result in a loop (nodes should not connect to themselves)
+        """        
     
         if upstream_layer_ids == None or layer_ids == None:
             return
@@ -104,7 +107,7 @@ class Network():
         for upstream_layer_id in upstream_layer_ids:
             for layer_id in layer_ids:
                 if self.network_graph.has_node(upstream_layer_id) and self.network_graph.has_node(layer_id):
-                    if self.network_graph.has_edge(upstream_layer_id, layer_id) == False:
+                    if upstream_layer_id != layer_id and self.network_graph.has_edge(upstream_layer_id, layer_id) == False:
                         self.network_graph.add_edge(upstream_layer_id, layer_id)
             
         self.clear_trained_model()
@@ -210,6 +213,7 @@ class Network():
         self.connect_layers(upstream_layers, downstream_layers)
                 
         self.clear_trained_model()
+
 
     def get_upstream_layers(self, layer_id):
         
