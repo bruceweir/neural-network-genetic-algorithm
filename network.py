@@ -444,5 +444,5 @@ class Network():
 
     def get_hash_for_network(self):
 
-        network_description = json.dumps(self.network_graph.node) + json.dumps(self.network_graph.edge)
+        network_description = json.dumps(list(self.network_graph.nodes())) + json.dumps(list(self.network_graph.edges()))
         return hashlib.md5(network_description.encode()).hexdigest()
