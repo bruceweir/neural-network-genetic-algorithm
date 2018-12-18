@@ -5,6 +5,7 @@ Created on Mon Jul 10 15:38:41 2017
 @author: bruce.weir@bbc.co.uk
 """
 
+import tensorflow as tf
 from network import Network
 from optimizer import Optimizer
 from train import Train
@@ -424,6 +425,7 @@ def to_do():
     
 print('Running tests....')    
 
+#tf.enable_eager_execution()
 test_network()
 test_network_graph()
 test_optimizer()

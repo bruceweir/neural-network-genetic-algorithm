@@ -5,10 +5,12 @@ Created on Tue Aug  8 12:41:05 2017
 @author: brucew
 """
 
-from keras.models import Model
-from keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, ActivityRegularization
-from keras.layers import MaxPooling2D, Input, concatenate, ZeroPadding1D, ZeroPadding2D
-from keras.layers import BatchNormalization
+import tensorflow as tf
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.layers import Dense, Dropout, Conv2D, Flatten, Reshape, ActivityRegularization
+from tensorflow.python.keras.layers import MaxPooling2D, Input, concatenate, ZeroPadding1D, ZeroPadding2D
+from tensorflow.python.keras.layers import BatchNormalization
+from tensorflow.python.keras import backend as K
 import math
 from functools import reduce
 
@@ -219,7 +221,7 @@ class Network_Compiler():
                 if self.shape_not_compatible(reshape_size, input_layers[x]):
                     input_layers[x] = self.conform_layer_to_shape(reshape_size, input_layers[x])
                     print('conformed shape:')
-                    print(input_layers[x]._keras_shape)
+                    print(K.int_shape(input_layers[x]))
             
             layer = concatenate(input_layers) # should break here
         return layer
@@ -265,8 +267,8 @@ class Network_Compiler():
     def shape_compatible(self, shape, layer):
         
         
-        layer_shape = list(filter(None, layer._keras_shape))
-    
+        layer_shape = list(filter(None, K.int_shape(layer)))
+
         if layer_shape[:-1] == shape[:-1]:
             return True
         else:
@@ -307,7 +309,9 @@ class Network_Compiler():
         return layer
     
     def get_compiled_layer_shape_details(self, layer):
-        previous_layer_shape = layer._keras_shape
+	
+        previous_layer_shape = K.int_shape(layer)
+        #previous_layer_shape = layer.get_input_at(0).get_shape().as_list()
         number_of_units_in_previous_layer = reduce(lambda x, y: x*y,  [x for x in previous_layer_shape if x is not None])
         number_of_dimensions_in_previous_layer = len([x for x in previous_layer_shape if x is not None])
         

@@ -12,7 +12,7 @@ from tqdm import tqdm
 import time
 import os
 from IPython.display import SVG, display
-from keras.utils.vis_utils import model_to_dot
+from tensorflow.python.keras.utils import plot_model
 import pickle
 
 
@@ -307,7 +307,7 @@ class Evolutionary_Neural_Network_Generator():
 
 def draw_model_on_interactive_session(model):
         
-    display(SVG(model_to_dot(model, show_shapes=True).create(prog='dot', format='svg')))
+    display(SVG(plot_model(model, to_file='model.png', show_shapes=True).create(prog='dot', format='svg')))
 
     
 if __name__ == '__main__':

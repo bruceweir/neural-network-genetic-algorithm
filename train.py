@@ -7,10 +7,12 @@ Based on:
 Original project:  https://medium.com/@harvitronix/lets-evolve-a-neural-network-with-a-genetic-algorithm-code-included-8809bece164
 Extended by: bruce.weir@bbc.co.uk
 """
-from keras.datasets import mnist, cifar10
-from keras.utils.np_utils import to_categorical
-from keras.callbacks import EarlyStopping
-from keras import backend as K
+import tensorflow as tf
+from tensorflow.python import keras
+from tensorflow.python.keras.datasets import mnist, cifar10
+from tensorflow.python.keras.utils import to_categorical
+from tensorflow.python.keras.callbacks import EarlyStopping
+from tensorflow.python.keras import backend as K
 from network_compiler import Network_Compiler
 import math
 import sys
@@ -18,7 +20,7 @@ from ast import literal_eval
 import numpy as np
 
 
-K.set_image_dim_ordering('tf')
+#K.set_image_dim_ordering('tf')
 
 class Train():
 # Helper: Early stopping.

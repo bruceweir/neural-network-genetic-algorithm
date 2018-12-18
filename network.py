@@ -6,8 +6,8 @@ import random
 import logging
 
 from network_layer_options import *
-
-from keras.utils import plot_model
+import tensorflow as tf
+from tensorflow.python.keras.utils import plot_model
 import networkx as nx
 import json
 import hashlib
