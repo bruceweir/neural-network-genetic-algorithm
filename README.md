@@ -4,8 +4,7 @@ This application uses a genetic algorithm to search for an optimum neural networ
 
 It can currently handle Dense (Fully Connected), Conv2D, Dropout, MaxPooling and ActivityRegularization layers and branching neural network structures. It uses the Keras library to build, train and validate.
 
-For more, see this blog post, which describes the original code from which this is forked: 
-https://medium.com/@harvitronix/lets-evolve-a-neural-network-with-a-genetic-algorithm-code-included-8809bece164
+The inspiration for this project was this blog post (https://medium.com/@harvitronix/lets-evolve-a-neural-network-with-a-genetic-algorithm-code-included-8809bece164), which describes the original code from which this is forked, although it turned out that I had to rewrite pretty much the entire thing to incorporate the Convolution and other useful layers... 
 
 ## To run
 
